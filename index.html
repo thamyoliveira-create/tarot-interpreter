@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Tarot Interpreter — Interpretação Rider-Waite-Smith</title>
+  <meta name="description" content="Aplicativo focado exclusivamente em interpretar cartas de Tarot Rider-Waite-Smith para tiragens manuais com baralho físico." />
+  <meta name="theme-color" content="#09090b" />
+
+  <!-- Google Fonts: Cinzel & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            tarot: {
+              bg: '#09090b',
+              card: '#121118',
+              gold: '#d4af37',
+              goldLight: '#f6e05e',
+              accent: '#b45309',
+            },
+          },
+          fontFamily: {
+            serif: ['Cinzel', 'serif', 'Georgia'],
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & Babel Standalone CDN para execução universal e imediata -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      background-color: #09090b;
+      color: #f4f4f5;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+    h1, h2, h3, h4, .font-serif {
+      font-family: 'Cinzel', serif, Georgia;
+      letter-spacing: 0.02em;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+    .animate-fadeIn { animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .animate-shake { animation: shake 0.3s ease-in-out; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #09090b; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #d4af37; }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 antialiased selection:bg-amber-500 selection:text-zinc-950">
+  <div id="root">
+    <div class="min-h-screen flex items-center justify-center">
+      <div class="flex flex-col items-center gap-3">
+        <div class="w-10 h-10 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin"></div>
+        <p class="text-xs font-semibold text-zinc-400 font-serif">Carregando Tarot Interpreter...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script da Aplicação React com todas as 78 cartas RWS e interpretador -->
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    // =========================================================================
+    // BASE DE DADOS COMPLETA DAS 78 CARTAS RIDER-WAITE-SMITH (PORTUGUÊS)
+    // =========================================================================
+    const TAROT_CARDS = [
+      // Arcanos Maiores (0 - XXI)
+      { id: 'fool', name: '0 - O Louco', number: 0, arcana: 'major', element: 'Ar', upright: { keywords: ['Novos começos', 'Espontaneidade', 'Fé no desconhecido', 'Inocência', 'Liberdade'], general: 'Representa o salto de fé para o desconhecido, a pureza de intenção e o início de uma nova jornada sem o peso de convenções passadas.' }, reversed: { keywords: ['Imprudência', 'Impulsividade', 'Hesitação excessiva', 'Ingenuidade prejudicial'], general: 'Alerta sobre riscos desnecessários, decisões precipitadas ou, inversamente, medo paralisante de arriscar.' } },
+      { id: 'magician', name: 'I - O Mago', number: 1, arcana: 'major', element: 'Ar', upright: { keywords: ['Manifestação', 'Recursos disponíveis', 'Habilidade', 'Poder de ação', 'Foco'], general: 'Simboliza a capacidade de transformar ideias em realidade através da união de vontade, intelecto e todos os quatro elementos.' }, reversed: { keywords: ['Manipulação', 'Ilusão', 'Potencial desperdiçado', 'Falta de foco'], general: 'Indica dispersão de talentos, uso indevido de influência ou incapacidade momentânea de agir.' } },
+      { id: 'high_priestess', name: 'II - A Sacerdotisa', number: 2, arcana: 'major', element: 'Água', upright: { keywords: ['Intuição', 'Mistério', 'Subconsciente', 'Sabedoria oculta', 'Silêncio'], general: 'Representa a sabedoria interior, segredos guardados, intuição aguçada e a necessidade de escutar a voz da alma antes de agir.' }, reversed: { keywords: ['Intuição bloqueada', 'Segredos prejudiciais', 'Superficialidade', 'Rumores'], general: 'Aponta para a negligência da própria intuição, fofocas ou informações mantidas ocultas que geram desconfiança.' } },
+      { id: 'empress', name: 'III - A Imperatriz', number: 3, arcana: 'major', element: 'Terra', upright: { keywords: ['Abundância', 'Fertilidade', 'Nutrição', 'Criatividade', 'Sensualidade'], general: 'A força nutridora da criação, geração de novos projetos, acolhimento, beleza e prosperidade tangível em florescimento.' }, reversed: { keywords: ['Bloqueio criativo', 'Sufocamento', 'Dependência', 'Negligência pessoal'], general: 'Indica excesso de controle nutridor que sufoca, ou descuido com o próprio autocuidado e bem-estar.' } },
+      { id: 'emperor', name: 'IV - O Imperador', number: 4, arcana: 'major', element: 'Fogo', upright: { keywords: ['Estrutura', 'Autoridade', 'Estabilidade', 'Disciplina', 'Proteção'], general: 'A solidez da ordem, estabelecimento de limites claros, governança justa, responsabilidade e estabilidade construída com disciplina.' }, reversed: { keywords: ['Rigidez excessiva', 'Tirania', 'Falta de disciplina', 'Caos estrutural'], general: 'Aponta para inflexibilidade prejudicial, autoritarismo ou perda de controle e falta de limites.' } },
+      { id: 'hierophant', name: 'V - O Hierofante', number: 5, arcana: 'major', element: 'Terra', upright: { keywords: ['Tradição', 'Ensino', 'Valores morais', 'Mentoria', 'Instituições'], general: 'O guia moral e espiritual, transmissão do conhecimento estabelecido, conformidade com valores éticos e busca por sentido superior.' }, reversed: { keywords: ['Dogmatismo', 'Rebeldia sem causa', 'Inconformismo', 'Rompimento'], general: 'Questionamento de regras obsoletas, desilusão com autoridades ou apego cego a dogmas.' } },
+      { id: 'lovers', name: 'VI - Os Enamorados', number: 6, arcana: 'major', element: 'Ar', upright: { keywords: ['Escolhas morais', 'Alinhamento de valores', 'União', 'Harmonia', 'Atração'], general: 'Representa a união afetiva e a tomada de decisão consciente baseada no coração e nos valores essenciais.' }, reversed: { keywords: ['Desalinhamento', 'Conflito interno', 'Escolha duvidosa', 'Falta de diálogo'], general: 'Dissonância de valores, dúvidas paralisantes entre dois caminhos ou conflito de prioridades.' } },
+      { id: 'chariot', name: 'VII - O Carro', number: 7, arcana: 'major', element: 'Água', upright: { keywords: ['Determinação', 'Vitória', 'Foco', 'Autocontrole', 'Superação'], general: 'O domínio sobre forças opostas através da força de vontade, avanço decidido em direção à meta e superação de obstáculos.' }, reversed: { keywords: ['Perda de controle', 'Agressividade', 'Falta de direção', 'Bloqueio'], general: 'Sensação de perder as rédeas da situação ou avanço desenfreado que causa desgaste.' } },
+      { id: 'strength', name: 'VIII - A Força', number: 8, arcana: 'major', element: 'Fogo', upright: { keywords: ['Coragem suave', 'Compaixão', 'Paciência', 'Domínio interior', 'Resiliência'], general: 'A força moral e espiritual que doma os instintos com amor, gentileza e paciência, sem recurso à violência.' }, reversed: { keywords: ['Dúvida de si', 'Impaciência', 'Agressividade reprimida', 'Exaustão'], general: 'Sensação de esgotamento emocional, perda de paciência ou dúvida sobre a própria capacidade de suportar.' } },
+      { id: 'hermit', name: 'IX - O Eremita', number: 9, arcana: 'major', element: 'Terra', upright: { keywords: ['Introspecção', 'Busca interior', 'Sabedoria', 'Guia', 'Prudência'], general: 'O recolhimento voluntário para refletir, examinar a própria consciência e buscar iluminação interior.' }, reversed: { keywords: ['Isolamento excessivo', 'Solidão amarga', 'Fuga da realidade', 'Teimosia'], general: 'Isolamento defensivo que afasta pessoas queridas ou recusa em encarar a própria solidão interna.' } },
+      { id: 'wheel_of_fortune', name: 'X - A Roda da Fortuna', number: 10, arcana: 'major', element: 'Fogo', upright: { keywords: ['Mudança de ciclo', 'Destino', 'Oportunidade', 'Movimento', 'Evolução'], general: 'O giro incessante dos ciclos da vida, lembrando que nada é estático e que novas portas e viradas de maré estão se abrindo.' }, reversed: { keywords: ['Resistência à mudança', 'Ciclos repetitivos', 'Imprevistos', 'Atrasos'], general: 'Dificuldade em aceitar transformações inevitáveis ou repetição de velhos erros.' } },
+      { id: 'justice', name: 'XI - A Justiça', number: 11, arcana: 'major', element: 'Ar', upright: { keywords: ['Verdade', 'Equilíbrio', 'Causa e efeito', 'Honestidade', 'Clareza moral'], general: 'A lei universal de causa e efeito: cada ação gera sua colheita. Julgamentos justos, transparência e retidão.' }, reversed: { keywords: ['Injustiça', 'Parcialidade', 'Negação de culpa', 'Julgamento severo'], general: 'Sensação de injustiça, desequilíbrio ou recusa em admitir a própria parcela de responsabilidade.' } },
+      { id: 'hanged_man', name: 'XII - O Enforcado', number: 12, arcana: 'major', element: 'Água', upright: { keywords: ['Nova perspectiva', 'Pausa necessária', 'Rendição consciente', 'Desapego'], general: 'A suspensão da ação externa em prol de uma mudança profunda de olhar. Ver de cabeça para baixo traz sabedoria.' }, reversed: { keywords: ['Resistência inútil', 'Sacrifício em vão', 'Estagnação', 'Vitimização'], general: 'Insistência em manter uma postura de mártir ou resistência a abrir mão do que já não tem futuro.' } },
+      { id: 'death', name: 'XIII - A Morte', number: 13, arcana: 'major', element: 'Água', upright: { keywords: ['Fim de ciclo', 'Transformação profunda', 'Renascimento', 'Transição'], general: 'Transmutação necessária de um estado antigo para permitir que o novo germine; encerramento natural de fases.' }, reversed: { keywords: ['Apego ao passado', 'Medo da mudança', 'Resistência dolorosa'], general: 'Dificuldade de aceitar que um capítulo terminou, prolongando o sofrimento pela relutância em soltar.' } },
+      { id: 'temperance', name: 'XIV - A Temperança', number: 14, arcana: 'major', element: 'Fogo', upright: { keywords: ['Equilíbrio', 'Moderação', 'Alquimia interior', 'Harmonização', 'Cura'], general: 'A combinação harmoniosa de opostos, dosagem correta de energias, cura emocional e diplomacia paciente.' }, reversed: { keywords: ['Desequilíbrio', 'Excessos', 'Impaciência', 'Falta de tato'], general: 'Extremos comportamentais, excessos de gastos ou emoções, ou pressa em forçar conciliações.' } },
+      { id: 'devil', name: 'XV - O Diabo', number: 15, arcana: 'major', element: 'Terra', upright: { keywords: ['Apego material', 'Obsessão', 'Ilusão de aprisionamento', 'Sombras', 'Tentação'], general: 'As correntes invisíveis criadas por apegos, medos ou dependências das quais acreditamos não conseguir nos libertar.' }, reversed: { keywords: ['Libertação de vícios', 'Rompimento de amarras', 'Consciência das sombras'], general: 'Despertar para padrões limitantes e superação gradual de relações tóxicas ou dependências.' } },
+      { id: 'tower', name: 'XVI - A Torre', number: 16, arcana: 'major', element: 'Fogo', upright: { keywords: ['Ruptura súbita', 'Queda de ilusões', 'Revelação', 'Reconstrução necessária'], general: 'O raio da verdade que destrói estruturas frágeis construídas sobre bases falsas, abrindo caminho para a realidade.' }, reversed: { keywords: ['Evitação do colapso', 'Prolongamento do inevitável', 'Medo da crise'], general: 'Resistência a encarar uma verdade desconfortável, tentando remendar uma base já condenada.' } },
+      { id: 'star', name: 'XVII - A Estrela', number: 17, arcana: 'major', element: 'Ar', upright: { keywords: ['Esperança renovada', 'Inspiração', 'Cura profunda', 'Fé no futuro', 'Serenidade'], general: 'O bálsamo após a tempestade: luz no horizonte, clareza mental, renovação da fé e cura para as feridas da alma.' }, reversed: { keywords: ['Desesperança momentânea', 'Pessimismo', 'Falta de fé', 'Desânimo'], general: 'Dificuldade transitória em enxergar a luz no fim do túnel ou desvalorização dos próprios talentos.' } },
+      { id: 'moon', name: 'XVIII - A Lua', number: 18, arcana: 'major', element: 'Água', upright: { keywords: ['Incerteza', 'Ilusão', 'Medos inconscientes', 'Intuição profunda', 'Mistério'], general: 'A travessia pela noite: coisas não esclarecidas, projeções mentais, ansiedades do subconsciente e miragens.' }, reversed: { keywords: ['Dissipação de ilusões', 'Superação de medos', 'Clareza emergente'], general: 'A névoa começa a se dissipar, permitindo ver os fatos como realmente são e superando receios irreais.' } },
+      { id: 'sun', name: 'XIX - O Sol', number: 19, arcana: 'major', element: 'Fogo', upright: { keywords: ['Alegria', 'Sucesso', 'Clareza total', 'Vitalidade', 'Realização'], general: 'A luz radiante da consciência: triunfo merecido, celebração, sinceridade e plenitude manifesta.' }, reversed: { keywords: ['Otimismo ingênuo', 'Atraso temporário no sucesso', 'Ego inflado'], general: 'O sol ainda brilha, mas há uma nuvem passageira de desânimo ou orgulho que atrapalha a visão.' } },
+      { id: 'judgement', name: 'XX - O Julgamento', number: 20, arcana: 'major', element: 'Fogo', upright: { keywords: ['Despertar', 'Chamado interior', 'Redenção', 'Renovação', 'Decisão definitiva'], general: 'O chamado da alma para um novo nível de consciência; superação do passado através do perdão e redenção.' }, reversed: { keywords: ['Autocrítica severa', 'Dúvida do chamado', 'Culpa paralisante'], general: 'Julgamento severo de si mesmo ou dos outros, apego à culpa que impede de renascer.' } },
+      { id: 'world', name: 'XXI - O Mundo', number: 21, arcana: 'major', element: 'Terra', upright: { keywords: ['Conclusão triunfante', 'Plenitude', 'Integração', 'Realização total', 'Celebração'], general: 'O coroamento de uma jornada: integração de lições, encerramento de um ciclo com maestria e sentimento de totalidade.' }, reversed: { keywords: ['Ciclo incompleto', 'Falta de encerramento', 'Pendências'], general: 'Sensação de que falta um detalhe para fechar um ciclo importante ou hesitação em dar o ponto final.' } },
+
+      // Paus (Wands - Fogo)
+      { id: 'ace_of_wands', name: 'Ás de Paus', arcana: 'minor', suit: 'wands', rank: 'Ás', element: 'Fogo', upright: { keywords: ['Centelha inicial', 'Inspiração', 'Nova paixão', 'Entusiasmo'], general: 'Surgimento de uma nova ideia brilhante, paixão renovada ou impulso criativo irresistível.' }, reversed: { keywords: ['Falta de energia', 'Atrasos no início', 'Hesitação'], general: 'Dificuldade em tirar a ideia do papel ou falta de ânimo passageira.' } },
+      { id: 'two_of_wands', name: 'Dois de Paus', arcana: 'minor', suit: 'wands', rank: '2', element: 'Fogo', upright: { keywords: ['Planejamento', 'Visão de futuro', 'Decisão de expansão'], general: 'Planejar os próximos passos mantendo a base segura já conquistada.' }, reversed: { keywords: ['Medo do desconhecido', 'Planejamento excessivo', 'Insegurança'], general: 'Ficar preso na zona de conforto pelo receio de arriscar a expansão.' } },
+      { id: 'three_of_wands', name: 'Três de Paus', arcana: 'minor', suit: 'wands', rank: '3', element: 'Fogo', upright: { keywords: ['Expansão', 'Navios chegando', 'Progresso confirmado'], general: 'Os primeiros frutos do esforço aparecem; oportunidades se ampliam.' }, reversed: { keywords: ['Demora nos resultados', 'Obstáculos logísticos'], general: 'Atrasos nas respostas esperadas ou necessidade de recalibrar prazos.' } },
+      { id: 'four_of_wands', name: 'Quatro de Paus', arcana: 'minor', suit: 'wands', rank: '4', element: 'Fogo', upright: { keywords: ['Celebração', 'Harmonia no lar', 'Conquista festejada'], general: 'Momento de alegria, festividade, união familiar e celebração de marcos importantes.' }, reversed: { keywords: ['Conflitos no lar', 'Tensão em celebrações'], general: 'Pequenos desentendimentos domésticos ou desarmonia passageira.' } },
+      { id: 'five_of_wands', name: 'Cinco de Paus', arcana: 'minor', suit: 'wands', rank: '5', element: 'Fogo', upright: { keywords: ['Competição', 'Divergência de ideias', 'Desafio dinâmico'], general: 'Confronto de vontades, debate acirrado de ideias que exige jogo de cintura.' }, reversed: { keywords: ['Evitação de conflito', 'Desgaste estéril'], general: 'Esgotamento gerado por discussões infrutíferas ou alívio com o fim da disputa.' } },
+      { id: 'six_of_wands', name: 'Seis de Paus', arcana: 'minor', suit: 'wands', rank: '6', element: 'Fogo', upright: { keywords: ['Vitória', 'Reconhecimento público', 'Sucesso'], general: 'Triunfo perante o grupo, colheita de aplausos e validação do próprio valor.' }, reversed: { keywords: ['Vaidade excessiva', 'Falta de reconhecimento'], general: 'Frustração por não receber o devido mérito ou alerta contra orgulho desmedido.' } },
+      { id: 'seven_of_wands', name: 'Sete de Paus', arcana: 'minor', suit: 'wands', rank: '7', element: 'Fogo', upright: { keywords: ['Defesa de posição', 'Coragem', 'Resistência a pressões'], general: 'Manter-se firme na sua verdade diante de críticas e oposição.' }, reversed: { keywords: ['Sobrecarga', 'Capitulação', 'Cansaço da luta'], general: 'Sentir-se acuado por demandas excessivas; necessidade de escolher batalhas.' } },
+      { id: 'eight_of_wands', name: 'Oito de Paus', arcana: 'minor', suit: 'wands', rank: '8', element: 'Fogo', upright: { keywords: ['Velocidade', 'Mensagens rápidas', 'Acontecimentos acelerados'], general: 'Aceleração dos fatos, notícias que chegam rapidamente e fluxo desimpedido.' }, reversed: { keywords: ['Atrasos frustrantes', 'Comunicação truncada'], general: 'Mensagens mal interpretadas ou ansiedade por querer acelerar o tempo.' } },
+      { id: 'nine_of_wands', name: 'Nove de Paus', arcana: 'minor', suit: 'wands', rank: '9', element: 'Fogo', upright: { keywords: ['Resiliência', 'Última barreira', 'Prontidão perseverante'], general: 'Cansaço de batalhas passadas, mas firme para dar o último esforço vitorioso.' }, reversed: { keywords: ['Paranoia defensiva', 'Exaustão total'], general: 'Estar em alerta perpétuo vendo ameaças irreais ou esgotamento por desconfiança.' } },
+      { id: 'ten_of_wands', name: 'Dez de Paus', arcana: 'minor', suit: 'wands', rank: '10', element: 'Fogo', upright: { keywords: ['Sobrecarga', 'Fardo pesado', 'Excesso de tarefas'], general: 'Carregar mais obrigações do que o suportável sozinho; a meta está perto, mas pesa.' }, reversed: { keywords: ['Alívio de peso', 'Delegação de tarefas'], general: 'Aprender a dizer não e delegar fardos alheios.' } },
+      { id: 'page_of_wands', name: 'Pajem de Paus', arcana: 'minor', suit: 'wands', rank: 'Pajem', element: 'Fogo', upright: { keywords: ['Mensageiro entusiasta', 'Curiosidade', 'Novas ideias'], general: 'Energia jovem e curiosa pronta para explorar novidades e aprender com entusiasmo.' }, reversed: { keywords: ['Falta de foco', 'Imaturidade', 'Inconstância'], general: 'Entusiasmo fugaz que se apaga no primeiro obstáculo.' } },
+      { id: 'knight_of_wands', name: 'Cavaleiro de Paus', arcana: 'minor', suit: 'wands', rank: 'Cavaleiro', element: 'Fogo', upright: { keywords: ['Ação impulsiva', 'Aventura', 'Ousadia e charme'], general: 'Avanço decidido e apaixonado; energia magnética para desbravar caminhos.' }, reversed: { keywords: ['Impulsividade cega', 'Fuga de compromissos'], general: 'Atitudes precipitadas que geram atritos ou abandono de projetos no meio.' } },
+      { id: 'queen_of_wands', name: 'Rainha de Paus', arcana: 'minor', suit: 'wands', rank: 'Rainha', element: 'Fogo', upright: { keywords: ['Carisma', 'Autoconfiança', 'Calor humano', 'Independência'], general: 'Presença magnética, vibrante e inspiradora que atrai pela generosidade e autoconfiança.' }, reversed: { keywords: ['Ciúme', 'Manipulação egóica', 'Insegurança'], general: 'Necessidade excessiva de holofotes ou agressividade defensiva.' } },
+      { id: 'king_of_wands', name: 'Rei de Paus', arcana: 'minor', suit: 'wands', rank: 'Rei', element: 'Fogo', upright: { keywords: ['Liderança visionária', 'Empreendedorismo', 'Honra'], general: 'Líder nato que inspira com visão grandiosa, integridade moral e capacidade realizadora.' }, reversed: { keywords: ['Autoritarismo', 'Arrogância', 'Impaciência tirânica'], general: 'Imposição de vontades à força, desconsiderando os limites alheios.' } },
+
+      // Copas (Cups - Água)
+      { id: 'ace_of_cups', name: 'Ás de Copas', arcana: 'minor', suit: 'cups', rank: 'Ás', element: 'Água', upright: { keywords: ['Amor abundante', 'Novo afeto', 'Abertura emocional', 'Paz'], general: 'Transbordar de sentimentos puros, renovação afetiva e profunda paz de espírito.' }, reversed: { keywords: ['Bloqueio afetivo', 'Amor reprimido', 'Vazio emocional'], general: 'Dificuldade de expressar sentimentos ou mágoas retidas que fecham o coração.' } },
+      { id: 'two_of_cups', name: 'Dois de Copas', arcana: 'minor', suit: 'cups', rank: '2', element: 'Água', upright: { keywords: ['Conexão mútua', 'Reciprocidade', 'Afinidade', 'Parceria'], general: 'Encontro harmonioso entre duas pessoas, troca sincera de afeto e entendimento mútuo.' }, reversed: { keywords: ['Desencontro afetivo', 'Falta de reciprocidade', 'Ruptura'], general: 'Dificuldade de sintonia emocional ou expectativas desalinhadas na troca afetiva.' } },
+      { id: 'three_of_cups', name: 'Três de Copas', arcana: 'minor', suit: 'cups', rank: '3', element: 'Água', upright: { keywords: ['Celebração em grupo', 'Amizade verdadeira', 'Apoio mútuo'], general: 'Confraternização com pessoas queridas, rede de afeto e comemoração de vitórias coletivas.' }, reversed: { keywords: ['Intromissão de terceiros', 'Fofocas', 'Superficialidade'], general: 'Influências externas prejudicando relações ou amizades superficiais.' } },
+      { id: 'four_of_cups', name: 'Quatro de Copas', arcana: 'minor', suit: 'cups', rank: '4', element: 'Água', upright: { keywords: ['Apatia', 'Tédio afetivo', 'Oportunidade ignorada'], general: 'Foco no que falta, tornando-se cego para novas dádivas e convites à sua frente.' }, reversed: { keywords: ['Despertar da apatia', 'Aceitação de novas chances'], general: 'Superação do desânimo e abertura para acolher novas propostas afetivas.' } },
+      { id: 'five_of_cups', name: 'Cinco de Copas', arcana: 'minor', suit: 'cups', rank: '5', element: 'Água', upright: { keywords: ['Luto emocional', 'Arrependimento', 'Taças ainda de pé'], general: 'Dor pela perda; contudo, nem tudo está perdido: ainda há taças cheias a valorizar.' }, reversed: { keywords: ['Cura do luto', 'Aceitação', 'Redescoberta da esperança'], general: 'Virar as costas para o que se perdeu e recomeçar com o que permaneceu.' } },
+      { id: 'six_of_cups', name: 'Seis de Copas', arcana: 'minor', suit: 'cups', rank: '6', element: 'Água', upright: { keywords: ['Nostalgia doce', 'Memórias do passado', 'Inocência'], general: 'Lembranças afetuosas, reconexão com sonhos de outrora e carinho desinteressado.' }, reversed: { keywords: ['Preso ao passado', 'Idealização irreal'], general: 'Viver em nostalgia excessiva recusando-se a encarar as demandas do presente.' } },
+      { id: 'seven_of_cups', name: 'Sete de Copas', arcana: 'minor', suit: 'cups', rank: '7', element: 'Água', upright: { keywords: ['Ilusões', 'Múltiplas opções', 'Fantasias sem foco'], general: 'Muitos sonhos sedutores, mas nem todos são reais; risco de se perder em miragens.' }, reversed: { keywords: ['Clareza de escolha', 'Pés no chão', 'Foco na realidade'], general: 'Superação de devaneios para fazer uma escolha realista e fundamentada.' } },
+      { id: 'eight_of_cups', name: 'Oito de Copas', arcana: 'minor', suit: 'cups', rank: '8', element: 'Água', upright: { keywords: ['Partida voluntária', 'Busca de sentido maior', 'Desapego'], general: 'Coragem de se afastar do que já não preenche a alma em busca de algo autêntico.' }, reversed: { keywords: ['Medo de partir', 'Apego a relações falidas'], general: 'Permanecer em situações desgastadas por receio da solidão.' } },
+      { id: 'nine_of_cups', name: 'Nove de Copas', arcana: 'minor', suit: 'cups', rank: '9', element: 'Água', upright: { keywords: ['Desejo realizado', 'Satisfação emocional', 'Contentamento'], general: 'Satisfação sincera, alegria com as próprias conquistas e conforto de espírito.' }, reversed: { keywords: ['Indulgência excessiva', 'Vazio interior disfarçado'], general: 'Buscar saciedade em prazeres superficiais sem preencher a carência interna real.' } },
+      { id: 'ten_of_cups', name: 'Dez de Copas', arcana: 'minor', suit: 'cups', rank: '10', element: 'Água', upright: { keywords: ['Felicidade plena', 'Harmonia no lar', 'Paz duradoura'], general: 'O ápice da harmonia afetiva: relacionamentos abençoados e bênçãos compartilhadas.' }, reversed: { keywords: ['Desarmonia familiar', 'Fachada de felicidade'], general: 'Tensões no ambiente íntimo ou esforço para manter aparências de união.' } },
+      { id: 'page_of_cups', name: 'Pajem de Copas', arcana: 'minor', suit: 'cups', rank: 'Pajem', element: 'Água', upright: { keywords: ['Sensibilidade poética', 'Mensagens carinhosas', 'Intuição'], general: 'Coração doce e aberto, notícias afetuosas e surpresas agradáveis que tocam a alma.' }, reversed: { keywords: ['Imaturidade emocional', 'Melindre dramático'], general: 'Reações infantis perante frustrações ou hipersensibilidade dramática.' } },
+      { id: 'knight_of_cups', name: 'Cavaleiro de Copas', arcana: 'minor', suit: 'cups', rank: 'Cavaleiro', element: 'Água', upright: { keywords: ['Romantismo', 'Proposta sincera', 'Idealismo poético'], general: 'Mensageiro do amor e da conciliação; traz propostas sinceras e expressa afeto com nobreza.' }, reversed: { keywords: ['Desilusão amorosa', 'Falso encanto', 'Inconstância'], general: 'Promessas sedutoras que não se sustentam na prática diária.' } },
+      { id: 'queen_of_cups', name: 'Rainha de Copas', arcana: 'minor', suit: 'cups', rank: 'Rainha', element: 'Água', upright: { keywords: ['Empatia profunda', 'Intuição viva', 'Acolhimento amoroso'], general: 'Mulher compreensiva e intuitiva; acolhe sem julgar e compreende a dor alheia.' }, reversed: { keywords: ['Dependência emocional', 'Manipulação afetiva'], general: 'Sentir-se afogada nas próprias emoções ou uso de chantagem emocional.' } },
+      { id: 'king_of_cups', name: 'Rei de Copas', arcana: 'minor', suit: 'cups', rank: 'Rei', element: 'Água', upright: { keywords: ['Maturidade emocional', 'Equilíbrio nas crises', 'Compaixão serena'], general: 'Domínio sereno sobre as águas do sentimento; sábio, compassivo e estável.' }, reversed: { keywords: ['Frieza defensiva', 'Turbulência reprimida'], general: 'Uso de distanciamento frio para mascarar fragilidades emocionais.' } },
+
+      // Espadas (Swords - Ar)
+      { id: 'ace_of_swords', name: 'Ás de Espadas', arcana: 'minor', suit: 'swords', rank: 'Ás', element: 'Ar', upright: { keywords: ['Clareza mental', 'Verdade cortante', 'Nova ideia lúcida'], general: 'O poder da mente iluminada: corte de ilusões e revelação da verdade nua e crua.' }, reversed: { keywords: ['Confusão mental', 'Palavras cruéis', 'Falta de discernimento'], general: 'Uso agressivo da palavra ou incapacidade de julgar com imparcialidade.' } },
+      { id: 'two_of_swords', name: 'Dois de Espadas', arcana: 'minor', suit: 'swords', rank: '2', element: 'Ar', upright: { keywords: ['Impasse', 'Dilema difícil', 'Olhos vendados', 'Trégua'], general: 'Dúvida entre duas opções desafiadoras; bloqueio voluntário para não encarar a escolha.' }, reversed: { keywords: ['Fim do impasse', 'Encarar a verdade', 'Decisão necessária'], general: 'A venda cai: é indispensável tomar uma posição e lidar com os fatos.' } },
+      { id: 'three_of_swords', name: 'Três de Espadas', arcana: 'minor', suit: 'swords', rank: '3', element: 'Ar', upright: { keywords: ['Coração partido', 'Verdade dolorosa', 'Decepção'], general: 'Dor causada pela percepção lúcida de uma perda ou rompimento; corte que limpa a ilusão.' }, reversed: { keywords: ['Cicatrização', 'Perdão libertador', 'Superação da mágoa'], general: 'Alívio do sofrimento agudo e início da recuperação da paz interior.' } },
+      { id: 'four_of_swords', name: 'Quatro de Espadas', arcana: 'minor', suit: 'swords', rank: '4', element: 'Ar', upright: { keywords: ['Descanso mental', 'Pausa regeneradora', 'Silêncio'], general: 'Necessidade de parar, silenciar pensamentos e restaurar energias desgastadas.' }, reversed: { keywords: ['Retorno à ativa', 'Inquietação mental crônica'], general: 'Fim do repouso ou dificuldade em desacelerar a mente hiperativa.' } },
+      { id: 'five_of_swords', name: 'Cinco de Espadas', arcana: 'minor', suit: 'swords', rank: '5', element: 'Ar', upright: { keywords: ['Vitória de Pirro', 'Conflito de ego', 'Derrota moral'], general: 'Vencer a discussão mas desgastar a relação; disputas onde o orgulho cega.' }, reversed: { keywords: ['Fim de hostilidades', 'Reconciliação humilde'], general: 'Disposição para depor as armas e admitir que a disputa não compensa.' } },
+      { id: 'six_of_swords', name: 'Seis de Espadas', arcana: 'minor', suit: 'swords', rank: '6', element: 'Ar', upright: { keywords: ['Travessia para águas calmas', 'Transição gradual'], general: 'Deixar para trás um ambiente turbulento em direção a águas mais serenas e seguras.' }, reversed: { keywords: ['Dificuldade de transição', 'Bagagem pesada do passado'], general: 'Resistência em soltar mágoas antigas durante a travessia.' } },
+      { id: 'seven_of_swords', name: 'Sete de Espadas', arcana: 'minor', suit: 'swords', rank: '7', element: 'Ar', upright: { keywords: ['Estratégia discreta', 'Astúcia', 'Cautela com segredos'], general: 'Necessidade de discrição e tato; cuidado com ações pelas sombras ou evasões.' }, reversed: { keywords: ['Verdade revelada', 'Fim do sigilo', 'Transparência'], general: 'Necessidade de agir com honestidade total; planos tortuosos que vêm à tona.' } },
+      { id: 'eight_of_swords', name: 'Oito de Espadas', arcana: 'minor', suit: 'swords', rank: '8', element: 'Ar', upright: { keywords: ['Prisão mental', 'Sensação de impotência', 'Autolimitação'], general: 'Sentir-se encurralado por crenças e medos gerados pela própria mente.' }, reversed: { keywords: ['Libertação de crenças', 'Romper a paralisia'], general: 'Retirar a venda dos olhos e descobrir saídas concretas para a situação.' } },
+      { id: 'nine_of_swords', name: 'Nove de Espadas', arcana: 'minor', suit: 'swords', rank: '9', element: 'Ar', upright: { keywords: ['Ansiedade noturna', 'Preocupação excessiva', 'Remorso'], general: 'A mente gerando cenários aterrorizantes; a maior parte da angústia é imaginada.' }, reversed: { keywords: ['Alívio da ansiedade', 'Fim do pesadelo mental'], general: 'Amanhecer após o tormento: constatação de que os medos eram superestimados.' } },
+      { id: 'ten_of_swords', name: 'Dez de Espadas', arcana: 'minor', suit: 'swords', rank: '10', element: 'Ar', upright: { keywords: ['Fundo do poço', 'Fim definitivo', 'Aurora no horizonte'], general: 'O encerramento doloroso mas completo de uma fase pesada; o pior já passou.' }, reversed: { keywords: ['Início da recuperação', 'Renascimento após o colapso'], general: 'Levantar-se após a crise e reconstruir a vida passo a passo.' } },
+      { id: 'page_of_swords', name: 'Pajem de Espadas', arcana: 'minor', suit: 'swords', rank: 'Pajem', element: 'Ar', upright: { keywords: ['Curiosidade investigativa', 'Vigilância', 'Mente afiada'], general: 'Mente perspicaz e atenta a detalhes, que busca a verdade com agilidade.' }, reversed: { keywords: ['Vigilância invasiva', 'Espionagem', 'Sarcasmo imaturo'], general: 'Uso indiscreto de informações ou argumentos infantis e agressivos.' } },
+      { id: 'knight_of_swords', name: 'Cavaleiro de Espadas', arcana: 'minor', suit: 'swords', rank: 'Cavaleiro', element: 'Ar', upright: { keywords: ['Determinação veloz', 'Lógica incisiva', 'Coragem'], general: 'Avanço fulminante e destemido guiado pela razão e foco estrito na meta.' }, reversed: { keywords: ['Agressividade verbal', 'Precipitação impensada'], general: 'Atropelar os outros com palavras ásperas antes de ponderar os impactos.' } },
+      { id: 'queen_of_swords', name: 'Rainha de Espadas', arcana: 'minor', suit: 'swords', rank: 'Rainha', element: 'Ar', upright: { keywords: ['Discernimento lúcido', 'Verdade imparcial', 'Autonomia mental'], general: 'Sabedoria cirúrgica conquistada pela experiência; preza pela transparência total.' }, reversed: { keywords: ['Amargura cínica', 'Frieza implacável'], general: 'Uso do intelecto como escudo contra a vulnerabilidade afetiva.' } },
+      { id: 'king_of_swords', name: 'Rei de Espadas', arcana: 'minor', suit: 'swords', rank: 'Rei', element: 'Ar', upright: { keywords: ['Autoridade intelectual', 'Justiça lógica', 'Ética rigorosa'], general: 'O estrategista supremo: mente brilhante, discernimento ético e imparcialidade.' }, reversed: { keywords: ['Tirania mental', 'Frieza calculista'], general: 'Uso da inteligência para dominar, ignorando a dimensão humana e empática.' } },
+
+      // Ouros (Pentacles - Terra)
+      { id: 'ace_of_pentacles', name: 'Ás de Ouros', arcana: 'minor', suit: 'pentacles', rank: 'Ás', element: 'Terra', upright: { keywords: ['Oportunidade concreta', 'Prosperidade tangível', 'Novo investimento'], general: 'Oferta sólida de ganho material, estabilidade profissional ou segurança duradoura.' }, reversed: { keywords: ['Oportunidade perdida', 'Instabilidade material'], general: 'Hesitação que perde um negócio vantajoso ou planejamento deficiente.' } },
+      { id: 'two_of_pentacles', name: 'Dois de Ouros', arcana: 'minor', suit: 'pentacles', rank: '2', element: 'Terra', upright: { keywords: ['Equilíbrio de prioridades', 'Flexibilidade', 'Adaptação ágil'], general: 'Malabarismo habilidoso entre múltiplos compromissos e tarefas com leveza.' }, reversed: { keywords: ['Desequilíbrio financeiro', 'Sobrecarga de tarefas'], general: 'Tentar abraçar demandas demais e perder o controle da organização.' } },
+      { id: 'three_of_pentacles', name: 'Três de Ouros', arcana: 'minor', suit: 'pentacles', rank: '3', element: 'Terra', upright: { keywords: ['Trabalho em equipe', 'Mestria técnica', 'Construção sólida'], general: 'Colaboração harmoniosa de especialistas construindo algo duradouro com qualidade.' }, reversed: { keywords: ['Falta de cooperação', 'Alinhamento falho'], general: 'Dificuldade de diálogo profissional, gerando falhas na entrega.' } },
+      { id: 'four_of_pentacles', name: 'Quatro de Ouros', arcana: 'minor', suit: 'pentacles', rank: '4', element: 'Terra', upright: { keywords: ['Segurança material', 'Apego ao controle', 'Conservadorismo'], general: 'Proteção cautelosa de recursos; estabilidade assegurada com risco de apego.' }, reversed: { keywords: ['Soltar o apego', 'Gastos imprudentes', 'Generosidade'], general: 'Liberação do controle obsessivo sobre bens ou risco de desperdício.' } },
+      { id: 'five_of_pentacles', name: 'Cinco de Ouros', arcana: 'minor', suit: 'pentacles', rank: '5', element: 'Terra', upright: { keywords: ['Aperto financeiro', 'Sensação de exclusão', 'Ajuda disponível'], general: 'Fase de aperto material ou carência; lembrete de que o acolhimento está por perto.' }, reversed: { keywords: ['Recuperação financeira', 'Fim do isolamento'], general: 'Saída gradual da crise material e reencontro de estabilidade digna.' } },
+      { id: 'six_of_pentacles', name: 'Seis de Ouros', arcana: 'minor', suit: 'pentacles', rank: '6', element: 'Terra', upright: { keywords: ['Generosidade justa', 'Partilha de recursos', 'Equilíbrio dar/receber'], general: 'Circulação justa da abundância: quem tem compartilha e quem precisa recebe com gratidão.' }, reversed: { keywords: ['Dívidas pendentes', 'Caridade condicional'], general: 'Relações de poder disfarçadas de ajuda ou favores que geram dependência.' } },
+      { id: 'seven_of_pentacles', name: 'Sete de Ouros', arcana: 'minor', suit: 'pentacles', rank: '7', element: 'Terra', upright: { keywords: ['Paciência com a colheita', 'Avaliação do progresso', 'Longo prazo'], general: 'A semente foi plantada; momento de avaliar o crescimento sem colher antes da hora.' }, reversed: { keywords: ['Impaciência com resultados', 'Esforço mal direcionado'], general: 'Frustração por esperar demais ou insistência em projetos estéreis.' } },
+      { id: 'eight_of_pentacles', name: 'Oito de Ouros', arcana: 'minor', suit: 'pentacles', rank: '8', element: 'Terra', upright: { keywords: ['Dedicação minuciosa', 'Aprimoramento técnico', 'Foco no detalhe'], general: 'Compromisso diligente com a excelência; esforço contínuo que constrói maestria.' }, reversed: { keywords: ['Perfeccionismo paralisante', 'Rotina monótona'], general: 'Exaustão com tarefas repetitivas ou perda de qualidade por pressa.' } },
+      { id: 'nine_of_pentacles', name: 'Nove de Ouros', arcana: 'minor', suit: 'pentacles', rank: '9', element: 'Terra', upright: { keywords: ['Autossuficiência', 'Independência financeira', 'Refinamento'], general: 'Colheita da prosperidade e independência conquistadas pelo próprio mérito.' }, reversed: { keywords: ['Gaiola dourada', 'Superficialidade fútil'], general: 'Viver em função de aparências materiais sentindo-se vazio por dentro.' } },
+      { id: 'ten_of_pentacles', name: 'Dez de Ouros', arcana: 'minor', suit: 'pentacles', rank: '10', element: 'Terra', upright: { keywords: ['Legado duradouro', 'Segurança familiar', 'Patrimônio'], general: 'O ápice da segurança material e familiar construída a longo prazo.' }, reversed: { keywords: ['Disputas de herança', 'Conflitos patrimoniais'], general: 'Brigas familiares por bens materiais ou ameaças ao patrimônio conjunto.' } },
+      { id: 'page_of_pentacles', name: 'Pajem de Ouros', arcana: 'minor', suit: 'pentacles', rank: 'Pajem', element: 'Terra', upright: { keywords: ['Estudante dedicado', 'Nova oportunidade prática', 'Pragmatismo'], general: 'Jovem aplicado que valoriza o aprendizado prático e oportunidades concretas.' }, reversed: { keywords: ['Falta de disciplina', 'Preguiça de executar'], general: 'Sonhar com ganhos sem se dispor ao trabalho metódico inicial.' } },
+      { id: 'knight_of_pentacles', name: 'Cavaleiro de Ouros', arcana: 'minor', suit: 'pentacles', rank: 'Cavaleiro', element: 'Terra', upright: { keywords: ['Metodicidade', 'Lealdade inabalável', 'Trabalho duro', 'Eficiência'], general: 'O cavaleiro mais confiável: avança a passos firmes e entrega resultados com perfeição.' }, reversed: { keywords: ['Estagnação teimosa', 'Inflexibilidade lenta'], general: 'Lentidão excessiva ou teimosia em manter métodos ultrapassados.' } },
+      { id: 'queen_of_pentacles', name: 'Rainha de Ouros', arcana: 'minor', suit: 'pentacles', rank: 'Rainha', element: 'Terra', upright: { keywords: ['Nutrição prática', 'Conforto acolhedor', 'Gestão sábia'], general: 'Constrói um ambiente seguro, farto e acolhedor; administra recursos com carinho e sabedoria.' }, reversed: { keywords: ['Preocupação obsessiva com bens', 'Sobrecarga doméstica'], general: 'Ansiedade por medo de perder estabilidade material ou sobrecarga solitária de tarefas.' } },
+      { id: 'king_of_pentacles', name: 'Rei de Ouros', arcana: 'minor', suit: 'pentacles', rank: 'Rei', element: 'Terra', upright: { keywords: ['Mestre da matéria', 'Prosperidade sólida', 'Generosidade protetora'], general: 'Patriarca próspero que alcançou o topo material com integridade e estabilidade suprema.' }, reversed: { keywords: ['Ganância materialista', 'Avareza inflexível'], general: 'Medir o valor das coisas apenas pelo dinheiro ou apego cego a posses.' } }
+    ];
+
+    const TAROT_CARDS_MAP = new Map(TAROT_CARDS.map(c => [c.id, c]));
+
+    // =========================================================================
+    // SERVIÇOS: STORAGE, PROMPT DA IA E MOTOR DE INTERPRETAÇÃO RWS
+    // =========================================================================
+    const storageService = {
+      getReadings() {
+        try {
+          const raw = localStorage.getItem('tarot_interpreter_readings');
+          return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+          return [];
+        }
+      },
+      saveReading(reading) {
+        try {
+          const readings = this.getReadings();
+          const idx = readings.findIndex(r => r.id === reading.id);
+          if (idx >= 0) readings[idx] = reading;
+          else readings.unshift(reading);
+          localStorage.setItem('tarot_interpreter_readings', JSON.stringify(readings));
+        } catch (e) { console.error(e); }
+      },
+      deleteReading(id) {
+        try {
+          const readings = this.getReadings().filter(r => r.id !== id);
+          localStorage.setItem('tarot_interpreter_readings', JSON.stringify(readings));
+        } catch (e) { console.error(e); }
+      },
+      getApiKey() {
+        return localStorage.getItem('tarot_gemini_api_key') || '';
+      },
+      setApiKey(key) {
+        if (key && key.trim()) localStorage.setItem('tarot_gemini_api_key', key.trim());
+        else localStorage.removeItem('tarot_gemini_api_key');
+      }
+    };
+
+    function generateInterpretationPrompt(reading) {
+      const cardsDetails = reading.cards.map((item, index) => {
+        const card = TAROT_CARDS_MAP.get(item.cardId);
+        if (!card) return `${index + 1}. Carta: ${item.cardId}`;
+        const orient = item.orientation === 'upright' ? 'Normal (Em pé)' : 'Invertida';
+        const pos = item.position ? ` — Posição: "${item.position}"` : '';
+        const aspects = item.orientation === 'upright' ? card.upright : card.reversed;
+        return `Carta ${index + 1}: ${card.name} (${orient})${pos}\n  - Tipo: Arcano ${card.arcana === 'major' ? 'Maior' : `Menor (${card.suit})`} | Elemento: ${card.element}\n  - Palavras-chave: ${aspects.keywords.join(', ')}\n  - Significado simbólico: ${aspects.general}`;
+      }).join('\n\n');
+
+      return `Você é um intérprete especializado no Tarot Rider-Waite-Smith.
+Sua função é interpretar exclusivamente as cartas informadas pelo usuário.
+O usuário realizou a tiragem fisicamente. Você não sorteia cartas e não altera as cartas fornecidas.
+
+Baseie sua interpretação na tradição simbólica do Rider-Waite-Smith.
+Considere:
+- significado tradicional de cada carta;
+- simbolismo da imagem;
+- orientação normal ou invertida;
+- posição ocupada pela carta;
+- pergunta apresentada;
+- contexto fornecido;
+- relação entre todas as cartas da tiragem.
+
+Não analise cada carta de forma isolada apenas.
+Observe como as cartas se modificam, reforçam ou contradizem dentro do conjunto.
+Cartas invertidas não são automaticamente o contrário: representam bloqueio, excesso, falta, internalização, atraso ou dificuldade de manifestação.
+
+Diretrizes éticas e de linguagem:
+- Responda à pergunta do usuário sem previsões deterministas absolutas. Use linguagem proporcional ("As cartas favorecem a possibilidade de...", "A combinação sugere...").
+- Em perguntas afetivas, distinga: atração, sentimentos, intenção, comportamento, disponibilidade emocional, reciprocidade e compromisso.
+- Não invente fatos externos não sustentados pela tiragem.
+
+DADOS DA CONSULTA:
+Pergunta: "${reading.question}"
+${reading.context ? `Contexto: "${reading.context}"` : 'Contexto: Nenhum contexto adicional informado.'}
+Estilo de interpretação: ${reading.interpretationStyle}
+
+CARTAS INFORMADAS:
+${cardsDetails}
+
+ESTRUTURA DA RESPOSTA:
+1. Visão geral
+2. Carta por carta
+3. Relação entre as cartas
+4. Síntese da leitura
+5. Pontos de atenção`;
+    }
+
+    async function interpretReadingService(reading) {
+      // Delay suave para experiência mística agradável
+      await new Promise(r => setTimeout(r, 600));
+
+      const cardsDetails = reading.cards.map(rc => {
+        const card = TAROT_CARDS_MAP.get(rc.cardId);
+        const isUpright = rc.orientation === 'upright';
+        const aspects = isUpright ? card.upright : card.reversed;
+        const nuance = isUpright
+          ? 'Na posição normal, a energia se expressa de modo aberto, direto e fluido.'
+          : 'Na posição invertida, a energia pede reflexão interna, superação de bloqueios ou cuidado com excessos/atrasos.';
+
+        let contextualMeaning = `${aspects.general} `;
+        if (rc.position) {
+          contextualMeaning += `No papel de "${rc.position}", esta carta pontua como essa vibração atua especificamente nesta etapa da questão.`;
+        }
+
+        return {
+          card,
+          orientation: rc.orientation,
+          position: rc.position,
+          keywords: aspects.keywords,
+          meaning: contextualMeaning,
+          nuanceNotes: nuance,
+        };
+      });
+
+      const totalCards = reading.cards.length;
+      const majorCount = cardsDetails.filter(c => c.card.arcana === 'major').length;
+      const reversedCount = cardsDetails.filter(c => c.orientation === 'reversed').length;
+
+      const elements = { Fogo: 0, Água: 0, Ar: 0, Terra: 0 };
+      cardsDetails.forEach(c => { if (c.card.element) elements[c.card.element] = (elements[c.card.element] || 0) + 1; });
+      const dominantElement = Object.entries(elements).reduce((a, b) => b[1] > a[1] ? b : a, ['', 0]);
+
+      // 1. Visão geral
+      let overview = '';
+      if (majorCount > totalCards / 2 && totalCards > 1) {
+        overview = `A predominância de Arcanos Maiores (${majorCount} de ${totalCards} cartas) indica que a questão sobre "${reading.question}" envolve transformações profundas e lições de vida de longo alcance, indo além das circunstâncias banais do cotidiano.`;
+      } else if (majorCount === 0) {
+        overview = `A presença exclusiva de Arcanos Menores evidencia que a situação está centrada em decisões práticas, atitudes cotidianas e ajustes de conduta que estão inteiramente ao seu alcance de gestão.`;
+      } else {
+        overview = `A tiragem combina forças estruturais de longo prazo com dinâmicas práticas imediatas. A resposta à sua pergunta ("${reading.question}") desdobra-se através da clareza de intenção e de passos concretos e conscientes.`;
+      }
+
+      if (reversedCount > 0) {
+        overview += ` Há ${reversedCount} carta(s) em posição invertida, sinalizando processos internos de maturação, revisão de hábitos ou resistências que pedem acolhimento e discernimento.`;
+      }
+
+      // 3. Relação entre as cartas
+      const elementBalanceMap = {
+        Fogo: 'Predomínio de Fogo (Paus): forte impulso de ação, iniciativa e motivação para superar barreiras.',
+        Água: 'Predomínio de Água (Copas): ênfase nas trocas afetivas, intuição e sensibilidade emocional.',
+        Ar: 'Predomínio de Ar (Espadas): necessidade de clareza mental, discernimento lógico e comunicação transparente.',
+        Terra: 'Predomínio de Terra (Ouros): foco em segurança tangível, paciência, trabalho e sustentabilidade prática.'
+      };
+      const elementBalance = dominantElement[1] > 1
+        ? elementBalanceMap[dominantElement[0]]
+        : 'Equilíbrio diversificado entre os elementos, exigindo harmonização entre mente, coração e atitudes práticas.';
+
+      const majorArcanaSignificance = majorCount > 0
+        ? `Os Arcanos Maiores presentes balizam a direção ética e os princípios fundamentais da tiragem.`
+        : `A leitura mostra maleabilidade e flexibilidade de desfecho com base nas suas escolhas diretas.`;
+
+      const synergiesAndContrasts = `As cartas atuam de forma sinérgica: enquanto as energias mais dinâmicas impulsionam o movimento, as cartas de ponderação protegem contra atitudes precipitadas.`;
+      const numericalOrNarrativeFlow = `O fluxo narrativo das cartas caminha do diagnóstico atual em direção à evolução possível, reafirmando que o futuro não é estático.`;
+
+      // 4. Síntese
+      const first = cardsDetails[0];
+      const last = cardsDetails[cardsDetails.length - 1];
+      let synthesis = `Respondendo diretamente à sua pergunta: o cenário favorece o desenvolvimento positivo na medida em que houver maturidade e alinhamento de conduta. A abertura marcada por ${first.card.name} (${first.orientation === 'upright' ? 'Normal' : 'Invertida'}) e a tendência de fechamento indicada por ${last.card.name} (${last.orientation === 'upright' ? 'Normal' : 'Invertida'}) sugerem que a paciência e a transparência serão seus melhores guias.`;
+
+      if (reading.interpretationStyle === 'objective') {
+        synthesis = `Em resumo direto: evite expectativas ilusórias e mantenha a consistência de ações. As cartas indicam um caminho viável desde que haja clareza de limites e honestidade de propósitos.`;
+      } else if (reading.interpretationStyle === 'traditional') {
+        synthesis = `Seguindo a tradição Rider-Waite-Smith: os símbolos advertem contra a pressa e convidam à nobreza de intenção. Cada arcano recorda que a harmonia externa decorre do equilíbrio interior.`;
+      }
+
+      // 5. Pontos de Atenção
+      const favorable = [
+        'Disponibilidade de recursos internos e clareza para discernir escolhas.',
+        'Potencial de crescimento e aprendizado contínuo na situação.'
+      ];
+      const challenging = [
+        'Evitar conclusões precipitadas ou projeções infundadas.',
+      ];
+      if (reversedCount > 0) {
+        challenging.push('Atenção a bloqueios emocionais ou resistência em abandonar padrões antigos.');
+      }
+      const undefinedOrOpen = [
+        'O tempo de amadurecimento dos acontecimentos depende da postura de todas as partes envolvidas.',
+        'O cenário permanece aberto ao livre arbítrio e às escolhas diárias.'
+      ];
+      const attitudeDependent = [
+        'Manter comunicação transparente e honesta consigo e com os outros.',
+        'Assumir a responsabilidade pelas próprias decisões sem terceirizar o rumo da questão.'
+      ];
+
+      const reflectiveQuestions = [
+        'Qual é o primeiro passo concreto que você pode dar hoje para harmonizar essa situação?',
+        'Existe algum apego ou medo que esteja distorcendo a sua percepção dos fatos?',
+        'Como você pode equilibrar razão e sensibilidade diante deste momento?'
+      ];
+
+      return {
+        overview,
+        cardByCard: cardsDetails,
+        cardsRelationship: {
+          elementBalance,
+          majorArcanaSignificance,
+          synergiesAndContrasts,
+          numericalOrNarrativeFlow,
+        },
+        synthesis,
+        attentionPoints: { favorable, challenging, undefinedOrOpen, attitudeDependent },
+        reflectiveQuestions: reading.interpretationStyle === 'reflective' ? reflectiveQuestions : undefined,
+      };
+    }
+
+    // =========================================================================
+    // COMPONENTES DA INTERFACE
+    // =========================================================================
+
+    // Componente: Seletor Pesquisável das 78 Cartas
+    function TarotCardSelector({ selectedCardId, onSelectCard }) {
+      const [isOpen, setIsOpen] = useState(false);
+      const [searchTerm, setSearchTerm] = useState('');
+      const [activeCategory, setActiveCategory] = useState('all');
+      const dropdownRef = useRef(null);
+      const inputRef = useRef(null);
+
+      const selectedCard = useMemo(() => TAROT_CARDS_MAP.get(selectedCardId), [selectedCardId]);
+
+      useEffect(() => {
+        function handleClickOutside(e) {
+          if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+            setIsOpen(false);
+          }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+      }, []);
+
+      useEffect(() => {
+        if (isOpen && inputRef.current) inputRef.current.focus();
+      }, [isOpen]);
+
+      const filtered = useMemo(() => {
+        return TAROT_CARDS.filter(card => {
+          const match = card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            card.upright.keywords.some(k => k.toLowerCase().includes(searchTerm.toLowerCase()));
+          if (!match) return false;
+          if (activeCategory === 'all') return true;
+          if (activeCategory === 'major') return card.arcana === 'major';
+          if (activeCategory === 'wands') return card.suit === 'wands';
+          if (activeCategory === 'cups') return card.suit === 'cups';
+          if (activeCategory === 'swords') return card.suit === 'swords';
+          if (activeCategory === 'pentacles') return card.suit === 'pentacles';
+          return true;
+        });
+      }, [searchTerm, activeCategory]);
+
+      const getSuitBadge = (card) => {
+        if (card.arcana === 'major') {
+          return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500/30">Arcano Maior</span>;
+        }
+        const map = {
+          wands: { label: 'Paus • Fogo', cls: 'bg-amber-950 text-amber-300 border-amber-500/30' },
+          cups: { label: 'Copas • Água', cls: 'bg-sky-950 text-sky-300 border-sky-500/30' },
+          swords: { label: 'Espadas • Ar', cls: 'bg-slate-800 text-slate-300 border-slate-500/30' },
+          pentacles: { label: 'Ouros • Terra', cls: 'bg-emerald-950 text-emerald-300 border-emerald-500/30' },
+        };
+        const s = map[card.suit];
+        return s ? <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${s.cls}`}>{s.label}</span> : null;
+      };
+
+      return (
+        <div className="relative w-full" ref={dropdownRef}>
+          <button
+            type="button"
+            onClick={() => setIsOpen(!isOpen)}
+            className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 bg-zinc-900/90 hover:bg-zinc-800/90 text-left rounded-lg border border-zinc-700 hover:border-amber-500/50 focus:border-amber-400 outline-none transition-all shadow-sm"
+          >
+            <div className="flex items-center gap-2.5 truncate">
+              {selectedCard ? (
+                <>
+                  <span className="text-amber-300 text-sm font-semibold truncate font-serif">{selectedCard.name}</span>
+                  {getSuitBadge(selectedCard)}
+                </>
+              ) : (
+                <span className="text-zinc-500 text-sm">Selecione uma das 78 cartas...</span>
+              )}
+            </div>
+            <span className="text-zinc-400 text-xs">{isOpen ? '▲' : '▼'}</span>
+          </button>
+
+          {isOpen && (
+            <div className="absolute z-50 left-0 right-0 mt-1.5 bg-zinc-950 border border-amber-500/30 rounded-xl shadow-2xl max-h-[380px] flex flex-col overflow-hidden animate-fadeIn">
+              <div className="p-3 border-b border-zinc-800 bg-zinc-900/50">
+                <div className="relative">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Digitar nome da carta (ex: O Louco, 3 de Copas)..."
+                    className="w-full pl-8 pr-8 py-2 bg-zinc-950 border border-zinc-700 focus:border-amber-400 rounded-lg text-sm text-zinc-100 placeholder-zinc-500 outline-none"
+                  />
+                  <span className="absolute left-2.5 top-2 text-zinc-500 text-xs">🔍</span>
+                  {searchTerm && (
+                    <button type="button" onClick={() => setSearchTerm('')} className="absolute right-2.5 top-2 text-zinc-400 hover:text-zinc-200 text-xs">✕</button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto pb-1 text-xs">
+                  {[
+                    { id: 'all', label: 'Todas (78)' },
+                    { id: 'major', label: 'Maiores (22)' },
+                    { id: 'wands', label: 'Paus' },
+                    { id: 'cups', label: 'Copas' },
+                    { id: 'swords', label: 'Espadas' },
+                    { id: 'pentacles', label: 'Ouros' },
+                  ].map(cat => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setActiveCategory(cat.id)}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-medium whitespace-nowrap transition-all ${
+                        activeCategory === cat.id ? 'bg-amber-500 text-zinc-950 font-bold' : 'bg-zinc-800/80 text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="overflow-y-auto max-h-[260px] divide-y divide-zinc-900/60 p-1">
+                {filtered.length === 0 ? (
+                  <div className="py-8 text-center text-zinc-500 text-sm">Nenhuma carta encontrada para "{searchTerm}".</div>
+                ) : (
+                  filtered.map(card => {
+                    const isSelected = card.id === selectedCardId;
+                    return (
+                      <button
+                        key={card.id}
+                        type="button"
+                        onClick={() => { onSelectCard(card.id); setIsOpen(false); setSearchTerm(''); }}
+                        className={`w-full flex items-center justify-between gap-3 p-2.5 rounded-lg text-left transition-colors ${
+                          isSelected ? 'bg-amber-500/20 text-amber-200 border-l-2 border-amber-400' : 'hover:bg-zinc-900 text-zinc-200'
+                        }`}
+                      >
+                        <div className="flex flex-col gap-0.5 truncate">
+                          <span className="font-serif font-medium text-sm text-zinc-100">{card.name}</span>
+                          <span className="text-[11px] text-zinc-400 truncate">{card.upright.keywords.slice(0, 3).join(' • ')}</span>
+                        </div>
+                        <div>{getSuitBadge(card)}</div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Componente: Card da Carta na Tiragem
+    function ReadingCardItem({ index, readingCard, onUpdateCard, onRemoveCard, canRemove }) {
+      const cardData = TAROT_CARDS_MAP.get(readingCard.cardId);
+
+      return (
+        <div className="p-4 md:p-5 rounded-xl bg-zinc-900/70 border border-zinc-800 hover:border-amber-500/30 transition-all shadow-md">
+          <div className="flex items-center justify-between gap-3 mb-3.5 pb-2.5 border-b border-zinc-800">
+            <div className="flex items-center gap-2">
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold font-serif">
+                {index + 1}
+              </span>
+              <h4 className="text-sm font-semibold text-zinc-200 font-serif">Carta {index + 1}</h4>
+            </div>
+            {canRemove && (
+              <button
+                type="button"
+                onClick={() => onRemoveCard(index)}
+                className="text-xs text-zinc-500 hover:text-rose-400 hover:bg-rose-950/40 px-2.5 py-1 rounded-md transition-colors"
+              >
+                🗑️ Remover
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5">
+            <div className="md:col-span-6">
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                Carta <span className="text-amber-400">*</span>
+              </label>
+              <TarotCardSelector
+                selectedCardId={readingCard.cardId}
+                onSelectCard={(id) => onUpdateCard(index, { ...readingCard, cardId: id })}
+              />
+            </div>
+
+            <div className="md:col-span-3">
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Orientação</label>
+              <div className="grid grid-cols-2 gap-1.5 p-1 bg-zinc-950 rounded-lg border border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => onUpdateCard(index, { ...readingCard, orientation: 'upright' })}
+                  className={`py-1.5 px-2 rounded text-xs font-medium transition-all text-center flex items-center justify-center gap-1 ${
+                    readingCard.orientation === 'upright' ? 'bg-amber-500 text-zinc-950 font-bold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <span>⬆️ Normal</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onUpdateCard(index, { ...readingCard, orientation: 'reversed' })}
+                  className={`py-1.5 px-2 rounded text-xs font-medium transition-all text-center flex items-center justify-center gap-1 ${
+                    readingCard.orientation === 'reversed' ? 'bg-purple-900 text-purple-200 font-bold border border-purple-500/40 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <span>🔄 Invertida</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="md:col-span-3">
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                Posição na tiragem <span className="text-zinc-500 text-[10px]">(opcional)</span>
+              </label>
+              <input
+                type="text"
+                value={readingCard.position || ''}
+                onChange={(e) => onUpdateCard(index, { ...readingCard, position: e.target.value })}
+                placeholder="Ex.: situação atual, desafio, conselho..."
+                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 focus:border-amber-400 rounded-lg text-xs text-zinc-100 placeholder-zinc-600 outline-none"
+              />
+            </div>
+          </div>
+
+          {cardData && (
+            <div className="mt-3 pt-2.5 border-t border-zinc-800/50 flex items-center gap-2 flex-wrap text-xs text-zinc-400">
+              <span className="text-[11px] text-zinc-500 font-medium">
+                {readingCard.orientation === 'upright' ? 'Aspectos normais:' : 'Aspectos invertidos:'}
+              </span>
+              {(readingCard.orientation === 'upright' ? cardData.upright.keywords : cardData.reversed.keywords).slice(0, 4).map((kw, i) => (
+                <span key={i} className="px-2 py-0.5 rounded bg-zinc-950 border border-zinc-800 text-zinc-300 text-[11px]">{kw}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Componente: Resumo Visual das Cartas
+    function ReadingSummary({ cards }) {
+      return (
+        <div className="flex flex-wrap gap-2.5 items-center">
+          {cards.map((item, index) => {
+            const card = TAROT_CARDS_MAP.get(item.cardId);
+            if (!card) return null;
+            const isUpright = item.orientation === 'upright';
+            return (
+              <div key={index} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 shadow-sm">
+                <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center text-[10px] font-bold font-serif">{index + 1}</span>
+                <span className="text-xs font-semibold text-zinc-100 font-serif">{card.name}</span>
+                <span className="text-zinc-600 text-xs">•</span>
+                <span className={`text-[11px] font-medium px-1.5 py-0.2 rounded ${isUpright ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30' : 'bg-purple-900/40 text-purple-300 border border-purple-500/30'}`}>
+                  {isUpright ? 'Normal' : 'Invertida'}
+                </span>
+                {item.position && (
+                  <>
+                    <span className="text-zinc-600 text-xs">•</span>
+                    <span className="text-[11px] text-zinc-400 italic">{item.position}</span>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // PÁGINA: NOVA INTERPRETAÇÃO
+    // =========================================================================
+    function NewReadingPage({ onReadingComplete }) {
+      const [question, setQuestion] = useState('');
+      const [context, setContext] = useState('');
+      const [cards, setCards] = useState([{ cardId: 'fool', orientation: 'upright', position: '' }]);
+      const [style, setStyle] = useState('detailed');
+      const [validationError, setValidationError] = useState(null);
+      const [isLoading, setIsLoading] = useState(false);
+
+      const handleAddCard = () => {
+        setCards([...cards, { cardId: '', orientation: 'upright', position: '' }]);
+        setValidationError(null);
+      };
+
+      const handleUpdateCard = (idx, updated) => {
+        const next = [...cards];
+        next[idx] = updated;
+        setCards(next);
+        setValidationError(null);
+      };
+
+      const handleRemoveCard = (idx) => {
+        if (cards.length <= 1) return;
+        setCards(cards.filter((_, i) => i !== idx));
+      };
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!question.trim()) {
+          setValidationError('Por favor, informe a sua pergunta para orientar a interpretação.');
+          return;
+        }
+        const unselected = cards.findIndex(c => !c.cardId || c.cardId.trim() === '');
+        if (unselected !== -1) {
+          setValidationError(`Por favor, selecione qual carta você tirou para a Carta ${unselected + 1}.`);
+          return;
+        }
+
+        setValidationError(null);
+        setIsLoading(true);
+
+        try {
+          const readingId = 'reading_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+          const createdAt = new Date().toISOString();
+          const rawReading = {
+            id: readingId,
+            question: question.trim(),
+            context: context.trim() ? context.trim() : undefined,
+            cards,
+            interpretationStyle: style,
+            createdAt,
+          };
+
+          const rawPrompt = generateInterpretationPrompt(rawReading);
+          rawReading.rawAiPrompt = rawPrompt;
+
+          const interp = await interpretReadingService(rawReading);
+          rawReading.structuredInterpretation = interp;
+
+          storageService.saveReading(rawReading);
+          onReadingComplete(rawReading);
+        } catch (err) {
+          console.error(err);
+          alert('Erro ao processar a tiragem. Tente novamente.');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const styleOptions = [
+        { id: 'detailed', label: 'Detalhada', desc: 'Explica cada carta individualmente e depois analisa a combinação aprofundada.', icon: '📖' },
+        { id: 'objective', label: 'Objetiva', desc: 'Resposta mais curta, prática e direta ao cerne da questão.', icon: '🎯' },
+        { id: 'traditional', label: 'Tradicional', desc: 'Prioriza os significados clássicos do Rider-Waite-Smith.', icon: '🏛️' },
+        { id: 'reflective', label: 'Reflexiva', desc: 'Apresenta a interpretação e formula perguntas reflexivas para o consulente.', icon: '🪞' },
+      ];
+
+      return (
+        <div className="space-y-8 animate-fadeIn max-w-4xl mx-auto">
+          <div className="text-center space-y-3 pt-2 pb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold">
+              <span>🔮</span>
+              <span>Interpretação Rider-Waite-Smith</span>
+            </div>
+            <h1 className="text-2xl md:text-4xl font-extrabold font-serif text-zinc-100 tracking-wide">
+              Nova Interpretação de Tarot
+            </h1>
+            <p className="text-xs md:text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              Tire suas cartas com o seu baralho físico e informe-as abaixo. O aplicativo analisa a combinação, orientações e posições segundo a tradição simbólica clássica do Rider-Waite.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-7">
+            {/* Pergunta */}
+            <div className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl">
+              <label className="block text-sm font-semibold text-amber-100 mb-2 font-serif flex items-center justify-between">
+                <span>Qual é a sua pergunta? <span className="text-amber-400">*</span></span>
+                <span className="text-[11px] font-normal text-zinc-500">Obrigatório</span>
+              </label>
+              <textarea
+                rows={3}
+                value={question}
+                onChange={(e) => { setQuestion(e.target.value); if (validationError) setValidationError(null); }}
+                placeholder="Como tende a evoluir minha relação com essa pessoa?"
+                className="w-full p-3.5 bg-zinc-900 border border-zinc-700 focus:border-amber-400 focus:ring-1 focus:ring-amber-400/40 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 outline-none leading-relaxed resize-y"
+              />
+            </div>
+
+            {/* Contexto */}
+            <div className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-zinc-800 shadow-xl">
+              <label className="block text-sm font-semibold text-zinc-200 mb-2 font-serif flex items-center justify-between">
+                <span>Contexto adicional</span>
+                <span className="text-[11px] font-normal text-zinc-500">Opcional</span>
+              </label>
+              <textarea
+                rows={2}
+                value={context}
+                onChange={(e) => setContext(e.target.value)}
+                placeholder="Adicione informações que podem ajudar na interpretação. Não é necessário informar nomes reais."
+                className="w-full p-3.5 bg-zinc-900 border border-zinc-700 focus:border-amber-400 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 outline-none leading-relaxed resize-y"
+              />
+            </div>
+
+            {/* Cartas */}
+            <div className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+                <div>
+                  <h3 className="text-base font-bold text-amber-100 font-serif">Cartas da tiragem</h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">Informe as cartas que você tirou fisicamente com o seu baralho.</p>
+                </div>
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                  {cards.length} {cards.length === 1 ? 'carta' : 'cartas'}
+                </span>
+              </div>
+
+              <div className="space-y-3.5">
+                {cards.map((card, idx) => (
+                  <ReadingCardItem
+                    key={idx}
+                    index={idx}
+                    readingCard={card}
+                    onUpdateCard={handleUpdateCard}
+                    onRemoveCard={handleRemoveCard}
+                    canRemove={cards.length > 1}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAddCard}
+                className="w-full py-3 px-4 rounded-xl border border-dashed border-zinc-700 hover:border-amber-400/60 bg-zinc-900/40 hover:bg-amber-500/5 text-zinc-300 hover:text-amber-200 text-xs md:text-sm font-medium transition-all flex items-center justify-center gap-2 group"
+              >
+                <span>➕ Adicionar carta</span>
+              </button>
+            </div>
+
+            {/* Estilo */}
+            <div className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-zinc-800 shadow-xl">
+              <h3 className="text-sm font-bold text-amber-100 mb-1 font-serif">Estilo da interpretação</h3>
+              <p className="text-xs text-zinc-400 mb-4">Escolha o tom e a profundidade para a análise.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {styleOptions.map((opt) => {
+                  const isSelected = style === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setStyle(opt.id)}
+                      className={`p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between ${
+                        isSelected ? 'bg-amber-500/15 border-amber-400 text-amber-200 shadow-md ring-1 ring-amber-400/40' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-700'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span>{opt.icon}</span>
+                          <span className={`text-sm font-bold font-serif ${isSelected ? 'text-amber-300' : 'text-zinc-200'}`}>{opt.label}</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-400 leading-relaxed">{opt.desc}</p>
+                      </div>
+                      {isSelected && <span className="text-[10px] font-bold text-amber-400 mt-2.5">✓ Selecionado</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Alerta de Validação */}
+            {validationError && (
+              <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-200 text-xs md:text-sm flex items-center gap-3 animate-shake">
+                <span className="text-lg">⚠️</span>
+                <span>{validationError}</span>
+              </div>
+            )}
+
+            {/* Botão de Envio */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-serif font-bold text-base md:text-lg tracking-wide shadow-xl shadow-amber-950/40 active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-zinc-950/20 border-t-zinc-950 rounded-full animate-spin"></div>
+                    <span>Decodificando simbolismos da tiragem...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xl">✨</span>
+                    <span>Interpretar tiragem</span>
+                  </>
+                )}
+              </button>
+              <p className="text-center text-xs text-zinc-400 mt-2.5">
+                Interpretação baseada na tradição clássica Rider-Waite-Smith • Sem sorteios automatizados
+              </p>
+            </div>
+          </form>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // PÁGINA: RESULTADO DA INTERPRETAÇÃO (AS 5 SEÇÕES)
+    // =========================================================================
+    function ReadingResultPage({ reading, onNewReading, onGoToHistory }) {
+      const [copied, setCopied] = useState(false);
+      const [showPrompt, setShowPrompt] = useState(false);
+      const interp = reading.structuredInterpretation;
+
+      if (!interp) return <div className="p-8 text-center text-zinc-400">Leitura não encontrada.</div>;
+
+      const handleCopy = () => {
+        const text = `🔮 LEITURA DE TAROT (RWS)\nPergunta: "${reading.question}"\n\n1. VISÃO GERAL:\n${interp.overview}\n\n4. SÍNTESE:\n${interp.synthesis}`;
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      };
+
+      const formattedDate = new Date(reading.createdAt).toLocaleString('pt-BR', {
+        day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+
+      return (
+        <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn pb-12">
+          {/* Top Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-zinc-950 border border-zinc-800">
+            <div className="flex items-center gap-2 text-xs text-zinc-400">
+              <span>📅</span>
+              <span>{formattedDate}</span>
+              <span className="text-zinc-600">•</span>
+              <span className="text-amber-400 capitalize">Estilo {reading.interpretationStyle}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-900 text-zinc-200 border border-zinc-700 hover:border-amber-500/40 transition-all"
+              >
+                {copied ? '✓ Copiado!' : '📋 Copiar leitura'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowPrompt(true)}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-900 text-zinc-300 border border-zinc-700 hover:border-amber-500/40 transition-all"
+              >
+                🤖 Prompt da IA
+              </button>
+              <button
+                type="button"
+                onClick={onNewReading}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-zinc-950 hover:bg-amber-400 transition-all"
+              >
+                ✨ Nova tiragem
+              </button>
+            </div>
+          </div>
+
+          {/* Pergunta e Contexto */}
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 border border-amber-500/30 shadow-2xl space-y-4">
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400/90 font-mono">Sua pergunta</span>
+              <h2 className="text-xl md:text-2xl font-bold font-serif text-zinc-100 mt-1 leading-snug">
+                "{reading.question}"
+              </h2>
+            </div>
+
+            {reading.context && (
+              <div className="pt-3 border-t border-zinc-800">
+                <span className="text-[11px] font-semibold text-zinc-400 block mb-1">Contexto adicional:</span>
+                <p className="text-xs md:text-sm text-zinc-300 italic bg-zinc-950 p-3 rounded-lg border border-zinc-800">
+                  {reading.context}
+                </p>
+              </div>
+            )}
+
+            <div className="pt-3 border-t border-zinc-800">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-2 font-mono">
+                Cartas da tiragem ({reading.cards.length})
+              </span>
+              <ReadingSummary cards={reading.cards} />
+            </div>
+          </div>
+
+          {/* 1. VISÃO GERAL */}
+          <section className="p-6 md:p-7 rounded-2xl bg-zinc-950 border border-amber-500/25 shadow-xl space-y-2">
+            <div className="flex items-center gap-2.5 mb-2">
+              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-serif font-bold text-xs">1</span>
+              <h3 className="text-lg font-bold font-serif text-amber-200">Visão geral</h3>
+            </div>
+            <p className="text-sm md:text-base text-zinc-200 leading-relaxed">{interp.overview}</p>
+          </section>
+
+          {/* 2. CARTA POR CARTA */}
+          <section className="p-6 md:p-7 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl space-y-5">
+            <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-800">
+              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-serif font-bold text-xs">2</span>
+              <div>
+                <h3 className="text-lg font-bold font-serif text-amber-200">Carta por carta</h3>
+                <p className="text-xs text-zinc-400">Significado contextualizado no cenário da pergunta.</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {interp.cardByCard.map((item, idx) => {
+                const isUpright = item.orientation === 'upright';
+                return (
+                  <div key={idx} className="p-5 rounded-xl bg-zinc-900/80 border border-zinc-800 hover:border-amber-500/30 transition-all space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-6 h-6 rounded-full bg-zinc-800 text-zinc-300 flex items-center justify-center text-xs font-serif font-bold">{idx + 1}</span>
+                        <h4 className="text-base font-bold text-zinc-100 font-serif">{item.card.name}</h4>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${isUpright ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' : 'bg-purple-900/40 text-purple-300 border-purple-500/40'}`}>
+                          {isUpright ? '⬆️ Normal' : '🔄 Invertida'}
+                        </span>
+                        {item.position && (
+                          <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                            Posição: {item.position}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {item.keywords.map((kw, i) => (
+                        <span key={i} className="px-2 py-0.5 rounded bg-zinc-950 text-zinc-400 text-[11px] border border-zinc-800">{kw}</span>
+                      ))}
+                    </div>
+
+                    <p className="text-xs md:text-sm text-zinc-200 leading-relaxed pt-1">{item.meaning}</p>
+                    {item.nuanceNotes && (
+                      <p className="text-[11px] text-zinc-400 italic pt-1 border-t border-zinc-800">
+                        💡 <span className="font-semibold text-zinc-300">Nuance RWS:</span> {item.nuanceNotes}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* 3. RELAÇÃO ENTRE AS CARTAS */}
+          <section className="p-6 md:p-7 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl space-y-4">
+            <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-800">
+              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-serif font-bold text-xs">3</span>
+              <div>
+                <h3 className="text-lg font-bold font-serif text-amber-200">Relação entre as cartas</h3>
+                <p className="text-xs text-zinc-400">Equilíbrio elemental, arcanos maiores e dinâmicas conjuntas.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+              <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 space-y-1.5">
+                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-wider font-mono">Equilíbrio Elemental</h5>
+                <p className="text-xs text-zinc-300 leading-relaxed">{interp.cardsRelationship.elementBalance}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 space-y-1.5">
+                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-wider font-mono">Arcanos Maiores & Estrutura</h5>
+                <p className="text-xs text-zinc-300 leading-relaxed">{interp.cardsRelationship.majorArcanaSignificance}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 md:col-span-2 space-y-1.5">
+                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-wider font-mono">Sinergias e Contrastes</h5>
+                <p className="text-xs text-zinc-300 leading-relaxed">{interp.cardsRelationship.synergiesAndContrasts}</p>
+              </div>
+            </div>
+          </section>
+
+          {/* 4. SÍNTESE DA LEITURA */}
+          <section className="p-6 md:p-7 rounded-2xl bg-gradient-to-r from-amber-950/40 via-zinc-950 to-amber-950/40 border border-amber-500/40 shadow-2xl space-y-3">
+            <div className="flex items-center gap-2.5">
+              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500 text-zinc-950 font-serif font-bold text-xs">4</span>
+              <h3 className="text-lg font-bold font-serif text-amber-100">Síntese da leitura</h3>
+            </div>
+            <p className="text-sm md:text-base text-zinc-100 font-serif leading-relaxed italic">
+              "{interp.synthesis}"
+            </p>
+          </section>
+
+          {/* 5. PONTOS DE ATENÇÃO */}
+          <section className="p-6 md:p-7 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl space-y-5">
+            <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-800">
+              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-serif font-bold text-xs">5</span>
+              <div>
+                <h3 className="text-lg font-bold font-serif text-amber-200">Pontos de atenção</h3>
+                <p className="text-xs text-zinc-400">Aspectos para orientar escolhas e atitudes conscientes.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-800/40 space-y-2">
+                <h4 className="text-xs font-bold text-emerald-300 uppercase tracking-wider font-mono">🌿 Aspectos Favoráveis</h4>
+                <ul className="space-y-1.5 text-xs text-emerald-100/90 list-disc list-inside">
+                  {interp.attentionPoints.favorable.map((item, i) => <li key={i}>{item}</li>)}
+                </ul>
+              </div>
+
+              <div className="p-4 rounded-xl bg-rose-950/30 border border-rose-800/40 space-y-2">
+                <h4 className="text-xs font-bold text-rose-300 uppercase tracking-wider font-mono">⚡ Desafios & Cuidados</h4>
+                <ul className="space-y-1.5 text-xs text-rose-100/90 list-disc list-inside">
+                  {interp.attentionPoints.challenging.map((item, i) => <li key={i}>{item}</li>)}
+                </ul>
+              </div>
+
+              <div className="p-4 rounded-xl bg-sky-950/30 border border-sky-800/40 space-y-2">
+                <h4 className="text-xs font-bold text-sky-300 uppercase tracking-wider font-mono">🌊 Em Aberto / Indefinidos</h4>
+                <ul className="space-y-1.5 text-xs text-sky-100/90 list-disc list-inside">
+                  {interp.attentionPoints.undefinedOrOpen.map((item, i) => <li key={i}>{item}</li>)}
+                </ul>
+              </div>
+
+              <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-800/40 space-y-2">
+                <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider font-mono">🧭 Dependentes da sua Postura</h4>
+                <ul className="space-y-1.5 text-xs text-amber-100/90 list-disc list-inside">
+                  {interp.attentionPoints.attitudeDependent.map((item, i) => <li key={i}>{item}</li>)}
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* Perguntas Reflexivas se houver */}
+          {interp.reflectiveQuestions && (
+            <section className="p-6 rounded-2xl bg-purple-950/30 border border-purple-500/30 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🪞</span>
+                <h3 className="text-base font-bold font-serif text-purple-200">Perguntas para auto-reflexão</h3>
+              </div>
+              <div className="space-y-2">
+                {interp.reflectiveQuestions.map((q, i) => (
+                  <div key={i} className="p-3 bg-zinc-950/80 rounded-lg border border-purple-900/50 text-xs md:text-sm text-purple-100">{q}</div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Botões Finais */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <button
+              type="button"
+              onClick={onNewReading}
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 font-serif font-bold text-sm shadow-lg hover:from-amber-400 hover:to-amber-500 transition-all flex items-center justify-center gap-2"
+            >
+              <span>✨ Fazer nova interpretação</span>
+            </button>
+            <button
+              type="button"
+              onClick={onGoToHistory}
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-zinc-900 text-zinc-300 border border-zinc-700 hover:bg-zinc-800 text-sm font-medium transition-all"
+            >
+              📜 Ver histórico
+            </button>
+          </div>
+
+          {/* Modal do Prompt */}
+          {showPrompt && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+              <div className="bg-zinc-950 border border-amber-500/40 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+                <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50">
+                  <h4 className="font-serif font-bold text-amber-200 text-sm">Prompt Estruturado de IA</h4>
+                  <button onClick={() => setShowPrompt(false)} className="text-zinc-400 hover:text-zinc-100">✕</button>
+                </div>
+                <div className="p-4 overflow-y-auto font-mono text-xs text-zinc-300 bg-zinc-950 leading-relaxed whitespace-pre-wrap select-all">
+                  {generateInterpretationPrompt(reading)}
+                </div>
+                <div className="p-3 border-t border-zinc-800 flex justify-end gap-2">
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(generateInterpretationPrompt(reading)); alert('Prompt copiado!'); }}
+                    className="px-4 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-semibold"
+                  >
+                    Copiar Prompt
+                  </button>
+                  <button onClick={() => setShowPrompt(false)} className="px-4 py-1.5 rounded-lg bg-zinc-800 text-zinc-200 text-xs font-semibold">
+                    Fechar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // PÁGINA: HISTÓRICO
+    // =========================================================================
+    function HistoryPage({ onSelectReading, onNewReading }) {
+      const [readings, setReadings] = useState([]);
+      const [searchTerm, setSearchTerm] = useState('');
+
+      const load = () => setReadings(storageService.getReadings());
+      useEffect(() => { load(); }, []);
+
+      const handleDelete = (id, e) => {
+        e.stopPropagation();
+        if (window.confirm('Excluir esta leitura do histórico?')) {
+          storageService.deleteReading(id);
+          load();
+        }
+      };
+
+      const filtered = useMemo(() => {
+        if (!searchTerm.trim()) return readings;
+        const term = searchTerm.toLowerCase();
+        return readings.filter(r => r.question.toLowerCase().includes(term) || (r.context && r.context.toLowerCase().includes(term)));
+      }, [readings, searchTerm]);
+
+      return (
+        <div className="max-w-4xl mx-auto space-y-7 animate-fadeIn pb-12">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold font-serif text-zinc-100 flex items-center gap-2.5">
+                <span>📜</span>
+                <span>Histórico de Leituras</span>
+              </h1>
+              <p className="text-xs md:text-sm text-zinc-400 mt-1">Revisite suas tiragens salvas localmente.</p>
+            </div>
+            <button
+              onClick={onNewReading}
+              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-serif font-bold text-xs md:text-sm shadow-md transition-all flex items-center gap-2"
+            >
+              <span>✨ Nova interpretação</span>
+            </button>
+          </div>
+
+          {readings.length > 0 && (
+            <div className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por pergunta ou contexto..."
+                className="w-full pl-9 pr-4 py-2.5 bg-zinc-950 border border-zinc-800 focus:border-amber-400 rounded-xl text-xs md:text-sm text-zinc-100 placeholder-zinc-500 outline-none"
+              />
+              <span className="absolute left-3 top-3 text-zinc-500 text-xs">🔍</span>
+            </div>
+          )}
+
+          {filtered.length === 0 ? (
+            <div className="text-center py-16 px-4 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-4">
+              <span className="text-4xl block">🎴</span>
+              <h3 className="text-lg font-bold font-serif text-zinc-200">
+                {readings.length === 0 ? 'Nenhuma leitura salva ainda' : 'Nenhuma leitura encontrada'}
+              </h3>
+              <p className="text-xs md:text-sm text-zinc-400 max-w-md mx-auto">
+                {readings.length === 0 ? 'Faça sua tiragem física e cadastre as cartas na página de Nova Interpretação.' : 'Tente buscar com outros termos.'}
+              </p>
+              {readings.length === 0 && (
+                <button
+                  onClick={onNewReading}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 text-zinc-950 font-serif font-bold text-xs md:text-sm shadow-md"
+                >
+                  <span>✨ Iniciar primeira interpretação</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filtered.map(reading => {
+                const dateStr = new Date(reading.createdAt).toLocaleString('pt-BR', {
+                  day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+                return (
+                  <div
+                    key={reading.id}
+                    onClick={() => onSelectReading(reading)}
+                    className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-amber-500/40 transition-all cursor-pointer shadow-lg space-y-4 group"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2 text-zinc-400">
+                        <span>📅 {dateStr}</span>
+                        <span className="text-zinc-600">•</span>
+                        <span className="text-amber-400/90 font-medium capitalize">Estilo {reading.interpretationStyle}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => handleDelete(reading.id, e)}
+                        className="text-zinc-500 hover:text-rose-400 px-2 py-1 rounded text-xs transition-colors"
+                      >
+                        🗑️ Excluir
+                      </button>
+                    </div>
+
+                    <div>
+                      <h3 className="text-base md:text-lg font-bold font-serif text-zinc-100 group-hover:text-amber-200 transition-colors leading-snug">
+                        "{reading.question}"
+                      </h3>
+                      {reading.context && <p className="text-xs text-zinc-400 italic line-clamp-1 mt-1">Contexto: {reading.context}</p>}
+                    </div>
+
+                    <div className="pt-2 border-t border-zinc-800 flex items-center justify-between gap-4 flex-wrap">
+                      <ReadingSummary cards={reading.cards} />
+                      <span className="text-xs font-bold text-amber-400 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                        <span>Ver interpretação</span>
+                        <span>→</span>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // APP PRINCIPAL
+    // =========================================================================
+    function App() {
+      const [tab, setTab] = useState('new');
+      const [currentReading, setCurrentReading] = useState(null);
+      const [savedCount, setSavedCount] = useState(0);
+
+      const updateCount = () => setSavedCount(storageService.getReadings().length);
+      useEffect(() => { updateCount(); }, [tab]);
+
+      const handleComplete = (reading) => {
+        setCurrentReading(reading);
+        setTab('result');
+        updateCount();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      const handleSelectHistory = (reading) => {
+        setCurrentReading(reading);
+        setTab('result');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      return (
+        <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans">
+          {/* Header */}
+          <header className="sticky top-0 z-40 bg-zinc-950/90 backdrop-blur-md border-b border-amber-500/20 px-4 lg:px-8 py-3.5 shadow-lg shadow-black/40">
+            <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+              <button onClick={() => setTab('new')} className="flex items-center gap-3 text-left">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400/20 via-amber-600/20 to-zinc-900 border border-amber-400/40 flex items-center justify-center">
+                  <span className="text-xl">🎴</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-serif font-bold text-lg text-amber-100 tracking-wide">Tarot Interpreter</span>
+                    <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">RWS</span>
+                  </div>
+                  <p className="text-xs text-zinc-400 hidden sm:block">Sistema Rider-Waite-Smith • Tiragem Física</p>
+                </div>
+              </button>
+
+              <nav className="flex items-center gap-2">
+                <button
+                  onClick={() => setTab('new')}
+                  className={`px-3.5 py-2 rounded-lg text-xs md:text-sm font-medium transition-all flex items-center gap-1.5 ${
+                    tab === 'new' ? 'bg-amber-500/15 text-amber-200 border border-amber-500/40' : 'text-zinc-300 hover:text-amber-100'
+                  }`}
+                >
+                  <span>✨ Nova interpretação</span>
+                </button>
+                <button
+                  onClick={() => setTab('history')}
+                  className={`px-3.5 py-2 rounded-lg text-xs md:text-sm font-medium transition-all flex items-center gap-2 ${
+                    tab === 'history' ? 'bg-amber-500/15 text-amber-200 border border-amber-500/40' : 'text-zinc-300 hover:text-amber-100'
+                  }`}
+                >
+                  <span>📜 Histórico</span>
+                  {savedCount > 0 && (
+                    <span className="px-1.5 py-0.2 text-[11px] font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      {savedCount}
+                    </span>
+                  )}
+                </button>
+              </nav>
+            </div>
+          </header>
+
+          {/* Conteúdo */}
+          <main className="flex-1 max-w-6xl w-full mx-auto px-4 lg:px-8 py-6 md:py-10">
+            {tab === 'new' && <NewReadingPage onReadingComplete={handleComplete} />}
+            {tab === 'result' && currentReading && (
+              <ReadingResultPage
+                reading={currentReading}
+                onNewReading={() => setTab('new')}
+                onGoToHistory={() => setTab('history')}
+              />
+            )}
+            {tab === 'history' && (
+              <HistoryPage
+                onSelectReading={handleSelectHistory}
+                onNewReading={() => setTab('new')}
+              />
+            )}
+          </main>
+
+          {/* Footer */}
+          <footer className="mt-auto border-t border-zinc-900 bg-zinc-950 py-6 px-4 text-center text-xs text-zinc-400 space-y-1.5">
+            <p className="font-serif text-zinc-300">Tarot Interpreter — Interpretação Simbólica Tradicional Rider-Waite-Smith</p>
+            <p className="text-[11px] text-zinc-400">
+              Uso ético e reflexivo • Sem simulações ou sorteios automatizados • As cartas iluminam possibilidades e reflexões conscientes.
+            </p>
+          </footer>
+        </div>
+      );
+    }
+
+    // Renderização no DOM
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
