@@ -12,6 +12,7 @@ export const App: React.FC = () => {
   const [currentReading, setCurrentReading] = useState<TarotReading | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
+  const [newReadingKey, setNewReadingKey] = useState(Date.now());
 
   const refreshSavedCount = () => {
     setSavedCount(storageService.getReadings().length);
@@ -35,6 +36,7 @@ export const App: React.FC = () => {
   };
 
   const handleNewReading = () => {
+    setNewReadingKey(Date.now());
     setActiveTab('new');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -60,7 +62,11 @@ export const App: React.FC = () => {
       {/* Conteúdo Principal */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 lg:px-8 py-6 md:py-10">
         {activeTab === 'new' && (
-          <NewReading onReadingComplete={handleReadingComplete} />
+          <NewReading
+            key={newReadingKey}
+            onReadingComplete={handleReadingComplete}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+          />
         )}
 
         {activeTab === 'result' && currentReading && (

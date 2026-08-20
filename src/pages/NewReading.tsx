@@ -10,9 +10,10 @@ import { storageService } from '../services/storage';
 
 interface NewReadingProps {
   onReadingComplete: (reading: TarotReading) => void;
+  onOpenSettings?: () => void;
 }
 
-export const NewReading: React.FC<NewReadingProps> = ({ onReadingComplete }) => {
+export const NewReading: React.FC<NewReadingProps> = ({ onReadingComplete, onOpenSettings }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFormSubmit = async (
@@ -95,7 +96,7 @@ export const NewReading: React.FC<NewReadingProps> = ({ onReadingComplete }) => 
       </div>
 
       {/* Formulário Principal */}
-      <ReadingForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+      <ReadingForm onSubmit={handleFormSubmit} isLoading={isLoading} onOpenSettings={onOpenSettings} />
     </div>
   );
 };

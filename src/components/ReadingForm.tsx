@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ReadingCard, InterpretationStyle, TarotReading, InputMode } from '../types/tarot';
 import { ReadingCardItem } from './ReadingCardItem';
 import { PhotoUploader } from './PhotoUploader';
+import { storageService } from '../services/storage';
 
 interface ReadingFormProps {
   onSubmit: (readingData: Omit<TarotReading, 'id' | 'createdAt'>) => void;
   isLoading: boolean;
+  onOpenSettings?: () => void;
 }
 
-export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading }) => {
-  const [inputMode, setInputMode] = useState<InputMode>('manual');
+export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading, onOpenSettings }) => {
+  const [inputMode, setInputMode] = useState<InputMode>('photo');
   const [question, setQuestion] = useState('');
   const [context, setContext] = useState('');
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
@@ -19,6 +21,12 @@ export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading })
   const [interpretationStyle, setInterpretationStyle] =
     useState<InterpretationStyle>('detailed');
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [hasApiKey, setHasApiKey] = useState(false);
+
+  useEffect(() => {
+    const key = storageService.getApiKey();
+    setHasApiKey(Boolean(key && key.trim().length > 10));
+  }, []);
 
   // Manipulação da lista de cartas manuais
   const handleAddCard = () => {
@@ -112,19 +120,6 @@ export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading })
       <div className="flex items-center justify-center p-1.5 bg-zinc-900/90 rounded-2xl border border-zinc-800 max-w-md mx-auto shadow-lg">
         <button
           type="button"
-          onClick={() => { setInputMode('manual'); setValidationError(null); }}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-            inputMode === 'manual'
-              ? 'bg-amber-500 text-zinc-950 font-serif font-bold shadow-md'
-              : 'text-zinc-400 hover:text-zinc-200'
-          }`}
-        >
-          <span>✍️</span>
-          <span>Seleção Manual</span>
-        </button>
-
-        <button
-          type="button"
           onClick={() => { setInputMode('photo'); setValidationError(null); }}
           className={`flex-1 py-2.5 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
             inputMode === 'photo'
@@ -134,6 +129,19 @@ export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading })
         >
           <span>📸</span>
           <span>Foto da Tiragem (IA)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setInputMode('manual'); setValidationError(null); }}
+          className={`flex-1 py-2.5 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+            inputMode === 'manual'
+              ? 'bg-amber-500 text-zinc-950 font-serif font-bold shadow-md'
+              : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          <span>✍️</span>
+          <span>Seleção Manual</span>
         </button>
       </div>
 
@@ -182,7 +190,7 @@ export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading })
                 <span>Foto da Tiragem Física</span>
               </h3>
               <p className="text-xs text-zinc-400 mt-0.5">
-                Envie uma foto nítida das cartas que você tirou na mesa. A IA identificará cada uma automaticamente.
+                Envie uma foto nítida das cartas na mesa. A IA identificará cada uma automaticamente.
               </p>
             </div>
             <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30">
@@ -197,6 +205,29 @@ export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading })
               setValidationError(null);
             }}
           />
+
+          {!hasApiKey && (
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start justify-between gap-3 text-xs text-amber-200">
+              <div className="space-y-1">
+                <p className="font-semibold flex items-center gap-1.5">
+                  <span>🔑</span>
+                  <span>Deseja reconhecimento por IA em tempo real com Gemini?</span>
+                </p>
+                <p className="text-[11px] text-zinc-400">
+                  Configure sua chave gratuita da Google Gemini API para a IA analisar os pixels exatos de cada carta na foto.
+                </p>
+              </div>
+              {onOpenSettings && (
+                <button
+                  type="button"
+                  onClick={onOpenSettings}
+                  className="px-3 py-1.5 rounded-lg bg-amber-500 text-zinc-950 font-bold text-xs whitespace-nowrap shadow-sm hover:bg-amber-400"
+                >
+                  Inserir chave
+                </button>
+              )}
+            </div>
+          )}
         </div>
       ) : (
         <div className="p-5 md:p-6 rounded-2xl bg-zinc-950/80 border border-amber-500/20 shadow-xl space-y-4">
@@ -309,7 +340,7 @@ export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading })
               <div className="w-5 h-5 border-2 border-zinc-950/20 border-t-zinc-950 rounded-full animate-spin"></div>
               <span>
                 {inputMode === 'photo'
-                  ? 'Analisando imagem com IA e decodificando cartas...'
+                  ? 'Analisando foto com IA e decodificando cartas...'
                   : 'Decodificando simbolismos da tiragem...'}
               </span>
             </>

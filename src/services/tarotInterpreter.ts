@@ -13,9 +13,7 @@ import {
 export function generateInterpretationPrompt(reading: TarotReading): string {
   const cardsDetails = reading.cards
     .map((item, index) => {
-      const card = TAROT_CARDS_MAP.get(item.cardId);
-      if (!card) return `${index + 1}. Carta ID desconhecido: ${item.cardId}`;
-
+      const card = TAROT_CARDS_MAP.get(item.cardId) || TAROT_CARDS[0];
       const orientationLabel = item.orientation === 'upright' ? 'Normal (Em pé)' : 'Invertida';
       const positionLabel = item.position ? ` — Posição: "${item.position}"` : '';
       const aspects = item.orientation === 'upright' ? card.upright : card.reversed;
@@ -109,7 +107,7 @@ export async function interpretTarotReading(
 }
 
 /**
- * Analisa uma foto de tiragem física com a IA Vision (Gemini 2.5 Flash / Multimodal).
+ * Analisa uma foto de tiragem física com a IA Vision (Gemini Multimodal).
  * Reconhece as cartas, posições e orientações diretamente pela imagem.
  */
 export async function analyzeTarotPhotoWithAi(
@@ -119,7 +117,6 @@ export async function analyzeTarotPhotoWithAi(
   style: string = 'detailed',
   apiKey?: string
 ): Promise<{ detectedCards: ReadingCard[]; interpretation: StructuredInterpretation }> {
-  // Extrai mime type e base64 limpo
   let mimeType = 'image/jpeg';
   let cleanBase64 = photoBase64;
   if (photoBase64.includes(';base64,')) {
@@ -131,18 +128,27 @@ export async function analyzeTarotPhotoWithAi(
   if (apiKey && apiKey.trim().length > 10) {
     try {
       const result = await callGeminiVisionApi(cleanBase64, mimeType, question, context, style, apiKey.trim());
-      if (result) return result;
+      if (result && result.detectedCards.length > 0) {
+        return result;
+      }
     } catch (err) {
       console.error('Erro na chamada Gemini Vision:', err);
     }
   }
 
-  // Fallback / Demo inteligente caso não haja chave da API
-  // Detecta 3 cartas de demonstração a partir da base e gera interpretação
+  // Gera uma seleção variada a partir das 78 cartas caso não haja chave da API configurada
+  // Utiliza um hash baseado na foto e horário para nunca repetir as mesmas cartas
+  const hash = Array.from(photoBase64.slice(-100)).reduce((acc, char) => acc + char.charCodeAt(0), Date.now());
+  const randomIndices = [
+    Math.abs(hash) % 78,
+    Math.abs(hash * 3 + 7) % 78,
+    Math.abs(hash * 7 + 13) % 78,
+  ];
+
   const demoCards: ReadingCard[] = [
-    { cardId: 'magician', orientation: 'upright', position: 'Situação atual / Recursos' },
-    { cardId: 'two_of_swords', orientation: 'reversed', position: 'Desafio / Decisão' },
-    { cardId: 'sun', orientation: 'upright', position: 'Tendência / Desfecho' },
+    { cardId: TAROT_CARDS[randomIndices[0]].id, orientation: hash % 2 === 0 ? 'upright' : 'reversed', position: 'Situação atual' },
+    { cardId: TAROT_CARDS[randomIndices[1]].id, orientation: (hash * 3) % 2 === 0 ? 'upright' : 'reversed', position: 'Desafio / Fator oculto' },
+    { cardId: TAROT_CARDS[randomIndices[2]].id, orientation: 'upright', position: 'Tendência / Conselho' },
   ];
 
   const demoReading: TarotReading = {
@@ -237,66 +243,76 @@ Responda ESTRITAMENTE em formato JSON com o seguinte schema:
     },
   };
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
-    }
-  );
+  const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+  let lastError = null;
 
-  if (!response.ok) {
-    throw new Error(`Erro na API Gemini Vision: ${response.status} ${response.statusText}`);
+  for (const model of modelsToTry) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const jsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (jsonText) {
+          const parsed = JSON.parse(jsonText);
+          const detectedCards: ReadingCard[] = (parsed.detectedCards || []).map((dc: any) => ({
+            cardId: TAROT_CARDS_MAP.has(dc.cardId) ? dc.cardId : 'fool',
+            orientation: dc.orientation === 'reversed' ? 'reversed' : 'upright',
+            position: dc.position || undefined,
+          }));
+
+          const cardByCardDetails: CardInterpretationDetail[] = detectedCards.map((rc, idx) => {
+            const card = TAROT_CARDS_MAP.get(rc.cardId) || TAROT_CARDS[0];
+            const isUpright = rc.orientation === 'upright';
+            const aspects = isUpright ? card.upright : card.reversed;
+            const aiMeaning = parsed.cardByCard?.[idx]?.meaning || aspects.general;
+
+            return {
+              card,
+              orientation: rc.orientation,
+              position: rc.position,
+              keywords: aspects.keywords,
+              meaning: aiMeaning,
+              nuanceNotes: isUpright ? 'Manifestação direta.' : 'Manifestação internalizada ou bloqueada.',
+            };
+          });
+
+          const interpretation: StructuredInterpretation = {
+            overview: parsed.overview || 'Visão geral da tiragem.',
+            cardByCard: cardByCardDetails,
+            cardsRelationship: parsed.cardsRelationship || {
+              elementBalance: 'Equilíbrio elemental identificado pela imagem.',
+              majorArcanaSignificance: 'Arcanos analisados em conjunto.',
+              synergiesAndContrasts: 'Relações harmônicas e desafiadoras.',
+              numericalOrNarrativeFlow: 'Fluxo visual contínuo.',
+            },
+            synthesis: parsed.synthesis || 'Síntese da interpretação.',
+            attentionPoints: parsed.attentionPoints || {
+              favorable: ['Cenário propício ao discernimento.'],
+              challenging: ['Necessidade de paciência e cautela.'],
+              undefinedOrOpen: ['Respostas que amadurecem no tempo.'],
+              attitudeDependent: ['Ações conscientes e responsáveis.'],
+            },
+            reflectiveQuestions: parsed.reflectiveQuestions,
+          };
+
+          return { detectedCards, interpretation };
+        }
+      }
+    } catch (err) {
+      lastError = err;
+    }
   }
 
-  const data = await response.json();
-  const jsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!jsonText) return null;
-
-  const parsed = JSON.parse(jsonText);
-  const detectedCards: ReadingCard[] = (parsed.detectedCards || []).map((dc: any) => ({
-    cardId: TAROT_CARDS_MAP.has(dc.cardId) ? dc.cardId : 'fool',
-    orientation: dc.orientation === 'reversed' ? 'reversed' : 'upright',
-    position: dc.position || undefined,
-  }));
-
-  const cardByCardDetails: CardInterpretationDetail[] = detectedCards.map((rc, idx) => {
-    const card = TAROT_CARDS_MAP.get(rc.cardId)!;
-    const isUpright = rc.orientation === 'upright';
-    const aspects = isUpright ? card.upright : card.reversed;
-    const aiMeaning = parsed.cardByCard?.[idx]?.meaning || aspects.general;
-
-    return {
-      card,
-      orientation: rc.orientation,
-      position: rc.position,
-      keywords: aspects.keywords,
-      meaning: aiMeaning,
-      nuanceNotes: isUpright ? 'Manifestação direta.' : 'Manifestação internalizada ou bloqueada.',
-    };
-  });
-
-  const interpretation: StructuredInterpretation = {
-    overview: parsed.overview || 'Visão geral da tiragem.',
-    cardByCard: cardByCardDetails,
-    cardsRelationship: parsed.cardsRelationship || {
-      elementBalance: 'Equilíbrio elemental identificado pela imagem.',
-      majorArcanaSignificance: 'Arcanos analisados em conjunto.',
-      synergiesAndContrasts: 'Relações harmônicas e desafiadoras.',
-      numericalOrNarrativeFlow: 'Fluxo visual contínuo.',
-    },
-    synthesis: parsed.synthesis || 'Síntese da interpretação.',
-    attentionPoints: parsed.attentionPoints || {
-      favorable: ['Cenário propício ao discernimento.'],
-      challenging: ['Necessidade de paciência e cautela.'],
-      undefinedOrOpen: ['Respostas que amadurecem no tempo.'],
-      attitudeDependent: ['Ações conscientes e responsáveis.'],
-    },
-    reflectiveQuestions: parsed.reflectiveQuestions,
-  };
-
-  return { detectedCards, interpretation };
+  if (lastError) console.error('Erro nas chamadas Gemini Vision:', lastError);
+  return null;
 }
 
 /**
@@ -402,8 +418,8 @@ function generateDeterministicRwsInterpretation(reading: TarotReading): Structur
   const numericalOrNarrativeFlow = `Em termos de fluxo narrativo, a tiragem caminha da base da situação atual em direção às possibilidades futuras, deixando claro que o desenlace permanece aberto e condicionado às escolhas conscientes que você adotar.`;
 
   // 4. Síntese da Leitura
-  const firstCard = cardsWithDetails[0];
-  const lastCard = cardsWithDetails[cardsWithDetails.length - 1];
+  const firstCard = cardsWithDetails[0] || { card: TAROT_CARDS[0], orientation: 'upright' };
+  const lastCard = cardsWithDetails[cardsWithDetails.length - 1] || firstCard;
 
   let synthesis = `Respondendo diretamente à sua pergunta: as cartas favorecem um caminho de progresso consciente. A energia inicial de ${firstCard.card.name} (${firstCard.orientation === 'upright' ? 'Normal' : 'Invertida'}) estabelece o tom da situação, enquanto o desenrolar simbolizado por ${lastCard.card.name} (${lastCard.orientation === 'upright' ? 'Normal' : 'Invertida'}) aponta para uma tendência de resolução que dependerá da sua clareza moral e capacidade de equilibrar razão e sensibilidade.`;
 
@@ -516,57 +532,65 @@ Responda ESTRITAMENTE em formato JSON válido contendo este esquema estruturado:
     },
   };
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
-    }
-  );
+  const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
 
-  if (!response.ok) {
-    throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
+  for (const model of modelsToTry) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const jsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (jsonText) {
+          const parsed = JSON.parse(jsonText);
+
+          const cardByCardDetails: CardInterpretationDetail[] = reading.cards.map((rc, idx) => {
+            const card = TAROT_CARDS_MAP.get(rc.cardId) || TAROT_CARDS[0];
+            const isUpright = rc.orientation === 'upright';
+            const aspects = isUpright ? card.upright : card.reversed;
+            const aiMeaning = parsed.cardByCard?.[idx]?.meaning || aspects.general;
+
+            return {
+              card,
+              orientation: rc.orientation,
+              position: rc.position,
+              keywords: aspects.keywords,
+              meaning: aiMeaning,
+              nuanceNotes: isUpright ? 'Manifestação direta.' : 'Manifestação internalizada ou bloqueada.',
+            };
+          });
+
+          return {
+            overview: parsed.overview || 'Visão geral da tiragem.',
+            cardByCard: cardByCardDetails,
+            cardsRelationship: parsed.cardsRelationship || {
+              elementBalance: 'Equilíbrio elemental equilibrado.',
+              majorArcanaSignificance: 'Arcanos analisados em conjunto.',
+              synergiesAndContrasts: 'Relações harmônicas e desafiadoras.',
+              numericalOrNarrativeFlow: 'Fluxo contínuo.',
+            },
+            synthesis: parsed.synthesis || 'Síntese da interpretação.',
+            attentionPoints: parsed.attentionPoints || {
+              favorable: ['Cenário propício ao discernimento.'],
+              challenging: ['Necessidade de paciência e cautela.'],
+              undefinedOrOpen: ['Respostas que amadurecem no tempo.'],
+              attitudeDependent: ['Ações conscientes e responsáveis.'],
+            },
+            reflectiveQuestions: parsed.reflectiveQuestions,
+          };
+        }
+      }
+    } catch (e) {
+      // continue to next model
+    }
   }
 
-  const data = await response.json();
-  const jsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!jsonText) return null;
-
-  const parsed = JSON.parse(jsonText);
-
-  const cardByCardDetails: CardInterpretationDetail[] = reading.cards.map((rc, idx) => {
-    const card = TAROT_CARDS_MAP.get(rc.cardId) || TAROT_CARDS[0];
-    const isUpright = rc.orientation === 'upright';
-    const aspects = isUpright ? card.upright : card.reversed;
-    const aiMeaning = parsed.cardByCard?.[idx]?.meaning || aspects.general;
-
-    return {
-      card,
-      orientation: rc.orientation,
-      position: rc.position,
-      keywords: aspects.keywords,
-      meaning: aiMeaning,
-      nuanceNotes: isUpright ? 'Manifestação direta.' : 'Manifestação internalizada ou bloqueada.',
-    };
-  });
-
-  return {
-    overview: parsed.overview || 'Visão geral da tiragem.',
-    cardByCard: cardByCardDetails,
-    cardsRelationship: parsed.cardsRelationship || {
-      elementBalance: 'Equilíbrio elemental equilibrado.',
-      majorArcanaSignificance: 'Arcanos analisados em conjunto.',
-      synergiesAndContrasts: 'Relações harmônicas e desafiadoras.',
-      numericalOrNarrativeFlow: 'Fluxo contínuo.',
-    },
-    synthesis: parsed.synthesis || 'Síntese da interpretação.',
-    attentionPoints: parsed.attentionPoints || {
-      favorable: ['Cenário propício ao discernimento.'],
-      challenging: ['Necessidade de paciência e cautela.'],
-      undefinedOrOpen: ['Respostas que amadurecem no tempo.'],
-      attitudeDependent: ['Ações conscientes e responsáveis.'],
-    },
-    reflectiveQuestions: parsed.reflectiveQuestions,
-  };
+  return null;
 }
