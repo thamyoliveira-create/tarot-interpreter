@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ReadingCard, InterpretationStyle, TarotReading } from '../types/tarot';
+import { ReadingCard, InterpretationStyle, TarotReading, InputMode } from '../types/tarot';
 import { ReadingCardItem } from './ReadingCardItem';
+import { PhotoUploader } from './PhotoUploader';
 
 interface ReadingFormProps {
   onSubmit: (readingData: Omit<TarotReading, 'id' | 'createdAt'>) => void;
@@ -8,8 +9,10 @@ interface ReadingFormProps {
 }
 
 export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading }) => {
+  const [inputMode, setInputMode] = useState<InputMode>('manual');
   const [question, setQuestion] = useState('');
   const [context, setContext] = useState('');
+  const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [cards, setCards] = useState<ReadingCard[]>([
     { cardId: 'fool', orientation: 'upright', position: '' },
   ]);
@@ -17,7 +20,7 @@ export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading })
     useState<InterpretationStyle>('detailed');
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Manipulação da lista de cartas
+  // Manipulação da lista de cartas manuais
   const handleAddCard = () => {
     setCards([...cards, { cardId: '', orientation: 'upright', position: '' }]);
     setValidationError(null);
@@ -39,18 +42,24 @@ export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading })
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validações amigáveis
     if (!question.trim()) {
       setValidationError('Por favor, informe a sua pergunta para orientar a interpretação das cartas.');
       return;
     }
 
-    const unselectedCardIndex = cards.findIndex((c) => !c.cardId || c.cardId.trim() === '');
-    if (unselectedCardIndex !== -1) {
-      setValidationError(
-        `Por favor, selecione qual carta você tirou para a Carta ${unselectedCardIndex + 1}.`
-      );
-      return;
+    if (inputMode === 'photo') {
+      if (!photoBase64) {
+        setValidationError('Por favor, envie ou tire uma foto da sua tiragem de cartas.');
+        return;
+      }
+    } else {
+      const unselectedCardIndex = cards.findIndex((c) => !c.cardId || c.cardId.trim() === '');
+      if (unselectedCardIndex !== -1) {
+        setValidationError(
+          `Por favor, selecione qual carta você tirou para a Carta ${unselectedCardIndex + 1}.`
+        );
+        return;
+      }
     }
 
     setValidationError(null);
@@ -58,7 +67,9 @@ export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading })
     onSubmit({
       question: question.trim(),
       context: context.trim() ? context.trim() : undefined,
-      cards,
+      cards: inputMode === 'photo' ? [] : cards,
+      photoBase64: photoBase64 || undefined,
+      inputMode,
       interpretationStyle,
     });
   };
@@ -97,6 +108,35 @@ export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading })
 
   return (
     <form onSubmit={handleSubmit} className="space-y-7 max-w-4xl mx-auto">
+      {/* Seletor de Modo de Entrada: Manual vs Foto da Tiragem */}
+      <div className="flex items-center justify-center p-1.5 bg-zinc-900/90 rounded-2xl border border-zinc-800 max-w-md mx-auto shadow-lg">
+        <button
+          type="button"
+          onClick={() => { setInputMode('manual'); setValidationError(null); }}
+          className={`flex-1 py-2.5 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+            inputMode === 'manual'
+              ? 'bg-amber-500 text-zinc-950 font-serif font-bold shadow-md'
+              : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          <span>✍️</span>
+          <span>Seleção Manual</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setInputMode('photo'); setValidationError(null); }}
+          className={`flex-1 py-2.5 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+            inputMode === 'photo'
+              ? 'bg-amber-500 text-zinc-950 font-serif font-bold shadow-md'
+              : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          <span>📸</span>
+          <span>Foto da Tiragem (IA)</span>
+        </button>
+      </div>
+
       {/* 1. Pergunta */}
       <div className="p-5 md:p-6 rounded-2xl bg-zinc-950/80 border border-amber-500/20 shadow-xl">
         <label className="block text-sm font-semibold text-amber-100 mb-2 font-serif flex items-center justify-between">
@@ -115,9 +155,6 @@ export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading })
           placeholder="Como tende a evoluir minha relação com essa pessoa?"
           className="w-full p-3.5 bg-zinc-900/90 border border-zinc-700 focus:border-amber-400 focus:ring-1 focus:ring-amber-400/40 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-all resize-y leading-relaxed"
         />
-        <p className="text-xs text-zinc-400 mt-2">
-          Dica: Formulações claras e reflexivas favorecem uma leitura mais rica e conectada.
-        </p>
       </div>
 
       {/* 2. Contexto Adicional */}
@@ -135,46 +172,73 @@ export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading })
         />
       </div>
 
-      {/* 3. Área da Leitura — Cartas da Tiragem */}
-      <div className="p-5 md:p-6 rounded-2xl bg-zinc-950/80 border border-amber-500/20 shadow-xl space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-          <div>
-            <h3 className="text-base font-bold text-amber-100 font-serif">
-              Cartas da tiragem
-            </h3>
-            <p className="text-xs text-zinc-400 mt-0.5">
-              Informe as cartas que você tirou fisicamente com o seu baralho.
-            </p>
+      {/* 3. Área da Leitura: Modo Foto vs Modo Manual */}
+      {inputMode === 'photo' ? (
+        <div className="p-5 md:p-6 rounded-2xl bg-zinc-950/80 border border-amber-500/20 shadow-xl space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+            <div>
+              <h3 className="text-base font-bold text-amber-100 font-serif flex items-center gap-2">
+                <span>📸</span>
+                <span>Foto da Tiragem Física</span>
+              </h3>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Envie uma foto nítida das cartas que você tirou na mesa. A IA identificará cada uma automaticamente.
+              </p>
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30">
+              Visão Computacional
+            </span>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
-            {cards.length} {cards.length === 1 ? 'carta' : 'cartas'}
-          </span>
-        </div>
 
-        {/* Lista de Cards */}
-        <div className="space-y-3.5">
-          {cards.map((card, index) => (
-            <ReadingCardItem
-              key={index}
-              index={index}
-              readingCard={card}
-              onUpdateCard={handleUpdateCard}
-              onRemoveCard={handleRemoveCard}
-              canRemove={cards.length > 1}
-            />
-          ))}
+          <PhotoUploader
+            photoBase64={photoBase64}
+            onPhotoSelected={(base64) => {
+              setPhotoBase64(base64);
+              setValidationError(null);
+            }}
+          />
         </div>
+      ) : (
+        <div className="p-5 md:p-6 rounded-2xl bg-zinc-950/80 border border-amber-500/20 shadow-xl space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+            <div>
+              <h3 className="text-base font-bold text-amber-100 font-serif">
+                Cartas da tiragem
+              </h3>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Informe as cartas que você tirou fisicamente com o seu baralho.
+              </p>
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
+              {cards.length} {cards.length === 1 ? 'carta' : 'cartas'}
+            </span>
+          </div>
 
-        {/* Botão Adicionar Carta */}
-        <button
-          type="button"
-          onClick={handleAddCard}
-          className="w-full py-3 px-4 rounded-xl border border-dashed border-zinc-700 hover:border-amber-400/60 bg-zinc-900/40 hover:bg-amber-500/5 text-zinc-300 hover:text-amber-200 text-xs md:text-sm font-medium transition-all flex items-center justify-center gap-2 group"
-        >
-          <span className="text-base group-hover:scale-110 transition-transform">➕</span>
-          <span>Adicionar carta à tiragem</span>
-        </button>
-      </div>
+          {/* Lista de Cards */}
+          <div className="space-y-3.5">
+            {cards.map((card, index) => (
+              <ReadingCardItem
+                key={index}
+                index={index}
+                readingCard={card}
+                onUpdateCard={handleUpdateCard}
+                onRemoveCard={handleRemoveCard}
+                canRemove={cards.length > 1}
+              />
+            ))}
+          </div>
+
+          {/* Botão Adicionar Carta */}
+          <button
+            type="button"
+            onClick={handleAddCard}
+            className="w-full py-3 px-4 rounded-xl border border-dashed border-zinc-700 hover:border-amber-400/60 bg-zinc-900/40 hover:bg-amber-500/5 text-zinc-300 hover:text-amber-200 text-xs md:text-sm font-medium transition-all flex items-center justify-center gap-2 group"
+          >
+            <span className="text-base group-hover:scale-110 transition-transform">➕</span>
+            <span>Adicionar carta à tiragem</span>
+          </button>
+        </div>
+      )}
 
       {/* 4. Estilo da Interpretação */}
       <div className="p-5 md:p-6 rounded-2xl bg-zinc-950/80 border border-zinc-800 shadow-xl">
@@ -243,17 +307,27 @@ export const ReadingForm: React.FC<ReadingFormProps> = ({ onSubmit, isLoading })
           {isLoading ? (
             <>
               <div className="w-5 h-5 border-2 border-zinc-950/20 border-t-zinc-950 rounded-full animate-spin"></div>
-              <span>Decodificando simbolismos da tiragem...</span>
+              <span>
+                {inputMode === 'photo'
+                  ? 'Analisando imagem com IA e decodificando cartas...'
+                  : 'Decodificando simbolismos da tiragem...'}
+              </span>
             </>
           ) : (
             <>
-              <span className="text-xl">✨</span>
-              <span>Interpretar tiragem</span>
+              <span className="text-xl">{inputMode === 'photo' ? '📸' : '✨'}</span>
+              <span>
+                {inputMode === 'photo'
+                  ? 'Identificar cartas na foto e interpretar'
+                  : 'Interpretar tiragem'}
+              </span>
             </>
           )}
         </button>
         <p className="text-center text-xs text-zinc-400 mt-2.5">
-          Interpretação baseada na tradição clássica Rider-Waite-Smith • Sem sorteios automatizados
+          {inputMode === 'photo'
+            ? 'Reconhecimento visual inteligente + Análise estruturada Rider-Waite-Smith'
+            : 'Interpretação baseada na tradição clássica Rider-Waite-Smith • Sem sorteios automatizados'}
         </p>
       </div>
     </form>

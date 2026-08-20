@@ -2,6 +2,7 @@ export type ArcanaType = 'major' | 'minor';
 export type SuitType = 'wands' | 'cups' | 'swords' | 'pentacles';
 export type CardOrientation = 'upright' | 'reversed';
 export type InterpretationStyle = 'detailed' | 'objective' | 'traditional' | 'reflective';
+export type InputMode = 'manual' | 'photo';
 
 export interface CardAspects {
   keywords: string[];
@@ -33,6 +34,7 @@ export interface ReadingCard {
   cardId: string;
   orientation: CardOrientation;
   position?: string;
+  confidence?: number;
 }
 
 export interface CardInterpretationDetail {
@@ -74,6 +76,8 @@ export interface TarotReading {
   cards: ReadingCard[];
   interpretationStyle: InterpretationStyle;
   createdAt: string;
+  photoBase64?: string;
+  inputMode?: InputMode;
   structuredInterpretation?: StructuredInterpretation;
   rawAiPrompt?: string;
   aiGeneratedText?: string;

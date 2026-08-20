@@ -4,6 +4,7 @@ import { ReadingForm } from '../components/ReadingForm';
 import {
   interpretTarotReading,
   generateInterpretationPrompt,
+  analyzeTarotPhotoWithAi,
 } from '../services/tarotInterpreter';
 import { storageService } from '../services/storage';
 
@@ -22,25 +23,45 @@ export const NewReading: React.FC<NewReadingProps> = ({ onReadingComplete }) => 
     try {
       const readingId = 'reading_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
       const createdAt = new Date().toISOString();
-
-      const partialReading: TarotReading = {
-        ...formData,
-        id: readingId,
-        createdAt,
-      };
-
-      // Gera o prompt de IA
-      const rawPrompt = generateInterpretationPrompt(partialReading);
-      partialReading.rawAiPrompt = rawPrompt;
-
-      // Executa a interpretação (com motor RWS embutido ou Gemini se configurado)
       const apiKey = storageService.getApiKey();
-      const structuredResult = await interpretTarotReading(partialReading, apiKey);
 
-      const completeReading: TarotReading = {
-        ...partialReading,
-        structuredInterpretation: structuredResult,
-      };
+      let completeReading: TarotReading;
+
+      if (formData.inputMode === 'photo' && formData.photoBase64) {
+        // Leitura visual por IA
+        const { detectedCards, interpretation } = await analyzeTarotPhotoWithAi(
+          formData.photoBase64,
+          formData.question,
+          formData.context,
+          formData.interpretationStyle,
+          apiKey
+        );
+
+        completeReading = {
+          ...formData,
+          id: readingId,
+          createdAt,
+          cards: detectedCards,
+          structuredInterpretation: interpretation,
+        };
+      } else {
+        // Leitura por seleção manual de cartas
+        const partialReading: TarotReading = {
+          ...formData,
+          id: readingId,
+          createdAt,
+        };
+
+        const rawPrompt = generateInterpretationPrompt(partialReading);
+        partialReading.rawAiPrompt = rawPrompt;
+
+        const structuredResult = await interpretTarotReading(partialReading, apiKey);
+
+        completeReading = {
+          ...partialReading,
+          structuredInterpretation: structuredResult,
+        };
+      }
 
       // Salva no LocalStorage
       storageService.saveReading(completeReading);
@@ -61,7 +82,7 @@ export const NewReading: React.FC<NewReadingProps> = ({ onReadingComplete }) => 
       <div className="text-center space-y-3 pt-2 pb-2">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold">
           <span>🔮</span>
-          <span>Interpretação Rider-Waite-Smith</span>
+          <span>Interpretação Rider-Waite-Smith • Manual ou Foto</span>
         </div>
 
         <h1 className="text-2xl md:text-4xl font-extrabold font-serif text-zinc-100 tracking-wide">
@@ -69,8 +90,7 @@ export const NewReading: React.FC<NewReadingProps> = ({ onReadingComplete }) => 
         </h1>
 
         <p className="text-xs md:text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-          Tire suas cartas com seu baralho físico e informe-as abaixo. O aplicativo analisa a
-          combinação, orientações e posições segundo a tradição simbólica clássica do Rider-Waite.
+          Tire suas cartas fisicamente e informe-as manualmente ou envie uma <strong>foto da tiragem</strong> para a IA identificar os arcanos e realizar a interpretação completa.
         </p>
       </div>
 

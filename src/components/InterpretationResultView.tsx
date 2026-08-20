@@ -16,6 +16,7 @@ export const InterpretationResultView: React.FC<InterpretationResultViewProps> =
 }) => {
   const [copied, setCopied] = useState(false);
   const [showPromptModal, setShowPromptModal] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
 
   const interp: StructuredInterpretation | undefined = reading.structuredInterpretation;
 
@@ -49,7 +50,7 @@ Data: ${new Date(reading.createdAt).toLocaleDateString('pt-BR')}
 ${reading.question}
 ${reading.context ? `\nContexto: ${reading.context}` : ''}
 
-🃏 CARTAS:
+🃏 CARTAS IDENTIFICADAS:
 ${cardsText}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -108,6 +109,11 @@ ${attentionText}
           <span className="text-amber-400 capitalize">
             Estilo {reading.interpretationStyle}
           </span>
+          {reading.inputMode === 'photo' && (
+            <span className="px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/30 text-[10px] font-semibold">
+              📸 Leitura por Foto
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -141,7 +147,7 @@ ${attentionText}
         </div>
       </div>
 
-      {/* Topo: Sua Pergunta & Contexto */}
+      {/* Topo: Sua Pergunta & Contexto & Foto se houver */}
       <div className="p-6 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 border border-amber-500/30 shadow-2xl space-y-4">
         <div>
           <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400/90 font-mono">
@@ -163,18 +169,42 @@ ${attentionText}
           </div>
         )}
 
-        {/* Cartas da Tiragem */}
+        {/* Foto da Tiragem se anexada */}
+        {reading.photoBase64 && (
+          <div className="pt-3 border-t border-zinc-800/80">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400/90 font-mono">
+                Foto da Tiragem Física
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowPhotoModal(true)}
+                className="text-xs text-amber-300 hover:underline"
+              >
+                Ampliar foto 🔍
+              </button>
+            </div>
+            <div className="max-h-56 rounded-xl overflow-hidden border border-zinc-800 bg-black flex items-center justify-center">
+              <img
+                src={reading.photoBase64}
+                alt="Foto da Tiragem"
+                className="max-h-56 w-auto object-contain cursor-pointer"
+                onClick={() => setShowPhotoModal(true)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Cartas Identificadas */}
         <div className="pt-3 border-t border-zinc-800/80">
           <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-2 font-mono">
-            Cartas da tiragem ({reading.cards.length})
+            Cartas {reading.inputMode === 'photo' ? 'Identificadas pela IA' : 'da Tiragem'} ({reading.cards.length})
           </span>
           <ReadingSummary cards={reading.cards} />
         </div>
       </div>
 
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       {/* 1. VISÃO GERAL */}
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="p-6 md:p-7 rounded-2xl bg-zinc-950/90 border border-amber-500/25 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
         <div className="flex items-center gap-2.5 mb-3.5">
@@ -190,9 +220,7 @@ ${attentionText}
         </p>
       </section>
 
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       {/* 2. CARTA POR CARTA */}
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="p-6 md:p-7 rounded-2xl bg-zinc-950/90 border border-amber-500/20 shadow-xl space-y-5">
         <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-800">
           <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-serif font-bold text-xs">
@@ -273,9 +301,7 @@ ${attentionText}
         </div>
       </section>
 
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       {/* 3. RELAÇÃO ENTRE AS CARTAS */}
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="p-6 md:p-7 rounded-2xl bg-zinc-950/90 border border-amber-500/20 shadow-xl space-y-4">
         <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-800">
           <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-serif font-bold text-xs">
@@ -332,9 +358,7 @@ ${attentionText}
         </div>
       </section>
 
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       {/* 4. SÍNTESE DA LEITURA */}
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="p-6 md:p-7 rounded-2xl bg-gradient-to-r from-amber-950/40 via-zinc-950 to-amber-950/40 border border-amber-500/40 shadow-2xl space-y-3">
         <div className="flex items-center gap-2.5">
           <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500 text-zinc-950 font-serif font-bold text-xs">
@@ -349,9 +373,7 @@ ${attentionText}
         </p>
       </section>
 
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       {/* 5. PONTOS DE ATENÇÃO */}
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="p-6 md:p-7 rounded-2xl bg-zinc-950/90 border border-amber-500/20 shadow-xl space-y-5">
         <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-800">
           <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-serif font-bold text-xs">
@@ -368,7 +390,6 @@ ${attentionText}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Favoráveis */}
           <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-800/40 space-y-2">
             <h4 className="text-xs font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1.5 font-mono">
               <span>🌿</span> Aspectos Favoráveis
@@ -380,7 +401,6 @@ ${attentionText}
             </ul>
           </div>
 
-          {/* Difíceis / Desafios */}
           <div className="p-4 rounded-xl bg-rose-950/30 border border-rose-800/40 space-y-2">
             <h4 className="text-xs font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1.5 font-mono">
               <span>⚡</span> Desafios & Cuidados
@@ -392,7 +412,6 @@ ${attentionText}
             </ul>
           </div>
 
-          {/* Indefinidos */}
           <div className="p-4 rounded-xl bg-sky-950/30 border border-sky-800/40 space-y-2">
             <h4 className="text-xs font-bold text-sky-300 uppercase tracking-wider flex items-center gap-1.5 font-mono">
               <span>🌊</span> Em Aberto / Indefinidos
@@ -404,7 +423,6 @@ ${attentionText}
             </ul>
           </div>
 
-          {/* Dependentes de Decisões */}
           <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-800/40 space-y-2">
             <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5 font-mono">
               <span>🧭</span> Dependentes da sua Postura
@@ -418,7 +436,7 @@ ${attentionText}
         </div>
       </section>
 
-      {/* Perguntas Reflexivas (se estilo reflexivo) */}
+      {/* Perguntas Reflexivas se houver */}
       {interp.reflectiveQuestions && interp.reflectiveQuestions.length > 0 && (
         <section className="p-6 md:p-7 rounded-2xl bg-purple-950/25 border border-purple-500/30 shadow-xl space-y-3">
           <div className="flex items-center gap-2">
@@ -460,6 +478,29 @@ ${attentionText}
           <span>Ver histórico completo</span>
         </button>
       </div>
+
+      {/* Modal Foto Ampliada */}
+      {showPhotoModal && reading.photoBase64 && (
+        <div
+          onClick={() => setShowPhotoModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md cursor-pointer animate-fadeIn"
+        >
+          <div className="relative max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden border border-amber-500/40">
+            <img
+              src={reading.photoBase64}
+              alt="Foto da Tiragem Ampliada"
+              className="max-h-[85vh] w-auto object-contain"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPhotoModal(false)}
+              className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-zinc-950/80 text-zinc-100 text-xs font-bold border border-zinc-700"
+            >
+              ✕ Fechar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Exibição do Prompt da IA */}
       {showPromptModal && (

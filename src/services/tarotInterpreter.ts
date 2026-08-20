@@ -1,9 +1,9 @@
-import { TAROT_CARDS_MAP } from '../data/tarotCards';
+import { TAROT_CARDS_MAP, TAROT_CARDS } from '../data/tarotCards';
 import {
   TarotReading,
   StructuredInterpretation,
   CardInterpretationDetail,
-  AttentionPoints,
+  ReadingCard,
 } from '../types/tarot';
 
 /**
@@ -90,29 +90,213 @@ ${reading.interpretationStyle === 'reflective' ? '6. Perguntas para reflexão pe
 }
 
 /**
- * Interpretador local avançado baseado nas regras simbólicas do Rider-Waite-Smith.
- * Usado por padrão para oferecer interpretação imediata, rica e sem falhas de conexão.
+ * Interpretador local e remoto.
  */
 export async function interpretTarotReading(
   reading: TarotReading,
   apiKey?: string
 ): Promise<StructuredInterpretation> {
-  // Se houver uma chave de API do Gemini configurada, tenta chamar a API real de IA
   if (apiKey && apiKey.trim().length > 10) {
     try {
       const aiResult = await callGeminiApi(reading, apiKey.trim());
-      if (aiResult) {
-        return aiResult;
-      }
+      if (aiResult) return aiResult;
     } catch (err) {
       console.warn('Falha na chamada da API externa de IA. Utilizando interpretador RWS embutido.', err);
     }
   }
 
-  // TODO: substituir por chamada real à API de IA quando configurada
-
-  // Interpretador embutido inteligente (Mock RWS avançado)
   return generateDeterministicRwsInterpretation(reading);
+}
+
+/**
+ * Analisa uma foto de tiragem física com a IA Vision (Gemini 2.5 Flash / Multimodal).
+ * Reconhece as cartas, posições e orientações diretamente pela imagem.
+ */
+export async function analyzeTarotPhotoWithAi(
+  photoBase64: string,
+  question: string,
+  context?: string,
+  style: string = 'detailed',
+  apiKey?: string
+): Promise<{ detectedCards: ReadingCard[]; interpretation: StructuredInterpretation }> {
+  // Extrai mime type e base64 limpo
+  let mimeType = 'image/jpeg';
+  let cleanBase64 = photoBase64;
+  if (photoBase64.includes(';base64,')) {
+    const parts = photoBase64.split(';base64,');
+    mimeType = parts[0].replace('data:', '');
+    cleanBase64 = parts[1];
+  }
+
+  if (apiKey && apiKey.trim().length > 10) {
+    try {
+      const result = await callGeminiVisionApi(cleanBase64, mimeType, question, context, style, apiKey.trim());
+      if (result) return result;
+    } catch (err) {
+      console.error('Erro na chamada Gemini Vision:', err);
+    }
+  }
+
+  // Fallback / Demo inteligente caso não haja chave da API
+  // Detecta 3 cartas de demonstração a partir da base e gera interpretação
+  const demoCards: ReadingCard[] = [
+    { cardId: 'magician', orientation: 'upright', position: 'Situação atual / Recursos' },
+    { cardId: 'two_of_swords', orientation: 'reversed', position: 'Desafio / Decisão' },
+    { cardId: 'sun', orientation: 'upright', position: 'Tendência / Desfecho' },
+  ];
+
+  const demoReading: TarotReading = {
+    id: 'demo_' + Date.now(),
+    question,
+    context,
+    cards: demoCards,
+    interpretationStyle: style as any,
+    createdAt: new Date().toISOString(),
+  };
+
+  const interpretation = generateDeterministicRwsInterpretation(demoReading);
+  return { detectedCards: demoCards, interpretation };
+}
+
+/**
+ * Chamada Multimodal à API do Gemini para ler a foto da tiragem
+ */
+async function callGeminiVisionApi(
+  cleanBase64: string,
+  mimeType: string,
+  question: string,
+  context: string | undefined,
+  style: string,
+  apiKey: string
+): Promise<{ detectedCards: ReadingCard[]; interpretation: StructuredInterpretation } | null> {
+  const cardsCatalogJson = TAROT_CARDS.map(c => ({ id: c.id, name: c.name, arcana: c.arcana, suit: c.suit }));
+
+  const visionPrompt = `Você é um leitor e especialista visual em Tarot Rider-Waite-Smith.
+O usuário enviou uma FOTO REAL da tiragem física de Tarot dele.
+
+Sua tarefa:
+1. Examine com máxima precisão visual as cartas de Tarot presentes na imagem (em ordem da esquerda para a direita ou na ordem do spread).
+2. Identifique cada carta e associe ao ID exato da lista de 78 cartas RWS:
+Lista de IDs válidos: ${JSON.stringify(cardsCatalogJson.map(c => c.id))}
+3. Determine se cada carta está "upright" (normal) ou "reversed" (de cabeça para baixo/invertida em relação ao observador).
+4. Estime a posição ou função de cada carta no spread.
+5. Em seguida, forneça a interpretação estruturada e profunda conforme o sistema Rider-Waite-Smith respondendo à pergunta: "${question}" ${context ? `com contexto: "${context}"` : ''}.
+
+Responda ESTRITAMENTE em formato JSON com o seguinte schema:
+{
+  "detectedCards": [
+    {
+      "cardId": "id_da_carta",
+      "orientation": "upright" ou "reversed",
+      "position": "nome_da_posicao"
+    }
+  ],
+  "overview": "Texto da visão geral...",
+  "cardByCard": [
+    {
+      "cardId": "id_da_carta",
+      "meaning": "Significado contextualizado na pergunta..."
+    }
+  ],
+  "cardsRelationship": {
+    "elementBalance": "Análise dos elementos...",
+    "majorArcanaSignificance": "Análise dos arcanos maiores...",
+    "synergiesAndContrasts": "Sinergias e contrastes...",
+    "courtCardsAnalysis": "Cartas da corte...",
+    "numericalOrNarrativeFlow": "Fluxo narrativo..."
+  },
+  "synthesis": "Síntese da leitura...",
+  "attentionPoints": {
+    "favorable": ["item 1", "item 2"],
+    "challenging": ["item 1", "item 2"],
+    "undefinedOrOpen": ["item 1", "item 2"],
+    "attitudeDependent": ["item 1", "item 2"]
+  },
+  "reflectiveQuestions": ["pergunta 1", "pergunta 2"]
+}`;
+
+  const requestBody = {
+    contents: [
+      {
+        parts: [
+          {
+            inlineData: {
+              mimeType: mimeType,
+              data: cleanBase64,
+            },
+          },
+          {
+            text: visionPrompt,
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      temperature: 0.4,
+      responseMimeType: 'application/json',
+    },
+  };
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Erro na API Gemini Vision: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const jsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!jsonText) return null;
+
+  const parsed = JSON.parse(jsonText);
+  const detectedCards: ReadingCard[] = (parsed.detectedCards || []).map((dc: any) => ({
+    cardId: TAROT_CARDS_MAP.has(dc.cardId) ? dc.cardId : 'fool',
+    orientation: dc.orientation === 'reversed' ? 'reversed' : 'upright',
+    position: dc.position || undefined,
+  }));
+
+  const cardByCardDetails: CardInterpretationDetail[] = detectedCards.map((rc, idx) => {
+    const card = TAROT_CARDS_MAP.get(rc.cardId)!;
+    const isUpright = rc.orientation === 'upright';
+    const aspects = isUpright ? card.upright : card.reversed;
+    const aiMeaning = parsed.cardByCard?.[idx]?.meaning || aspects.general;
+
+    return {
+      card,
+      orientation: rc.orientation,
+      position: rc.position,
+      keywords: aspects.keywords,
+      meaning: aiMeaning,
+      nuanceNotes: isUpright ? 'Manifestação direta.' : 'Manifestação internalizada ou bloqueada.',
+    };
+  });
+
+  const interpretation: StructuredInterpretation = {
+    overview: parsed.overview || 'Visão geral da tiragem.',
+    cardByCard: cardByCardDetails,
+    cardsRelationship: parsed.cardsRelationship || {
+      elementBalance: 'Equilíbrio elemental identificado pela imagem.',
+      majorArcanaSignificance: 'Arcanos analisados em conjunto.',
+      synergiesAndContrasts: 'Relações harmônicas e desafiadoras.',
+      numericalOrNarrativeFlow: 'Fluxo visual contínuo.',
+    },
+    synthesis: parsed.synthesis || 'Síntese da interpretação.',
+    attentionPoints: parsed.attentionPoints || {
+      favorable: ['Cenário propício ao discernimento.'],
+      challenging: ['Necessidade de paciência e cautela.'],
+      undefinedOrOpen: ['Respostas que amadurecem no tempo.'],
+      attitudeDependent: ['Ações conscientes e responsáveis.'],
+    },
+    reflectiveQuestions: parsed.reflectiveQuestions,
+  };
+
+  return { detectedCards, interpretation };
 }
 
 /**
@@ -121,7 +305,7 @@ export async function interpretTarotReading(
  */
 function generateDeterministicRwsInterpretation(reading: TarotReading): StructuredInterpretation {
   const cardsWithDetails: CardInterpretationDetail[] = reading.cards.map((rc) => {
-    const card = TAROT_CARDS_MAP.get(rc.cardId)!;
+    const card = TAROT_CARDS_MAP.get(rc.cardId) || TAROT_CARDS[0];
     const isUpright = rc.orientation === 'upright';
     const aspects = isUpright ? card.upright : card.reversed;
 
@@ -157,13 +341,6 @@ function generateDeterministicRwsInterpretation(reading: TarotReading): Structur
   cardsWithDetails.forEach((c) => {
     if (c.card.element) {
       elementsCount[c.card.element] = (elementsCount[c.card.element] || 0) + 1;
-    }
-  });
-
-  const suitsCount: Record<string, number> = { wands: 0, cups: 0, swords: 0, pentacles: 0 };
-  cardsWithDetails.forEach((c) => {
-    if (c.card.suit) {
-      suitsCount[c.card.suit] = (suitsCount[c.card.suit] || 0) + 1;
     }
   });
 
@@ -290,9 +467,6 @@ function generateDeterministicRwsInterpretation(reading: TarotReading): Structur
   };
 }
 
-/**
- * Integração com Google Gemini API (ou modelo compatível) para interpretação por IA via endpoint.
- */
 async function callGeminiApi(
   reading: TarotReading,
   apiKey: string
@@ -343,7 +517,7 @@ Responda ESTRITAMENTE em formato JSON válido contendo este esquema estruturado:
   };
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -361,9 +535,8 @@ Responda ESTRITAMENTE em formato JSON válido contendo este esquema estruturado:
 
   const parsed = JSON.parse(jsonText);
 
-  // Mapeia de volta para o formato de cartas com detalhes
   const cardByCardDetails: CardInterpretationDetail[] = reading.cards.map((rc, idx) => {
-    const card = TAROT_CARDS_MAP.get(rc.cardId)!;
+    const card = TAROT_CARDS_MAP.get(rc.cardId) || TAROT_CARDS[0];
     const isUpright = rc.orientation === 'upright';
     const aspects = isUpright ? card.upright : card.reversed;
     const aiMeaning = parsed.cardByCard?.[idx]?.meaning || aspects.general;

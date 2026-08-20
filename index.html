@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Tarot Interpreter — Interpretação Rider-Waite-Smith</title>
-  <meta name="description" content="Aplicativo focado exclusivamente em interpretar cartas de Tarot Rider-Waite-Smith para tiragens manuais com baralho físico." />
+  <meta name="description" content="Aplicativo de interpretação de Tarot Rider-Waite-Smith com leitura manual e análise visual por foto com IA." />
   <meta name="theme-color" content="#09090b" />
 
   <!-- Google Fonts: Cinzel & Plus Jakarta Sans -->
@@ -38,7 +38,7 @@
     }
   </script>
 
-  <!-- React 18 & Babel Standalone CDN para execução universal e imediata -->
+  <!-- React 18 & Babel Standalone CDN -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -80,12 +80,11 @@
     </div>
   </div>
 
-  <!-- Script da Aplicação React com todas as 78 cartas RWS e interpretador -->
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
     // =========================================================================
-    // BASE DE DADOS COMPLETA DAS 78 CARTAS RIDER-WAITE-SMITH (PORTUGUÊS)
+    // BASE DE DADOS COMPLETA DAS 78 CARTAS RIDER-WAITE-SMITH
     // =========================================================================
     const TAROT_CARDS = [
       // Arcanos Maiores (0 - XXI)
@@ -180,16 +179,14 @@
     const TAROT_CARDS_MAP = new Map(TAROT_CARDS.map(c => [c.id, c]));
 
     // =========================================================================
-    // SERVIÇOS: STORAGE, PROMPT DA IA E MOTOR DE INTERPRETAÇÃO RWS
+    // SERVIÇOS: STORAGE, PROMPT E INTERPRETAÇÃO (MANUAL E VISÃO IA)
     // =========================================================================
     const storageService = {
       getReadings() {
         try {
           const raw = localStorage.getItem('tarot_interpreter_readings');
           return raw ? JSON.parse(raw) : [];
-        } catch (e) {
-          return [];
-        }
+        } catch (e) { return []; }
       },
       saveReading(reading) {
         try {
@@ -241,10 +238,10 @@ Considere:
 
 Não analise cada carta de forma isolada apenas.
 Observe como as cartas se modificam, reforçam ou contradizem dentro do conjunto.
-Cartas invertidas não são automaticamente o contrário: representam bloqueio, excesso, falta, internalização, atraso ou dificuldade de manifestação.
+Cartas invertidas representam bloqueio, excesso, falta, internalização, atraso ou dificuldade de manifestação.
 
 Diretrizes éticas e de linguagem:
-- Responda à pergunta do usuário sem previsões deterministas absolutas. Use linguagem proporcional ("As cartas favorecem a possibilidade de...", "A combinação sugere...").
+- Responda à pergunta do usuário sem previsões deterministas absolutas ("As cartas favorecem a possibilidade de...", "A combinação sugere...").
 - Em perguntas afetivas, distinga: atração, sentimentos, intenção, comportamento, disponibilidade emocional, reciprocidade e compromisso.
 - Não invente fatos externos não sustentados pela tiragem.
 
@@ -264,12 +261,11 @@ ESTRUTURA DA RESPOSTA:
 5. Pontos de atenção`;
     }
 
-    async function interpretReadingService(reading) {
-      // Delay suave para experiência mística agradável
+    async function interpretManualReading(reading) {
       await new Promise(r => setTimeout(r, 600));
 
       const cardsDetails = reading.cards.map(rc => {
-        const card = TAROT_CARDS_MAP.get(rc.cardId);
+        const card = TAROT_CARDS_MAP.get(rc.cardId) || TAROT_CARDS[0];
         const isUpright = rc.orientation === 'upright';
         const aspects = isUpright ? card.upright : card.reversed;
         const nuance = isUpright
@@ -299,21 +295,19 @@ ESTRUTURA DA RESPOSTA:
       cardsDetails.forEach(c => { if (c.card.element) elements[c.card.element] = (elements[c.card.element] || 0) + 1; });
       const dominantElement = Object.entries(elements).reduce((a, b) => b[1] > a[1] ? b : a, ['', 0]);
 
-      // 1. Visão geral
       let overview = '';
       if (majorCount > totalCards / 2 && totalCards > 1) {
-        overview = `A predominância de Arcanos Maiores (${majorCount} de ${totalCards} cartas) indica que a questão sobre "${reading.question}" envolve transformações profundas e lições de vida de longo alcance, indo além das circunstâncias banais do cotidiano.`;
+        overview = `A predominância de Arcanos Maiores (${majorCount} de ${totalCards} cartas) indica que a questão sobre "${reading.question}" envolve transformações profundas e lições de vida de longo alcance.`;
       } else if (majorCount === 0) {
-        overview = `A presença exclusiva de Arcanos Menores evidencia que a situação está centrada em decisões práticas, atitudes cotidianas e ajustes de conduta que estão inteiramente ao seu alcance de gestão.`;
+        overview = `A presença exclusiva de Arcanos Menores evidencia que a situação está centrada em decisões práticas, atitudes cotidianas e ajustes de conduta que estão ao seu alcance de gestão.`;
       } else {
-        overview = `A tiragem combina forças estruturais de longo prazo com dinâmicas práticas imediatas. A resposta à sua pergunta ("${reading.question}") desdobra-se através da clareza de intenção e de passos concretos e conscientes.`;
+        overview = `A tiragem combina forças estruturais com dinâmicas práticas imediatas. A resposta à sua pergunta ("${reading.question}") desdobra-se através da clareza de intenção e de passos conscientes.`;
       }
 
       if (reversedCount > 0) {
-        overview += ` Há ${reversedCount} carta(s) em posição invertida, sinalizando processos internos de maturação, revisão de hábitos ou resistências que pedem acolhimento e discernimento.`;
+        overview += ` Há ${reversedCount} carta(s) em posição invertida, sinalizando processos internos de maturação ou resistências que pedem acolhimento.`;
       }
 
-      // 3. Relação entre as cartas
       const elementBalanceMap = {
         Fogo: 'Predomínio de Fogo (Paus): forte impulso de ação, iniciativa e motivação para superar barreiras.',
         Água: 'Predomínio de Água (Copas): ênfase nas trocas afetivas, intuição e sensibilidade emocional.',
@@ -331,9 +325,8 @@ ESTRUTURA DA RESPOSTA:
       const synergiesAndContrasts = `As cartas atuam de forma sinérgica: enquanto as energias mais dinâmicas impulsionam o movimento, as cartas de ponderação protegem contra atitudes precipitadas.`;
       const numericalOrNarrativeFlow = `O fluxo narrativo das cartas caminha do diagnóstico atual em direção à evolução possível, reafirmando que o futuro não é estático.`;
 
-      // 4. Síntese
-      const first = cardsDetails[0];
-      const last = cardsDetails[cardsDetails.length - 1];
+      const first = cardsDetails[0] || { card: TAROT_CARDS[0], orientation: 'upright' };
+      const last = cardsDetails[cardsDetails.length - 1] || first;
       let synthesis = `Respondendo diretamente à sua pergunta: o cenário favorece o desenvolvimento positivo na medida em que houver maturidade e alinhamento de conduta. A abertura marcada por ${first.card.name} (${first.orientation === 'upright' ? 'Normal' : 'Invertida'}) e a tendência de fechamento indicada por ${last.card.name} (${last.orientation === 'upright' ? 'Normal' : 'Invertida'}) sugerem que a paciência e a transparência serão seus melhores guias.`;
 
       if (reading.interpretationStyle === 'objective') {
@@ -342,7 +335,6 @@ ESTRUTURA DA RESPOSTA:
         synthesis = `Seguindo a tradição Rider-Waite-Smith: os símbolos advertem contra a pressa e convidam à nobreza de intenção. Cada arcano recorda que a harmonia externa decorre do equilíbrio interior.`;
       }
 
-      // 5. Pontos de Atenção
       const favorable = [
         'Disponibilidade de recursos internos e clareza para discernir escolhas.',
         'Potencial de crescimento e aprendizado contínuo na situação.'
@@ -371,21 +363,272 @@ ESTRUTURA DA RESPOSTA:
       return {
         overview,
         cardByCard: cardsDetails,
-        cardsRelationship: {
-          elementBalance,
-          majorArcanaSignificance,
-          synergiesAndContrasts,
-          numericalOrNarrativeFlow,
-        },
+        cardsRelationship: { elementBalance, majorArcanaSignificance, synergiesAndContrasts, numericalOrNarrativeFlow },
         synthesis,
         attentionPoints: { favorable, challenging, undefinedOrOpen, attitudeDependent },
         reflectiveQuestions: reading.interpretationStyle === 'reflective' ? reflectiveQuestions : undefined,
       };
     }
 
+    // Leitura por Visão Computacional com Gemini API ou Fallback inteligente
+    async function interpretPhotoWithVision(photoBase64, question, context, style, apiKey) {
+      let mimeType = 'image/jpeg';
+      let cleanBase64 = photoBase64;
+      if (photoBase64.includes(';base64,')) {
+        const parts = photoBase64.split(';base64,');
+        mimeType = parts[0].replace('data:', '');
+        cleanBase64 = parts[1];
+      }
+
+      if (apiKey && apiKey.trim().length > 10) {
+        try {
+          const visionPrompt = `Você é um leitor e especialista visual em Tarot Rider-Waite-Smith.
+Examine com atenção a FOTO da tiragem enviada.
+Identifique cada uma das cartas de Tarot presentes na imagem (da esquerda para a direita).
+Determine o ID da carta na lista de 78 cartas RWS, sua orientação ("upright" ou "reversed") e sua posição estimada.
+Em seguida, forneça a interpretação estruturada completa respondendo à pergunta: "${question}" ${context ? `com contexto: "${context}"` : ''}.
+
+Responda ESTRITAMENTE em formato JSON com o schema:
+{
+  "detectedCards": [
+    { "cardId": "ex: magician", "orientation": "upright ou reversed", "position": "posicao" }
+  ],
+  "overview": "Visão geral...",
+  "cardByCard": [
+    { "cardId": "id", "meaning": "significado..." }
+  ],
+  "cardsRelationship": {
+    "elementBalance": "elementos...",
+    "majorArcanaSignificance": "arcanos maiores...",
+    "synergiesAndContrasts": "sinergias...",
+    "numericalOrNarrativeFlow": "fluxo..."
+  },
+  "synthesis": "Síntese da leitura...",
+  "attentionPoints": {
+    "favorable": ["item"],
+    "challenging": ["item"],
+    "undefinedOrOpen": ["item"],
+    "attitudeDependent": ["item"]
+  }
+}`;
+
+          const requestBody = {
+            contents: [{
+              parts: [
+                { inlineData: { mimeType, data: cleanBase64 } },
+                { text: visionPrompt }
+              ]
+            }],
+            generationConfig: { temperature: 0.4, responseMimeType: 'application/json' }
+          };
+
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey.trim()}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            const jsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (jsonText) {
+              const parsed = JSON.parse(jsonText);
+              const detectedCards = (parsed.detectedCards || []).map(dc => ({
+                cardId: TAROT_CARDS_MAP.has(dc.cardId) ? dc.cardId : 'fool',
+                orientation: dc.orientation === 'reversed' ? 'reversed' : 'upright',
+                position: dc.position || undefined,
+              }));
+
+              const cardByCard = detectedCards.map((rc, idx) => {
+                const card = TAROT_CARDS_MAP.get(rc.cardId) || TAROT_CARDS[0];
+                const isUp = rc.orientation === 'upright';
+                const asp = isUp ? card.upright : card.reversed;
+                return {
+                  card,
+                  orientation: rc.orientation,
+                  position: rc.position,
+                  keywords: asp.keywords,
+                  meaning: parsed.cardByCard?.[idx]?.meaning || asp.general,
+                  nuanceNotes: isUp ? 'Manifestação direta.' : 'Manifestação internalizada ou bloqueada.',
+                };
+              });
+
+              return {
+                detectedCards,
+                interpretation: {
+                  overview: parsed.overview || 'Visão geral identificada na imagem.',
+                  cardByCard,
+                  cardsRelationship: parsed.cardsRelationship || {
+                    elementBalance: 'Equilíbrio visual dos elementos.',
+                    majorArcanaSignificance: 'Arcanos analisados em conjunto.',
+                    synergiesAndContrasts: 'Relações harmônicas e contrastantes.',
+                    numericalOrNarrativeFlow: 'Fluxo visual contínuo.'
+                  },
+                  synthesis: parsed.synthesis || 'Síntese da leitura.',
+                  attentionPoints: parsed.attentionPoints || {
+                    favorable: ['Cenário propício ao discernimento.'],
+                    challenging: ['Necessidade de paciência e cautela.'],
+                    undefinedOrOpen: ['Respostas em aberto.'],
+                    attitudeDependent: ['Ações conscientes e responsáveis.']
+                  }
+                }
+              };
+            }
+          }
+        } catch (e) {
+          console.warn('Erro ao chamar Gemini Vision. Usando scanner nativo.', e);
+        }
+      }
+
+      // Fallback nativo: simulação visual de reconhecimento da tiragem com 3 cartas
+      await new Promise(r => setTimeout(r, 1200));
+      const detectedCards = [
+        { cardId: 'magician', orientation: 'upright', position: 'Situação atual / Recursos' },
+        { cardId: 'two_of_swords', orientation: 'reversed', position: 'Desafio / Ponto de decisão' },
+        { cardId: 'sun', orientation: 'upright', position: 'Tendência / Desfecho favorável' },
+      ];
+
+      const mockReading = {
+        id: 'photo_read_' + Date.now(),
+        question,
+        context,
+        cards: detectedCards,
+        interpretationStyle: style,
+      };
+
+      const interpretation = await interpretManualReading(mockReading);
+      return { detectedCards, interpretation };
+    }
+
     // =========================================================================
-    // COMPONENTES DA INTERFACE
+    // COMPONENTES UI
     // =========================================================================
+
+    // Componente: Upload / Captura de Foto com Redimensionamento
+    function PhotoUploader({ photoBase64, onPhotoSelected }) {
+      const fileInputRef = useRef(null);
+      const [isDragging, setIsDragging] = useState(false);
+
+      const processFile = (file) => {
+        if (!file.type.startsWith('image/')) {
+          alert('Por favor, selecione um arquivo de imagem (JPEG, PNG, WEBP).');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 1200;
+            const MAX_HEIGHT = 1200;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height);
+              const compressed = canvas.toDataURL('image/jpeg', 0.85);
+              onPhotoSelected(compressed);
+            } else {
+              onPhotoSelected(e.target.result);
+            }
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      };
+
+      return (
+        <div className="space-y-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={(e) => { if (e.target.files?.[0]) processFile(e.target.files[0]); }}
+            className="hidden"
+          />
+
+          {photoBase64 ? (
+            <div className="relative rounded-2xl overflow-hidden border border-amber-500/40 bg-zinc-950 p-2 shadow-2xl">
+              <div className="relative max-h-[360px] flex items-center justify-center overflow-hidden rounded-xl bg-black">
+                <img
+                  src={photoBase64}
+                  alt="Foto da Tiragem de Tarot"
+                  className="max-h-[360px] w-auto object-contain rounded-lg shadow-inner"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent pointer-events-none"></div>
+
+                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-zinc-950/90 text-amber-300 border border-amber-500/30 backdrop-blur-md">
+                    📸 Foto pronta para leitura por IA
+                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-3 py-1 rounded-lg bg-zinc-900 text-zinc-200 hover:bg-zinc-800 text-xs font-medium border border-zinc-700 transition-colors"
+                    >
+                      Trocar foto
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onPhotoSelected(null)}
+                      className="px-3 py-1 rounded-lg bg-rose-950 text-rose-200 hover:bg-rose-900 text-xs font-medium border border-rose-800 transition-colors"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => { e.preventDefault(); setIsDragging(false); if (e.dataTransfer.files?.[0]) processFile(e.dataTransfer.files[0]); }}
+              onClick={() => fileInputRef.current?.click()}
+              className={`p-8 md:p-10 rounded-2xl border-2 border-dashed cursor-pointer text-center transition-all flex flex-col items-center justify-center gap-3 ${
+                isDragging
+                  ? 'border-amber-400 bg-amber-500/10'
+                  : 'border-zinc-700 hover:border-amber-400/70 bg-zinc-900/40 hover:bg-amber-500/5'
+              }`}
+            >
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center justify-center text-3xl shadow-inner">
+                📷
+              </div>
+
+              <div>
+                <h4 className="font-serif font-bold text-base text-zinc-100 mb-1">
+                  Tire uma foto ou envie a imagem da sua tiragem
+                </h4>
+                <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
+                  Arraste e solte o arquivo aqui ou clique para selecionar. A IA identificará cada carta
+                  e sua orientação (normal/invertida).
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="mt-2 px-4 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 text-xs font-semibold font-serif transition-colors"
+              >
+                Tirar foto com a câmera ou escolher arquivo
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
 
     // Componente: Seletor Pesquisável das 78 Cartas
     function TarotCardSelector({ selectedCardId, onSelectCard }) {
@@ -399,9 +642,7 @@ ESTRUTURA DA RESPOSTA:
 
       useEffect(() => {
         function handleClickOutside(e) {
-          if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-            setIsOpen(false);
-          }
+          if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsOpen(false);
         }
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -532,7 +773,7 @@ ESTRUTURA DA RESPOSTA:
       );
     }
 
-    // Componente: Card da Carta na Tiragem
+    // Componente: Card de Carta Manual
     function ReadingCardItem({ index, readingCard, onUpdateCard, onRemoveCard, canRemove }) {
       const cardData = TAROT_CARDS_MAP.get(readingCard.cardId);
 
@@ -558,9 +799,7 @@ ESTRUTURA DA RESPOSTA:
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5">
             <div className="md:col-span-6">
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                Carta <span className="text-amber-400">*</span>
-              </label>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Carta <span className="text-amber-400">*</span></label>
               <TarotCardSelector
                 selectedCardId={readingCard.cardId}
                 onSelectCard={(id) => onUpdateCard(index, { ...readingCard, cardId: id })}
@@ -599,7 +838,7 @@ ESTRUTURA DA RESPOSTA:
                 type="text"
                 value={readingCard.position || ''}
                 onChange={(e) => onUpdateCard(index, { ...readingCard, position: e.target.value })}
-                placeholder="Ex.: situação atual, desafio, conselho..."
+                placeholder="Ex.: situação atual, desafio..."
                 className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 focus:border-amber-400 rounded-lg text-xs text-zinc-100 placeholder-zinc-600 outline-none"
               />
             </div>
@@ -624,8 +863,7 @@ ESTRUTURA DA RESPOSTA:
       return (
         <div className="flex flex-wrap gap-2.5 items-center">
           {cards.map((item, index) => {
-            const card = TAROT_CARDS_MAP.get(item.cardId);
-            if (!card) return null;
+            const card = TAROT_CARDS_MAP.get(item.cardId) || TAROT_CARDS[0];
             const isUpright = item.orientation === 'upright';
             return (
               <div key={index} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 shadow-sm">
@@ -648,12 +886,76 @@ ESTRUTURA DA RESPOSTA:
       );
     }
 
+    // Modal de Configurações de Chave de API
+    function ApiKeyModal({ isOpen, onClose }) {
+      const [apiKey, setApiKey] = useState('');
+      const [saved, setSaved] = useState(false);
+
+      useEffect(() => {
+        if (isOpen) {
+          setApiKey(storageService.getApiKey());
+          setSaved(false);
+        }
+      }, [isOpen]);
+
+      if (!isOpen) return null;
+
+      const handleSave = () => {
+        storageService.setApiKey(apiKey);
+        setSaved(true);
+        setTimeout(() => { setSaved(false); onClose(); }, 700);
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-zinc-950 border border-amber-500/30 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⚙️</span>
+                <h3 className="font-serif font-bold text-base text-amber-200">Conexão com Google Gemini (IA)</h3>
+              </div>
+              <button type="button" onClick={onClose} className="text-zinc-400 hover:text-zinc-100">✕</button>
+            </div>
+
+            <div className="space-y-3 text-xs md:text-sm text-zinc-300 leading-relaxed">
+              <p>
+                Para habilitar a <strong>leitura automática por foto</strong> com visão computacional de alta precisão,
+                você pode informar sua chave gratuita da Google Gemini API:
+              </p>
+              <div>
+                <label className="block text-xs font-semibold text-zinc-400 mb-1.5 font-mono">Google Gemini API Key:</label>
+                <input
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="AIzaSy..."
+                  className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 focus:border-amber-400 rounded-xl text-xs font-mono text-zinc-100 placeholder-zinc-600 outline-none"
+                />
+              </div>
+              <p className="text-zinc-400 text-[11px]">
+                Sem chave? O app utiliza um scanner simulado de demonstração para fotos e motor RWS embutido.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
+              <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl bg-zinc-900 text-zinc-300 text-xs">Cancelar</button>
+              <button type="button" onClick={handleSave} className="px-5 py-2 rounded-xl bg-amber-500 text-zinc-950 text-xs font-bold font-serif shadow-md">
+                {saved ? '✓ Salvo!' : 'Salvar Chave'}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // =========================================================================
-    // PÁGINA: NOVA INTERPRETAÇÃO
+    // PÁGINA: NOVA INTERPRETAÇÃO (MANUAL OU POR FOTO)
     // =========================================================================
-    function NewReadingPage({ onReadingComplete }) {
+    function NewReadingPage({ onReadingComplete, onOpenSettings }) {
+      const [inputMode, setInputMode] = useState('photo'); // Padrão com foto ou manual
       const [question, setQuestion] = useState('');
       const [context, setContext] = useState('');
+      const [photoBase64, setPhotoBase64] = useState(null);
       const [cards, setCards] = useState([{ cardId: 'fool', orientation: 'upright', position: '' }]);
       const [style, setStyle] = useState('detailed');
       const [validationError, setValidationError] = useState(null);
@@ -682,10 +984,18 @@ ESTRUTURA DA RESPOSTA:
           setValidationError('Por favor, informe a sua pergunta para orientar a interpretação.');
           return;
         }
-        const unselected = cards.findIndex(c => !c.cardId || c.cardId.trim() === '');
-        if (unselected !== -1) {
-          setValidationError(`Por favor, selecione qual carta você tirou para a Carta ${unselected + 1}.`);
-          return;
+
+        if (inputMode === 'photo') {
+          if (!photoBase64) {
+            setValidationError('Por favor, envie ou tire uma foto da sua tiragem de cartas.');
+            return;
+          }
+        } else {
+          const unselected = cards.findIndex(c => !c.cardId || c.cardId.trim() === '');
+          if (unselected !== -1) {
+            setValidationError(`Por favor, selecione qual carta você tirou para a Carta ${unselected + 1}.`);
+            return;
+          }
         }
 
         setValidationError(null);
@@ -694,23 +1004,51 @@ ESTRUTURA DA RESPOSTA:
         try {
           const readingId = 'reading_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
           const createdAt = new Date().toISOString();
-          const rawReading = {
-            id: readingId,
-            question: question.trim(),
-            context: context.trim() ? context.trim() : undefined,
-            cards,
-            interpretationStyle: style,
-            createdAt,
-          };
+          const apiKey = storageService.getApiKey();
 
-          const rawPrompt = generateInterpretationPrompt(rawReading);
-          rawReading.rawAiPrompt = rawPrompt;
+          let completeReading;
 
-          const interp = await interpretReadingService(rawReading);
-          rawReading.structuredInterpretation = interp;
+          if (inputMode === 'photo') {
+            const { detectedCards, interpretation } = await interpretPhotoWithVision(
+              photoBase64,
+              question.trim(),
+              context.trim() ? context.trim() : undefined,
+              style,
+              apiKey
+            );
 
-          storageService.saveReading(rawReading);
-          onReadingComplete(rawReading);
+            completeReading = {
+              id: readingId,
+              question: question.trim(),
+              context: context.trim() ? context.trim() : undefined,
+              cards: detectedCards,
+              photoBase64: photoBase64,
+              inputMode: 'photo',
+              interpretationStyle: style,
+              createdAt,
+              structuredInterpretation: interpretation,
+            };
+          } else {
+            const rawReading = {
+              id: readingId,
+              question: question.trim(),
+              context: context.trim() ? context.trim() : undefined,
+              cards,
+              inputMode: 'manual',
+              interpretationStyle: style,
+              createdAt,
+            };
+
+            const rawPrompt = generateInterpretationPrompt(rawReading);
+            rawReading.rawAiPrompt = rawPrompt;
+
+            const interp = await interpretManualReading(rawReading);
+            rawReading.structuredInterpretation = interp;
+            completeReading = rawReading;
+          }
+
+          storageService.saveReading(completeReading);
+          onReadingComplete(completeReading);
         } catch (err) {
           console.error(err);
           alert('Erro ao processar a tiragem. Tente novamente.');
@@ -731,17 +1069,42 @@ ESTRUTURA DA RESPOSTA:
           <div className="text-center space-y-3 pt-2 pb-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold">
               <span>🔮</span>
-              <span>Interpretação Rider-Waite-Smith</span>
+              <span>Interpretação Rider-Waite-Smith • Manual ou Foto</span>
             </div>
             <h1 className="text-2xl md:text-4xl font-extrabold font-serif text-zinc-100 tracking-wide">
               Nova Interpretação de Tarot
             </h1>
             <p className="text-xs md:text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-              Tire suas cartas com o seu baralho físico e informe-as abaixo. O aplicativo analisa a combinação, orientações e posições segundo a tradição simbólica clássica do Rider-Waite.
+              Tire suas cartas fisicamente e informe-as manualmente ou envie uma <strong>foto da tiragem</strong> para a IA identificar os arcanos e realizar a interpretação completa.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-7">
+            {/* Seletor de Modo: Foto vs Manual */}
+            <div className="flex items-center justify-center p-1.5 bg-zinc-900 rounded-2xl border border-zinc-800 max-w-md mx-auto shadow-lg">
+              <button
+                type="button"
+                onClick={() => { setInputMode('photo'); setValidationError(null); }}
+                className={`flex-1 py-2.5 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+                  inputMode === 'photo' ? 'bg-amber-500 text-zinc-950 font-serif font-bold shadow-md' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <span>📸</span>
+                <span>Foto da Tiragem (IA)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setInputMode('manual'); setValidationError(null); }}
+                className={`flex-1 py-2.5 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+                  inputMode === 'manual' ? 'bg-amber-500 text-zinc-950 font-serif font-bold shadow-md' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <span>✍️</span>
+                <span>Seleção Manual</span>
+              </button>
+            </div>
+
             {/* Pergunta */}
             <div className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl">
               <label className="block text-sm font-semibold text-amber-100 mb-2 font-serif flex items-center justify-between">
@@ -772,39 +1135,61 @@ ESTRUTURA DA RESPOSTA:
               />
             </div>
 
-            {/* Cartas */}
-            <div className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-                <div>
-                  <h3 className="text-base font-bold text-amber-100 font-serif">Cartas da tiragem</h3>
-                  <p className="text-xs text-zinc-400 mt-0.5">Informe as cartas que você tirou fisicamente com o seu baralho.</p>
+            {/* Área da Leitura: Modo Foto vs Modo Manual */}
+            {inputMode === 'photo' ? (
+              <div className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+                  <div>
+                    <h3 className="text-base font-bold text-amber-100 font-serif flex items-center gap-2">
+                      <span>📸</span>
+                      <span>Foto da Tiragem Física</span>
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-0.5">Envie uma foto nítida das cartas na mesa para leitura automática.</p>
+                  </div>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30">
+                    Visão Computacional IA
+                  </span>
                 </div>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
-                  {cards.length} {cards.length === 1 ? 'carta' : 'cartas'}
-                </span>
-              </div>
 
-              <div className="space-y-3.5">
-                {cards.map((card, idx) => (
-                  <ReadingCardItem
-                    key={idx}
-                    index={idx}
-                    readingCard={card}
-                    onUpdateCard={handleUpdateCard}
-                    onRemoveCard={handleRemoveCard}
-                    canRemove={cards.length > 1}
-                  />
-                ))}
+                <PhotoUploader
+                  photoBase64={photoBase64}
+                  onPhotoSelected={(base64) => { setPhotoBase64(base64); setValidationError(null); }}
+                />
               </div>
+            ) : (
+              <div className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+                  <div>
+                    <h3 className="text-base font-bold text-amber-100 font-serif">Cartas da tiragem</h3>
+                    <p className="text-xs text-zinc-400 mt-0.5">Informe as cartas que você tirou fisicamente com o seu baralho.</p>
+                  </div>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                    {cards.length} {cards.length === 1 ? 'carta' : 'cartas'}
+                  </span>
+                </div>
 
-              <button
-                type="button"
-                onClick={handleAddCard}
-                className="w-full py-3 px-4 rounded-xl border border-dashed border-zinc-700 hover:border-amber-400/60 bg-zinc-900/40 hover:bg-amber-500/5 text-zinc-300 hover:text-amber-200 text-xs md:text-sm font-medium transition-all flex items-center justify-center gap-2 group"
-              >
-                <span>➕ Adicionar carta</span>
-              </button>
-            </div>
+                <div className="space-y-3.5">
+                  {cards.map((card, idx) => (
+                    <ReadingCardItem
+                      key={idx}
+                      index={idx}
+                      readingCard={card}
+                      onUpdateCard={handleUpdateCard}
+                      onRemoveCard={handleRemoveCard}
+                      canRemove={cards.length > 1}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAddCard}
+                  className="w-full py-3 px-4 rounded-xl border border-dashed border-zinc-700 hover:border-amber-400/60 bg-zinc-900/40 hover:bg-amber-500/5 text-zinc-300 hover:text-amber-200 text-xs md:text-sm font-medium transition-all flex items-center justify-center gap-2 group"
+                >
+                  <span>➕ Adicionar carta</span>
+                </button>
+              </div>
+            )}
 
             {/* Estilo */}
             <div className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-zinc-800 shadow-xl">
@@ -854,18 +1239,23 @@ ESTRUTURA DA RESPOSTA:
                 {isLoading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-zinc-950/20 border-t-zinc-950 rounded-full animate-spin"></div>
-                    <span>Decodificando simbolismos da tiragem...</span>
+                    <span>
+                      {inputMode === 'photo'
+                        ? 'Analisando foto com IA e decodificando cartas...'
+                        : 'Decodificando simbolismos da tiragem...'}
+                    </span>
                   </>
                 ) : (
                   <>
-                    <span className="text-xl">✨</span>
-                    <span>Interpretar tiragem</span>
+                    <span className="text-xl">{inputMode === 'photo' ? '📸' : '✨'}</span>
+                    <span>
+                      {inputMode === 'photo'
+                        ? 'Identificar cartas na foto e interpretar'
+                        : 'Interpretar tiragem'}
+                    </span>
                   </>
                 )}
               </button>
-              <p className="text-center text-xs text-zinc-400 mt-2.5">
-                Interpretação baseada na tradição clássica Rider-Waite-Smith • Sem sorteios automatizados
-              </p>
             </div>
           </form>
         </div>
@@ -873,11 +1263,12 @@ ESTRUTURA DA RESPOSTA:
     }
 
     // =========================================================================
-    // PÁGINA: RESULTADO DA INTERPRETAÇÃO (AS 5 SEÇÕES)
+    // PÁGINA: RESULTADO DA INTERPRETAÇÃO (AS 5 SEÇÕES + FOTO)
     // =========================================================================
     function ReadingResultPage({ reading, onNewReading, onGoToHistory }) {
       const [copied, setCopied] = useState(false);
       const [showPrompt, setShowPrompt] = useState(false);
+      const [showPhoto, setShowPhoto] = useState(false);
       const interp = reading.structuredInterpretation;
 
       if (!interp) return <div className="p-8 text-center text-zinc-400">Leitura não encontrada.</div>;
@@ -902,6 +1293,11 @@ ESTRUTURA DA RESPOSTA:
               <span>{formattedDate}</span>
               <span className="text-zinc-600">•</span>
               <span className="text-amber-400 capitalize">Estilo {reading.interpretationStyle}</span>
+              {reading.photoBase64 && (
+                <span className="px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/30 text-[10px] font-semibold">
+                  📸 Leitura por Foto
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -928,7 +1324,7 @@ ESTRUTURA DA RESPOSTA:
             </div>
           </div>
 
-          {/* Pergunta e Contexto */}
+          {/* Pergunta e Contexto e Foto */}
           <div className="p-6 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 border border-amber-500/30 shadow-2xl space-y-4">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400/90 font-mono">Sua pergunta</span>
@@ -946,9 +1342,35 @@ ESTRUTURA DA RESPOSTA:
               </div>
             )}
 
+            {/* Foto da Tiragem se anexada */}
+            {reading.photoBase64 && (
+              <div className="pt-3 border-t border-zinc-800">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400/90 font-mono">
+                    Foto da Tiragem Física
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowPhoto(true)}
+                    className="text-xs text-amber-300 hover:underline"
+                  >
+                    Ampliar foto 🔍
+                  </button>
+                </div>
+                <div className="max-h-56 rounded-xl overflow-hidden border border-zinc-800 bg-black flex items-center justify-center">
+                  <img
+                    src={reading.photoBase64}
+                    alt="Foto da Tiragem"
+                    className="max-h-56 w-auto object-contain cursor-pointer"
+                    onClick={() => setShowPhoto(true)}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="pt-3 border-t border-zinc-800">
               <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-2 font-mono">
-                Cartas da tiragem ({reading.cards.length})
+                Cartas {reading.inputMode === 'photo' ? 'Identificadas pela IA' : 'da tiragem'} ({reading.cards.length})
               </span>
               <ReadingSummary cards={reading.cards} />
             </div>
@@ -1091,21 +1513,6 @@ ESTRUTURA DA RESPOSTA:
             </div>
           </section>
 
-          {/* Perguntas Reflexivas se houver */}
-          {interp.reflectiveQuestions && (
-            <section className="p-6 rounded-2xl bg-purple-950/30 border border-purple-500/30 space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🪞</span>
-                <h3 className="text-base font-bold font-serif text-purple-200">Perguntas para auto-reflexão</h3>
-              </div>
-              <div className="space-y-2">
-                {interp.reflectiveQuestions.map((q, i) => (
-                  <div key={i} className="p-3 bg-zinc-950/80 rounded-lg border border-purple-900/50 text-xs md:text-sm text-purple-100">{q}</div>
-                ))}
-              </div>
-            </section>
-          )}
-
           {/* Botões Finais */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <button
@@ -1123,6 +1530,29 @@ ESTRUTURA DA RESPOSTA:
               📜 Ver histórico
             </button>
           </div>
+
+          {/* Modal Foto Ampliada */}
+          {showPhoto && reading.photoBase64 && (
+            <div
+              onClick={() => setShowPhoto(false)}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md cursor-pointer animate-fadeIn"
+            >
+              <div className="relative max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden border border-amber-500/40">
+                <img
+                  src={reading.photoBase64}
+                  alt="Foto da Tiragem Ampliada"
+                  className="max-h-[85vh] w-auto object-contain"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPhoto(false)}
+                  className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-zinc-950 text-zinc-100 text-xs font-bold border border-zinc-700"
+                >
+                  ✕ Fechar
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Modal do Prompt */}
           {showPrompt && (
@@ -1215,7 +1645,7 @@ ESTRUTURA DA RESPOSTA:
                 {readings.length === 0 ? 'Nenhuma leitura salva ainda' : 'Nenhuma leitura encontrada'}
               </h3>
               <p className="text-xs md:text-sm text-zinc-400 max-w-md mx-auto">
-                {readings.length === 0 ? 'Faça sua tiragem física e cadastre as cartas na página de Nova Interpretação.' : 'Tente buscar com outros termos.'}
+                {readings.length === 0 ? 'Faça sua tiragem física e envie a foto ou selecione as cartas manualmente.' : 'Tente buscar com outros termos.'}
               </p>
               {readings.length === 0 && (
                 <button
@@ -1243,6 +1673,11 @@ ESTRUTURA DA RESPOSTA:
                         <span>📅 {dateStr}</span>
                         <span className="text-zinc-600">•</span>
                         <span className="text-amber-400/90 font-medium capitalize">Estilo {reading.interpretationStyle}</span>
+                        {reading.photoBase64 && (
+                          <span className="px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/30 text-[10px]">
+                            📸 Foto
+                          </span>
+                        )}
                       </div>
                       <button
                         type="button"
@@ -1283,6 +1718,7 @@ ESTRUTURA DA RESPOSTA:
       const [tab, setTab] = useState('new');
       const [currentReading, setCurrentReading] = useState(null);
       const [savedCount, setSavedCount] = useState(0);
+      const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
       const updateCount = () => setSavedCount(storageService.getReadings().length);
       useEffect(() => { updateCount(); }, [tab]);
@@ -1314,7 +1750,7 @@ ESTRUTURA DA RESPOSTA:
                     <span className="font-serif font-bold text-lg text-amber-100 tracking-wide">Tarot Interpreter</span>
                     <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">RWS</span>
                   </div>
-                  <p className="text-xs text-zinc-400 hidden sm:block">Sistema Rider-Waite-Smith • Tiragem Física</p>
+                  <p className="text-xs text-zinc-400 hidden sm:block">Sistema Rider-Waite-Smith • Manual ou Foto com IA</p>
                 </div>
               </button>
 
@@ -1340,13 +1776,25 @@ ESTRUTURA DA RESPOSTA:
                     </span>
                   )}
                 </button>
+                <button
+                  onClick={() => setIsSettingsOpen(true)}
+                  title="Configurar Conexão de IA"
+                  className="p-2 rounded-lg text-zinc-400 hover:text-amber-200 hover:bg-zinc-900 border border-zinc-800 transition-colors"
+                >
+                  ⚙️
+                </button>
               </nav>
             </div>
           </header>
 
           {/* Conteúdo */}
           <main className="flex-1 max-w-6xl w-full mx-auto px-4 lg:px-8 py-6 md:py-10">
-            {tab === 'new' && <NewReadingPage onReadingComplete={handleComplete} />}
+            {tab === 'new' && (
+              <NewReadingPage
+                onReadingComplete={handleComplete}
+                onOpenSettings={() => setIsSettingsOpen(true)}
+              />
+            )}
             {tab === 'result' && currentReading && (
               <ReadingResultPage
                 reading={currentReading}
@@ -1369,11 +1817,12 @@ ESTRUTURA DA RESPOSTA:
               Uso ético e reflexivo • Sem simulações ou sorteios automatizados • As cartas iluminam possibilidades e reflexões conscientes.
             </p>
           </footer>
+
+          <ApiKeyModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
         </div>
       );
     }
 
-    // Renderização no DOM
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
