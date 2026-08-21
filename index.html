@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Arcana — Oráculo Sagrado & Grimório Rider-Waite-Smith</title>
-  <meta name="description" content="Grimório e oráculo místico de Tarot Rider-Waite-Smith com visão computacional por IA, biblioteca de arcanos e sabedoria hermética." />
-  <meta name="theme-color" content="#05020a" />
+  <meta name="description" content="Grimório e oráculo místico de Tarot Rider-Waite-Smith com tiragem aleatória virtual, visão computacional por IA, biblioteca de arcanos e sabedoria hermética." />
+  <meta name="theme-color" content="#030107" />
 
   <!-- Google Fonts Complementares: Almendra, MedievalSharp & Cormorant Garamond -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -168,8 +168,22 @@
       from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    @keyframes flipCardAnim {
+      0% { transform: rotateY(90deg) scale(0.85); opacity: 0; }
+      100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+    }
+    @keyframes shuffleShake {
+      0%, 100% { transform: translateX(0) rotate(0); }
+      20% { transform: translateX(-6px) rotate(-3deg); }
+      40% { transform: translateX(6px) rotate(3deg); }
+      60% { transform: translateX(-4px) rotate(-2deg); }
+      80% { transform: translateX(4px) rotate(2deg); }
+    }
+
     .animate-sigil { animation: pulseSigil 7s ease-in-out infinite; }
     .animate-fadeIn { animation: fadeInWitch 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .animate-flip { animation: flipCardAnim 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .animate-shuffle { animation: shuffleShake 0.6s ease-in-out infinite; }
 
     /* Custom Scrollbar Místico */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -341,6 +355,14 @@
 
     // Modelos de Tiragem Consagrados
     const SPREAD_PRESETS = [
+      {
+        id: 'single_card',
+        name: 'Carta do Dia',
+        icon: '☀️',
+        cardCount: 1,
+        positions: ['Mensagem Central & Conselho do Dia'],
+        desc: 'Foco direto em uma lâmina mestra para clareza e reflexão imediata.'
+      },
       {
         id: 'three_time',
         name: 'Tríade do Tempo',
@@ -539,7 +561,7 @@
       }
 
       return `Você é um Grão-Mestre em Hermenêutica de Tarot especializado no sistema Rider-Waite-Smith (RWS).
-O consulente realizou a tiragem fisicamente. Você interpreta exclusivamente as cartas fornecidas.
+O consulente realizou a tiragem de cartas. Você interpreta exclusivamente as cartas fornecidas.
 
 ${styleDirectives}
 
@@ -912,8 +934,45 @@ Responda ESTRITAMENTE em formato JSON com o schema:
     // COMPONENTES UI MÍSTICOS & ILUSTRAÇÕES DE CARTAS
     // =========================================================================
 
+    // Componente: Verso Sagrado da Carta Oculta (Card Back)
+    function OccultCardBack({ size = 'md', isShuffling = false, isSelected = false, onClick, className = '' }) {
+      const sizeClasses = {
+        sm: 'w-16 h-26 text-[9px]',
+        md: 'w-24 h-38 md:w-28 md:h-44 text-xs',
+        lg: 'w-32 h-52 md:w-36 md:h-58 text-sm',
+      }[size] || 'w-24 h-38 md:w-28 md:h-44 text-xs';
+
+      return (
+        <div
+          onClick={onClick}
+          className={`relative rounded-xl overflow-hidden border-2 transition-all duration-300 shadow-2xl flex flex-col items-center justify-between p-2 select-none cursor-pointer group ${
+            isSelected
+              ? 'border-amber-400 shadow-witch-gold scale-105 ring-2 ring-amber-300'
+              : 'border-amber-500/60 shadow-witch-coven hover:border-amber-400 hover:scale-105 hover:shadow-witch-gold'
+          } bg-gradient-to-br from-[#120524] via-[#070110] to-[#1e0a36] ${sizeClasses} ${isShuffling ? 'animate-shuffle' : ''} ${className}`}
+        >
+          <div className="w-full flex justify-between text-[10px] text-amber-400/80 px-1 pt-0.5 pointer-events-none">
+            <span>🜏</span><span>✦</span><span>🜂</span>
+          </div>
+
+          <div className="w-12 h-12 md:w-14 md:h-14 rounded-full border border-amber-500/40 flex items-center justify-center p-1 bg-black/60 shadow-inner group-hover:border-amber-400 transition-colors">
+            <div className="w-full h-full rounded-full border border-dashed border-amber-400/60 flex items-center justify-center">
+              <span className="text-sm md:text-base text-amber-300 font-devil-title select-none">☽◯☾</span>
+            </div>
+          </div>
+
+          <div className="w-full flex justify-between text-[10px] text-amber-400/80 px-1 pb-0.5 pointer-events-none">
+            <span>🜄</span><span>✦</span><span>🜃</span>
+          </div>
+
+          {/* Borda interna refinada */}
+          <div className="absolute inset-1 border border-amber-500/30 rounded-lg pointer-events-none"></div>
+        </div>
+      );
+    }
+
     // Componente: Visual da Carta de Tarot Ilustrada (Moldura de Ouro Arcano)
-    function VisualTarotCard({ cardId, orientation = 'upright', position, size = 'md', onClick }) {
+    function VisualTarotCard({ cardId, orientation = 'upright', position, size = 'md', isRevealing = false, onClick }) {
       const card = TAROT_CARDS_MAP.get(cardId) || TAROT_CARDS[0];
       const imageUrl = getCardImageUrl(cardId);
       const isReversed = orientation === 'reversed';
@@ -927,7 +986,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       return (
         <div
           onClick={onClick}
-          className={`relative group flex flex-col items-center select-none ${onClick ? 'cursor-pointer' : ''}`}
+          className={`relative group flex flex-col items-center select-none ${onClick ? 'cursor-pointer' : ''} ${isRevealing ? 'animate-flip' : ''}`}
         >
           {/* Card Container com Borda Gótica & Brilho Oculto */}
           <div
@@ -974,6 +1033,233 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 {position}
               </span>
             )}
+          </div>
+        </div>
+      );
+    }
+
+    // Componente: Tirador Virtual de Cartas Aleatórias (Baralho Interativo)
+    function VirtualDeckDrawer({
+      targetPositions,
+      cards,
+      onCardsDrawn,
+      allowReversed,
+      onToggleAllowReversed,
+      majorOnly,
+      onToggleMajorOnly
+    }) {
+      const [isShuffling, setIsShuffling] = useState(false);
+      const [shuffleCount, setShuffleCount] = useState(0);
+      const [revealingIndex, setRevealingIndex] = useState(null);
+
+      // Sorteia cartas aleatórias únicas
+      const drawRandomDeckCards = (count) => {
+        let pool = majorOnly ? TAROT_CARDS.filter(c => c.arcana === 'major') : [...TAROT_CARDS];
+        // Fisher-Yates shuffle
+        for (let i = pool.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        const selected = pool.slice(0, count);
+        return selected.map((card, idx) => ({
+          cardId: card.id,
+          orientation: allowReversed && Math.random() > 0.65 ? 'reversed' : 'upright',
+          position: targetPositions[idx] || `Lâmina ${idx + 1}`
+        }));
+      };
+
+      // Embaralhar o Baralho
+      const handleShuffle = () => {
+        setIsShuffling(true);
+        setTimeout(() => {
+          setIsShuffling(false);
+          setShuffleCount(prev => prev + 1);
+        }, 800);
+      };
+
+      // Tirar todas as cartas automaticamente
+      const handleDrawAll = () => {
+        setIsShuffling(true);
+        setTimeout(() => {
+          const newDrawn = drawRandomDeckCards(targetPositions.length);
+          onCardsDrawn(newDrawn);
+          setIsShuffling(false);
+          setRevealingIndex(targetPositions.length - 1);
+        }, 600);
+      };
+
+      // Tirar a próxima carta individualmente ao tocar no baralho
+      const handleDrawNextCard = () => {
+        const nextIdx = cards.findIndex(c => !c.cardId || c.cardId === '');
+        const targetIdx = nextIdx === -1 ? 0 : nextIdx;
+
+        let pool = majorOnly ? TAROT_CARDS.filter(c => c.arcana === 'major') : [...TAROT_CARDS];
+        // Evitar cartas já tiradas
+        const existingIds = new Set(cards.map(c => c.cardId).filter(Boolean));
+        const available = pool.filter(c => !existingIds.has(c.id));
+        const chosen = (available.length > 0 ? available : pool)[Math.floor(Math.random() * (available.length > 0 ? available.length : pool.length))];
+
+        const updated = [...cards];
+        while (updated.length < targetPositions.length) {
+          updated.push({ cardId: '', orientation: 'upright', position: targetPositions[updated.length] });
+        }
+
+        updated[targetIdx] = {
+          cardId: chosen.id,
+          orientation: allowReversed && Math.random() > 0.65 ? 'reversed' : 'upright',
+          position: targetPositions[targetIdx] || `Lâmina ${targetIdx + 1}`
+        };
+
+        setRevealingIndex(targetIdx);
+        onCardsDrawn(updated);
+      };
+
+      const drawnCount = cards.filter(c => c.cardId && c.cardId !== '').length;
+      const totalNeeded = targetPositions.length;
+      const isComplete = drawnCount >= totalNeeded;
+
+      return (
+        <div className="space-y-6">
+          {/* Barra de Opções do Baralho */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-black/60 rounded-2xl border border-witch-border text-xs">
+            <div className="flex items-center gap-4 flex-wrap">
+              <label className="flex items-center gap-2 cursor-pointer text-amber-200 font-devil-title">
+                <input
+                  type="checkbox"
+                  checked={allowReversed}
+                  onChange={(e) => onToggleAllowReversed(e.target.checked)}
+                  className="rounded border-amber-500 text-amber-500 focus:ring-amber-400 bg-black"
+                />
+                <span>🔄 Permitir Cartas Invertidas</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer text-purple-200 font-devil-title">
+                <input
+                  type="checkbox"
+                  checked={majorOnly}
+                  onChange={(e) => onToggleMajorOnly(e.target.checked)}
+                  className="rounded border-purple-500 text-purple-500 focus:ring-purple-400 bg-black"
+                />
+                <span>✨ Apenas Arcanos Maiores (22)</span>
+              </label>
+            </div>
+
+            <div className="text-amber-400 font-devil-title text-xs">
+              {drawnCount} de {totalNeeded} {totalNeeded === 1 ? 'lâmina sorteada' : 'lâminas sorteadas'}
+            </div>
+          </div>
+
+          {/* Área Central de Embaralhamento & Baralho Místico */}
+          <div className="p-6 md:p-8 rounded-3xl bg-gradient-to-b from-witch-parchment via-witch-night to-witch-void border border-amber-500/40 shadow-witch-coven flex flex-col items-center justify-center gap-6 relative overflow-hidden">
+            <div className="text-center space-y-1">
+              <h4 className="font-devil-title text-2xl md:text-3xl text-witch-gold font-bold">
+                O Baralho Sagrado das 78 Lâminas
+              </h4>
+              <p className="text-xs md:text-sm text-purple-200/80 font-book">
+                Toque no baralho para tirar a próxima carta ou clique no botão para tirar todas de uma só vez.
+              </p>
+            </div>
+
+            {/* O Monte do Baralho de Cartas Fechadas (3D Stack) */}
+            <div className="relative py-4 flex items-center justify-center">
+              {/* Cartas de fundo para dar volume 3D ao baralho */}
+              <div className="absolute translate-x-2 translate-y-2 opacity-30 pointer-events-none">
+                <OccultCardBack size="lg" />
+              </div>
+              <div className="absolute translate-x-1 translate-y-1 opacity-60 pointer-events-none">
+                <OccultCardBack size="lg" />
+              </div>
+
+              {/* Carta de topo clicável */}
+              <div className="relative z-10" onClick={handleDrawNextCard}>
+                <OccultCardBack
+                  size="lg"
+                  isShuffling={isShuffling}
+                  className="hover:scale-105 active:scale-95"
+                />
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/90 px-3 py-1 rounded-full border border-amber-500/50 text-[10px] text-amber-300 font-devil-title shadow-md pointer-events-none">
+                  👆 Toque para Tirar
+                </div>
+              </div>
+            </div>
+
+            {/* Controles de Ação Ritualística */}
+            <div className="flex items-center gap-3 flex-wrap justify-center pt-2">
+              <button
+                type="button"
+                onClick={handleShuffle}
+                disabled={isShuffling}
+                className="px-5 py-2.5 rounded-xl bg-witch-parchment hover:bg-witch-coven text-amber-200 border border-witch-border hover:border-amber-400 text-xs font-devil-title transition-all flex items-center gap-2 shadow-sm"
+              >
+                <span>🔀</span>
+                <span>{isShuffling ? 'Embaralhando...' : 'Embaralhar Baralho'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDrawAll}
+                disabled={isShuffling}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-devil-title font-bold text-xs shadow-witch-gold transition-all flex items-center gap-2"
+              >
+                <span>🔮</span>
+                <span>Tirar Todas as Cartas do Spread</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Altar das Cartas Sorteadas no Momento */}
+          <div className="p-6 md:p-8 rounded-3xl bg-black/80 border-2 border-amber-500/40 shadow-witch-gold space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-witch-border">
+              <span className="font-devil-title text-sm md:text-base text-witch-gold font-bold flex items-center gap-2">
+                <span>✧</span>
+                <span>Lâminas Reveladas no Altar</span>
+                <span>✧</span>
+              </span>
+
+              {isComplete && (
+                <span className="text-xs font-bold text-emerald-400 font-devil-title">
+                  ✓ Todas as cartas consagradas!
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 pt-2">
+              {targetPositions.map((pos, idx) => {
+                const cardItem = cards[idx];
+                const hasCard = cardItem && cardItem.cardId && cardItem.cardId !== '';
+
+                if (hasCard) {
+                  return (
+                    <VisualTarotCard
+                      key={idx}
+                      cardId={cardItem.cardId}
+                      orientation={cardItem.orientation}
+                      position={pos}
+                      size="md"
+                      isRevealing={revealingIndex === idx}
+                    />
+                  );
+                }
+
+                return (
+                  <div
+                    key={idx}
+                    onClick={handleDrawNextCard}
+                    className="w-24 h-38 md:w-28 md:h-44 rounded-xl border-2 border-dashed border-amber-500/30 hover:border-amber-400/80 bg-witch-night/60 flex flex-col items-center justify-center p-3 text-center cursor-pointer transition-all hover:bg-amber-500/10 group"
+                  >
+                    <span className="text-2xl text-amber-500/40 group-hover:text-amber-300 group-hover:scale-110 transition-all mb-1">
+                      🃏
+                    </span>
+                    <span className="text-[11px] font-bold text-amber-200/80 font-devil-title line-clamp-2">
+                      {pos}
+                    </span>
+                    <span className="text-[9px] text-zinc-500 font-book mt-1">
+                      Clique p/ tirar
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       );
@@ -1651,19 +1937,24 @@ Responda ESTRITAMENTE em formato JSON com o schema:
     }
 
     // =========================================================================
-    // PÁGINA: NOVA INTERPRETAÇÃO (MANUAL OU POR FOTO COM MODELOS DE TIRAGEM)
+    // PÁGINA: NOVA INTERPRETAÇÃO (VIRTUAL / ALEATÓRIA, FOTO OU MANUAL)
     // =========================================================================
     function NewReadingPage({ onReadingComplete, onOpenSettings }) {
-      const [inputMode, setInputMode] = useState('photo');
+      const [inputMode, setInputMode] = useState('virtual'); // 'virtual', 'photo', 'manual'
       const [selectedPresetId, setSelectedPresetId] = useState('three_time');
       const [question, setQuestion] = useState('');
       const [context, setContext] = useState('');
       const [photoBase64, setPhotoBase64] = useState(null);
+      const [allowReversed, setAllowReversed] = useState(true);
+      const [majorOnly, setMajorOnly] = useState(false);
+
+      // Cartas da tiragem
       const [cards, setCards] = useState([
-        { cardId: 'fool', orientation: 'upright', position: 'Passado (Origem / Raízes)' },
-        { cardId: 'magician', orientation: 'upright', position: 'Presente (Momento Atual)' },
-        { cardId: 'sun', orientation: 'upright', position: 'Futuro (Tendência Imediata)' },
+        { cardId: '', orientation: 'upright', position: 'Passado (Origem / Raízes)' },
+        { cardId: '', orientation: 'upright', position: 'Presente (Momento Atual)' },
+        { cardId: '', orientation: 'upright', position: 'Futuro (Tendência Imediata)' },
       ]);
+
       const [style, setStyle] = useState('reflective');
       const [validationError, setValidationError] = useState(null);
       const [isLoading, setIsLoading] = useState(false);
@@ -1674,17 +1965,25 @@ Responda ESTRITAMENTE em formato JSON com o schema:
         setHasApiKey(Boolean(key && key.trim().length > 10));
       }, []);
 
+      const currentPreset = useMemo(() => {
+        return SPREAD_PRESETS.find(p => p.id === selectedPresetId) || SPREAD_PRESETS[1];
+      }, [selectedPresetId]);
+
       // Aplicar modelo de tiragem pré-definido
       const handleSelectPreset = (preset) => {
         setSelectedPresetId(preset.id);
-        if (preset.id === 'free') return;
+        if (preset.id === 'free') {
+          setCards([{ cardId: '', orientation: 'upright', position: 'Posição Livre' }]);
+          return;
+        }
 
         const newCards = preset.positions.map((pos, idx) => ({
-          cardId: cards[idx]?.cardId || TAROT_CARDS[idx % TAROT_CARDS.length].id,
-          orientation: cards[idx]?.orientation || 'upright',
+          cardId: '',
+          orientation: 'upright',
           position: pos,
         }));
         setCards(newCards);
+        setValidationError(null);
       };
 
       const handleAddCard = () => {
@@ -1719,7 +2018,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
         } else {
           const unselected = cards.findIndex(c => !c.cardId || c.cardId.trim() === '');
           if (unselected !== -1) {
-            setValidationError(`Por favor, selecione qual carta você tirou para a Lâmina ${unselected + 1}.`);
+            setValidationError(`Por favor, tire ou selecione a carta para a Lâmina ${unselected + 1} ("${cards[unselected]?.position || 'Posição'}").`);
             return;
           }
         }
@@ -1760,7 +2059,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               question: question.trim(),
               context: context.trim() ? context.trim() : undefined,
               cards,
-              inputMode: 'manual',
+              inputMode: inputMode === 'virtual' ? 'virtual' : 'manual',
               interpretationStyle: style,
               createdAt,
             };
@@ -1813,33 +2112,44 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             </div>
 
             <p className="text-base md:text-lg text-purple-200/90 max-w-2xl mx-auto leading-relaxed">
-              Consagre as cartas retiradas com o seu baralho físico. Envie a <strong>foto da mesa</strong> para visão computacional por IA ou selecione as lâminas manualmente.
+              Faça sua <strong>tiragem virtual com cartas aleatórias</strong>, envie a foto da sua mesa física ou selecione as lâminas manualmente.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Seletor de Modo: Foto vs Manual */}
-            <div className="flex items-center justify-center p-1.5 bg-witch-void/90 rounded-2xl border border-amber-500/40 max-w-md mx-auto shadow-witch-coven backdrop-blur-md">
+            {/* Seletor de Modo: Tiragem Virtual vs Foto vs Manual */}
+            <div className="flex items-center justify-center p-1.5 bg-witch-void/90 rounded-2xl border border-amber-500/40 max-w-lg mx-auto shadow-witch-coven backdrop-blur-md">
+              <button
+                type="button"
+                onClick={() => { setInputMode('virtual'); setValidationError(null); }}
+                className={`flex-1 py-3 px-3 rounded-xl text-xs md:text-sm font-devil-title font-bold transition-all flex items-center justify-center gap-1.5 ${
+                  inputMode === 'virtual' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-witch-gold' : 'text-zinc-400 hover:text-amber-200'
+                }`}
+              >
+                <span>🎴</span>
+                <span>Tiragem Virtual</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => { setInputMode('photo'); setValidationError(null); }}
-                className={`flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-devil-title font-bold transition-all flex items-center justify-center gap-2 ${
+                className={`flex-1 py-3 px-3 rounded-xl text-xs md:text-sm font-devil-title font-bold transition-all flex items-center justify-center gap-1.5 ${
                   inputMode === 'photo' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-witch-gold' : 'text-zinc-400 hover:text-amber-200'
                 }`}
               >
                 <span>📸</span>
-                <span>Foto da Tiragem (IA)</span>
+                <span>Foto (IA)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => { setInputMode('manual'); setValidationError(null); }}
-                className={`flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-devil-title font-bold transition-all flex items-center justify-center gap-2 ${
+                className={`flex-1 py-3 px-3 rounded-xl text-xs md:text-sm font-devil-title font-bold transition-all flex items-center justify-center gap-1.5 ${
                   inputMode === 'manual' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-witch-gold' : 'text-zinc-400 hover:text-amber-200'
                 }`}
               >
                 <span>✍️</span>
-                <span>Seleção Manual</span>
+                <span>Manual</span>
               </button>
             </div>
 
@@ -1853,7 +2163,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 rows={3}
                 value={question}
                 onChange={(e) => { setQuestion(e.target.value); if (validationError) setValidationError(null); }}
-                placeholder="Exemplo: Como tende a evoluir minha relação com essa pessoa? / Qual caminho profissional favorece minha missão de alma?"
+                placeholder="Exemplo: Como tende a evoluir minha relação com essa pessoa? / Qual orientação espiritual para o meu momento atual?"
                 className="w-full p-4 bg-black border border-witch-border focus:border-amber-400 rounded-2xl text-base text-zinc-100 placeholder-zinc-600 outline-none leading-relaxed resize-y font-book shadow-inner"
               />
             </div>
@@ -1873,8 +2183,73 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               />
             </div>
 
-            {/* Área da Leitura: Modo Foto vs Modo Manual */}
-            {inputMode === 'photo' ? (
+            {/* SELEÇÃO DO MODELO DE TIRAGEM (Para Virtual e Manual) */}
+            {inputMode !== 'photo' && (
+              <div className="p-6 md:p-7 rounded-3xl witch-card space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-witch-border">
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-bold text-witch-gold font-devil-title">
+                      Modelos de Tiragem Consagrados
+                    </h3>
+                    <p className="text-xs text-zinc-400 font-book">Escolha a disposição ritualística para a consulta.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                  {SPREAD_PRESETS.map((preset) => {
+                    const isSelected = selectedPresetId === preset.id;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => handleSelectPreset(preset)}
+                        className={`p-3 rounded-xl text-left border transition-all flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-amber-500/20 border-amber-400 text-amber-200 shadow-witch-gold ring-1 ring-amber-400/60'
+                            : 'bg-black/60 border-witch-border hover:border-amber-400/60 text-zinc-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-base">{preset.icon}</span>
+                          <span className="text-xs font-bold font-devil-title text-amber-100 tracking-wide">{preset.name}</span>
+                        </div>
+                        <span className="text-[10px] text-zinc-400 font-book">{preset.cardCount} {preset.cardCount === 1 ? 'carta' : 'cartas'}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ÁREA DA LEITURA DE ACORDO COM O MODO ESCOLHIDO */}
+            {inputMode === 'virtual' && (
+              <div className="p-6 md:p-7 rounded-3xl witch-card space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-witch-border">
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-bold text-witch-gold font-devil-title flex items-center gap-2">
+                      <span>🎴</span>
+                      <span>Tiragem Virtual Interativa</span>
+                    </h3>
+                    <p className="text-xs text-zinc-400 font-book mt-0.5">Embaralhe o baralho sagrado e retire suas cartas intuitivamente.</p>
+                  </div>
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm font-devil-title">
+                    Sorteio Místico
+                  </span>
+                </div>
+
+                <VirtualDeckDrawer
+                  targetPositions={currentPreset.positions}
+                  cards={cards}
+                  onCardsDrawn={(newCards) => { setCards(newCards); setValidationError(null); }}
+                  allowReversed={allowReversed}
+                  onToggleAllowReversed={setAllowReversed}
+                  majorOnly={majorOnly}
+                  onToggleMajorOnly={setMajorOnly}
+                />
+              </div>
+            )}
+
+            {inputMode === 'photo' && (
               <div className="p-6 md:p-7 rounded-3xl witch-card space-y-5">
                 <div className="flex items-center justify-between pb-4 border-b border-witch-border">
                   <div>
@@ -1917,47 +2292,23 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="p-6 md:p-7 rounded-3xl witch-card space-y-6">
-                {/* Seletor de Modelos de Tiragem (Spread Presets) */}
-                <div>
-                  <div className="flex items-center justify-between pb-3 border-b border-witch-border mb-3">
-                    <div>
-                      <h3 className="text-xl md:text-2xl font-bold text-witch-gold font-devil-title">
-                        Modelos de Tiragem Consagrados
-                      </h3>
-                      <p className="text-xs text-zinc-400 font-book">Escolha a disposição ritualística para preencher as posições automaticamente.</p>
-                    </div>
-                  </div>
+            )}
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
-                    {SPREAD_PRESETS.map((preset) => {
-                      const isSelected = selectedPresetId === preset.id;
-                      return (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => handleSelectPreset(preset)}
-                          className={`p-3 rounded-xl text-left border transition-all flex flex-col justify-between ${
-                            isSelected
-                              ? 'bg-amber-500/20 border-amber-400 text-amber-200 shadow-witch-gold'
-                              : 'bg-black/60 border-witch-border hover:border-amber-400/60 text-zinc-300'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-base">{preset.icon}</span>
-                            <span className="text-xs font-bold font-devil-title text-amber-100 tracking-wide">{preset.name}</span>
-                          </div>
-                          <span className="text-[10px] text-zinc-400 font-book">{preset.cardCount} {preset.cardCount === 1 ? 'carta' : 'cartas'}</span>
-                        </button>
-                      );
-                    })}
+            {inputMode === 'manual' && (
+              <div className="p-6 md:p-7 rounded-3xl witch-card space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-witch-border">
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-bold text-witch-gold font-devil-title flex items-center gap-2">
+                      <span>✍️</span>
+                      <span>Seleção Manual das Lâminas</span>
+                    </h3>
+                    <p className="text-xs text-zinc-400 font-book mt-0.5">Escolha cada uma das 78 cartas retiradas fisicamente.</p>
                   </div>
                 </div>
 
                 {/* Altar das Cartas Escolhidas */}
                 <div className="pt-2">
-                  <VirtualTarotAltar cards={cards} />
+                  <VirtualTarotAltar cards={cards.filter(c => c.cardId)} />
                 </div>
 
                 <div className="space-y-4 pt-2">
@@ -1983,7 +2334,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               </div>
             )}
 
-            {/* Estilo */}
+            {/* Estilo Hermenêutico */}
             <div className="p-6 md:p-7 rounded-3xl witch-card space-y-4">
               <div>
                 <h3 className="text-xl md:text-2xl font-bold text-witch-gold font-devil-title">
@@ -2127,6 +2478,11 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <span>{formattedDate}</span>
               <span className="text-amber-500/40">•</span>
               <span className="text-amber-300 capitalize">Prisma {reading.interpretationStyle}</span>
+              {reading.inputMode === 'virtual' && (
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-semibold font-devil-title">
+                  🎴 Tiragem Virtual
+                </span>
+              )}
               {reading.photoBase64 && (
                 <span className="px-2.5 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 text-[10px] font-semibold font-devil-title">
                   📸 Leitura por Imagem
@@ -2660,7 +3016,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 {readings.length === 0 ? 'Nenhuma leitura consagrada ainda' : 'Nenhuma consulta encontrada'}
               </h3>
               <p className="text-sm text-zinc-400 max-w-md mx-auto">
-                {readings.length === 0 ? 'Realize sua primeira consulta oracular com fotos ou seleção de arcanos.' : 'Tente buscar com outros termos.'}
+                {readings.length === 0 ? 'Realize sua primeira consulta oracular com tiragem virtual, fotos ou seleção manual.' : 'Tente buscar com outros termos.'}
               </p>
               {readings.length === 0 && (
                 <button
@@ -2688,6 +3044,11 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                         <span>📅 {dateStr}</span>
                         <span className="text-amber-500/40">•</span>
                         <span className="text-amber-300 font-medium capitalize">Prisma {reading.interpretationStyle}</span>
+                        {reading.inputMode === 'virtual' && (
+                          <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-devil-title">
+                            🎴 Virtual
+                          </span>
+                        )}
                         {reading.photoBase64 && (
                           <span className="px-2.5 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 text-[10px] font-devil-title">
                             📸 Foto
