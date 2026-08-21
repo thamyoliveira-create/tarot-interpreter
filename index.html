@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Tarot Interpreter — Oráculo & Hermenêutica Rider-Waite-Smith</title>
-  <meta name="description" content="Santuário místico de interpretação de Tarot Rider-Waite-Smith com leitura manual e visão computacional por IA." />
+  <meta name="description" content="Santuário místico de interpretação de Tarot Rider-Waite-Smith com biblioteca dos 78 arcanos, tiragens consagradas e visão computacional por IA." />
   <meta name="theme-color" content="#06040a" />
 
   <!-- Google Fonts: Cinzel Decorative, Cinzel, Cormorant Garamond & Plus Jakarta Sans -->
@@ -57,7 +57,6 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
-    /* Fundo Cósmico & Estrelas Cintilantes */
     body {
       background-color: #06040a;
       background-image: 
@@ -70,20 +69,10 @@
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     }
 
-    .font-mystic-title {
-      font-family: 'Cinzel Decorative', 'Cinzel', serif;
-    }
-    .font-mystic-serif {
-      font-family: 'Cinzel', serif;
-      letter-spacing: 0.03em;
-    }
-    .font-mystic-body {
-      font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 1.125rem;
-      line-height: 1.75;
-    }
+    .font-mystic-title { font-family: 'Cinzel Decorative', 'Cinzel', serif; }
+    .font-mystic-serif { font-family: 'Cinzel', serif; letter-spacing: 0.03em; }
+    .font-mystic-body { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.125rem; line-height: 1.75; }
 
-    /* Brilho Dourado Metálico */
     .text-gold-gradient {
       background: linear-gradient(135deg, #fae49e 0%, #d4af37 50%, #fef3c7 100%);
       -webkit-background-clip: text;
@@ -95,7 +84,6 @@
       -webkit-text-fill-color: transparent;
     }
 
-    /* Borda Dourada Imperial */
     .mystic-border {
       border: 1px solid rgba(230, 198, 103, 0.3);
       box-shadow: 0 0 20px -3px rgba(139, 92, 246, 0.15), inset 0 0 15px -3px rgba(230, 198, 103, 0.05);
@@ -110,22 +98,22 @@
       box-shadow: 0 0 30px -5px rgba(230, 198, 103, 0.2);
     }
 
-    /* Animações Místicas */
     @keyframes pulseGlow {
       0%, 100% { opacity: 0.4; transform: scale(1); }
       50% { opacity: 0.8; transform: scale(1.03); }
-    }
-    @keyframes floatStar {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-6px) rotate(5deg); }
     }
     @keyframes fadeInSlow {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .animate-pulseGlow { animation: pulseGlow 4s ease-in-out infinite; }
-    .animate-floatStar { animation: floatStar 5s ease-in-out infinite; }
     .animate-fadeIn { animation: fadeInSlow 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    /* Estilo de Impressão para o Cartão Místico / PDF */
+    @media print {
+      body { background: white !important; color: black !important; }
+      header, footer, nav, button { display: none !important; }
+      .print-card { box-shadow: none !important; border: 2px solid #333 !important; color: black !important; background: white !important; }
+    }
 
     ::-webkit-scrollbar { width: 7px; height: 7px; }
     ::-webkit-scrollbar-track { background: #06040a; }
@@ -149,15 +137,48 @@
     const { useState, useEffect, useMemo, useRef } = React;
 
     // =========================================================================
+    // HELPER: URL DAS IMAGENS ORIGINAIS DAS 78 CARTAS (RIDER-WAITE-SMITH 1909)
+    // =========================================================================
+    function getCardImageUrl(cardId) {
+      const majorMap = {
+        'fool': 'ar00', 'magician': 'ar01', 'high_priestess': 'ar02', 'empress': 'ar03',
+        'emperor': 'ar04', 'hierophant': 'ar05', 'lovers': 'ar06', 'chariot': 'ar07',
+        'strength': 'ar08', 'hermit': 'ar09', 'wheel_of_fortune': 'ar10', 'justice': 'ar11',
+        'hanged_man': 'ar12', 'death': 'ar13', 'temperance': 'ar14', 'devil': 'ar15',
+        'tower': 'ar16', 'star': 'ar17', 'moon': 'ar18', 'sun': 'ar19',
+        'judgement': 'ar20', 'world': 'ar21'
+      };
+
+      if (majorMap[cardId]) {
+        return `https://cdn.jsdelivr.net/gh/seven102161/elaine-tarot-cards@master/cards/${majorMap[cardId]}.jpg`;
+      }
+
+      const parts = (cardId || '').split('_of_');
+      if (parts.length === 2) {
+        const rankStr = parts[0];
+        const suitStr = parts[1];
+        const suitPrefix = { 'wands': 'wa', 'cups': 'cu', 'swords': 'sw', 'pentacles': 'pe' }[suitStr] || 'wa';
+        const rankCode = {
+          'ace': 'ac', 'two': '02', 'three': '03', 'four': '04', 'five': '05',
+          'six': '06', 'seven': '07', 'eight': '08', 'nine': '09', 'ten': '10',
+          'page': 'pa', 'knight': 'kn', 'queen': 'qu', 'king': 'ki'
+        }[rankStr] || 'ac';
+        return `https://cdn.jsdelivr.net/gh/seven102161/elaine-tarot-cards@master/cards/${suitPrefix}${rankCode}.jpg`;
+      }
+
+      return 'https://cdn.jsdelivr.net/gh/seven102161/elaine-tarot-cards@master/cards/ar00.jpg';
+    }
+
+    // =========================================================================
     // BASE DE DADOS COMPLETA DAS 78 CARTAS RIDER-WAITE-SMITH
     // =========================================================================
     const TAROT_CARDS = [
       // Arcanos Maiores (0 - XXI)
-      { id: 'fool', name: '0 - O Louco', number: 0, arcana: 'major', element: 'Ar', upright: { keywords: ['Novos começos', 'Espontaneidade', 'Fé no desconhecido', 'Inocência', 'Liberdade'], general: 'Representa o salto de fé para o desconhecido, a pureza de intenção e o início de uma nova jornada sem o peso de convenções passadas.' }, reversed: { keywords: ['Imprudência', 'Impulsividade', 'Hesitação excessiva', 'Ingenuidade prejudicial'], general: 'Alerta sobre riscos desnecessários, decisões precipitadas ou, inversamente, medo paralisante de arriscar.' } },
-      { id: 'magician', name: 'I - O Mago', number: 1, arcana: 'major', element: 'Ar', upright: { keywords: ['Manifestação', 'Recursos disponíveis', 'Habilidade', 'Poder de ação', 'Foco'], general: 'Simboliza a capacidade de transformar ideias em realidade através da união de vontade, intelecto e todos os quatro elementos.' }, reversed: { keywords: ['Manipulação', 'Ilusão', 'Potencial desperdiçado', 'Falta de foco'], general: 'Indica dispersão de talentos, uso indevido de influência ou incapacidade momentânea de agir.' } },
-      { id: 'high_priestess', name: 'II - A Sacerdotisa', number: 2, arcana: 'major', element: 'Água', upright: { keywords: ['Intuição', 'Mistério', 'Subconsciente', 'Sabedoria oculta', 'Silêncio'], general: 'Representa a sabedoria interior, segredos guardados, intuição aguçada e a necessidade de escutar a voz da alma antes de agir.' }, reversed: { keywords: ['Intuição bloqueada', 'Segredos prejudiciais', 'Superficialidade', 'Rumores'], general: 'Aponta para a negligência da própria intuição, fofocas ou informações mantidas ocultas que geram desconfiança.' } },
-      { id: 'empress', name: 'III - A Imperatriz', number: 3, arcana: 'major', element: 'Terra', upright: { keywords: ['Abundância', 'Fertilidade', 'Nutrição', 'Criatividade', 'Sensualidade'], general: 'A força nutridora da criação, geração de novos projetos, acolhimento, beleza e prosperidade tangível em florescimento.' }, reversed: { keywords: ['Bloqueio criativo', 'Sufocamento', 'Dependência', 'Negligência pessoal'], general: 'Indica excesso de controle nutridor que sufoca, ou descuido com o próprio autocuidado e bem-estar.' } },
-      { id: 'emperor', name: 'IV - O Imperador', number: 4, arcana: 'major', element: 'Fogo', upright: { keywords: ['Estrutura', 'Autoridade', 'Estabilidade', 'Disciplina', 'Proteção'], general: 'A solidez da ordem, estabelecimento de limites claros, governança justa, responsabilidade e estabilidade construída com disciplina.' }, reversed: { keywords: ['Rigidez excessiva', 'Tirania', 'Falta de disciplina', 'Caos estrutural'], general: 'Aponta para inflexibilidade prejudicial, autoritarismo ou perda de controle e falta de limites.' } },
+      { id: 'fool', name: '0 - O Louco', number: 0, arcana: 'major', element: 'Ar', upright: { keywords: ['Novos começos', 'Espontaneidade', 'Fé no desconhecido', 'Inocência', 'Liberdade'], general: 'Representa o salto de fé para o desconhecido, a pureza de intenção e o início de uma nova jornada sem o peso de convenções passadas.', love: 'Abertura para novas experiências e encontros inesperados; leveza e desapego de padrões antigos.', career: 'Início de um novo projeto, carreira ou mudança ousada com entusiasmo.', advice: 'Dê um voto de confiança à vida, liberte-se de medos paralisantes e siga sua intuição com responsabilidade.' }, reversed: { keywords: ['Imprudência', 'Impulsividade', 'Hesitação excessiva', 'Ingenuidade prejudicial'], general: 'Alerta sobre riscos desnecessários, decisões precipitadas ou, inversamente, medo paralisante de arriscar.', advice: 'Analise os fatos antes de agir por puro impulso; cuide para que a busca por liberdade não se transforme em negligência.' }, symbolism: ['O cão branco (instinto protetor)', 'A rosa branca (pureza de intenção)', 'A trouxa pequena (desapego material)', 'O abismo à frente (o desconhecido)'] },
+      { id: 'magician', name: 'I - O Mago', number: 1, arcana: 'major', element: 'Ar', upright: { keywords: ['Manifestação', 'Recursos disponíveis', 'Habilidade', 'Poder de ação', 'Foco'], general: 'Simboliza a capacidade de transformar ideias em realidade através da união de vontade, intelecto e todos os quatro elementos.', love: 'Iniciativa ativa, comunicação clara, magnetismo e habilidade de conduzir a relação.', career: 'Autonomia, domínio técnico, competência para liderar e implementar projetos com sucesso.', advice: 'Você possui todas as ferramentas necessárias para alcançar seus objetivos; concentre sua intenção e aja.' }, reversed: { keywords: ['Manipulação', 'Ilusão', 'Potencial desperdiçado', 'Falta de foco'], general: 'Indica dispersão de talentos, uso indevido de influência ou incapacidade momentânea de agir.', advice: 'Seja honesto consigo e com os outros; alinhe suas palavras com ações concretas.' }, symbolism: ['Símbolo do infinito (potencial ilimitado)', 'Os 4 símbolos dos naipes na mesa (domínio da matéria)', 'A mão para o céu e outra para a terra (como em cima, assim embaixo)'] },
+      { id: 'high_priestess', name: 'II - A Sacerdotisa', number: 2, arcana: 'major', element: 'Água', upright: { keywords: ['Intuição', 'Mistério', 'Subconsciente', 'Sabedoria oculta', 'Silêncio'], general: 'Representa a sabedoria interior, segredos guardados, intuição aguçada e a necessidade de escutar a voz da alma antes de agir.', love: 'Conexão intuitiva profunda, atração misteriosa, necessidade de escutar o que não é dito em palavras.', career: 'Aconselha discrição, pesquisa aprofundada e confiança na percepção intuitiva antes de fechar acordos.', advice: 'Silencie a mente e escute sua voz interior; as respostas estão guardadas no seu templo secreto.' }, reversed: { keywords: ['Intuição bloqueada', 'Segredos prejudiciais', 'Superficialidade', 'Rumores'], general: 'Aponta para a negligência da própria intuição, fofocas ou informações mantidas ocultas que geram desconfiança.', advice: 'Não ignore os sinais sutis que seu inconsciente envia; busque a verdade sem se perder em desconfianças.' }, symbolism: ['As colunas Boaz e Jachin (dualidade e equilíbrio)', 'O véu com romãs (o sagrado feminino e a fertilidade oculta)', 'A lua crescente aos pés (domínio sobre as marés subconscientes)'] },
+      { id: 'empress', name: 'III - A Imperatriz', number: 3, arcana: 'major', element: 'Terra', upright: { keywords: ['Abundância', 'Fertilidade', 'Nutrição', 'Criatividade', 'Sensualidade'], general: 'A força nutridora da criação, geração de novos projetos, acolhimento, beleza e prosperidade tangível em florescimento.', love: 'Amor fecundo, acolhimento caloroso, atração física e harmonia fértil no relacionamento.', career: 'Projetos que florescem e dão frutos concretos; ambiente de trabalho criativo e próspero.', advice: 'Nutra seus planos com carinho e paciência; permita que a beleza e a generosidade guiem suas decisões.' }, reversed: { keywords: ['Bloqueio criativo', 'Sufocamento', 'Dependência', 'Negligência pessoal'], general: 'Indica excesso de controle nutridor que sufoca, ou descuido com o próprio autocuidado e bem-estar.', advice: 'Cuide de si mesmo antes de tentar cuidar de todos ao redor; estabeleça limites saudáveis no doar.' }, symbolism: ['A coroa de doze estrelas (os doze signos e ciclos celestes)', 'O campo de trigo dourado (a colheita farta)', 'O símbolo de Vênus no coração (o amor incondicional)'] },
+      { id: 'emperor', name: 'IV - O Imperador', number: 4, arcana: 'major', element: 'Fogo', upright: { keywords: ['Estrutura', 'Autoridade', 'Estabilidade', 'Disciplina', 'Proteção'], general: 'A solidez da ordem, estabelecimento de limites claros, governança justa, responsabilidade e estabilidade construída com disciplina.', love: 'Segurança, compromisso duradouro, lealdade e proteção; estabilidade nas relações afetivas.', career: 'Liderança firme, consolidação profissional, organização metódica e conquista de autoridade.', advice: 'Traga ordem, método e disciplina aos seus passos; assuma a liderança da sua própria vida com firmeza.' }, reversed: { keywords: ['Rigidez excessiva', 'Tirania', 'Falta de disciplina', 'Caos estrutural'], general: 'Aponta para inflexibilidade prejudicial, autoritarismo ou perda de controle e falta de limites.', advice: 'Substitua a rigidez pela firmeza justa; saiba ouvir e delegar em vez de tentar controlar tudo à força.' }, symbolism: ['O trono de pedra esculpido com cabeças de carneiro (Áries/Fogo)', 'O cetro ankh (o poder da vida)', 'A armadura sob o manto vermelho (prontidão para defender o reino)'] },
       { id: 'hierophant', name: 'V - O Hierofante', number: 5, arcana: 'major', element: 'Terra', upright: { keywords: ['Tradição', 'Ensino', 'Valores morais', 'Mentoria', 'Instituições'], general: 'O guia moral e espiritual, transmissão do conhecimento estabelecido, conformidade com valores éticos e busca por sentido superior.' }, reversed: { keywords: ['Dogmatismo', 'Rebeldia sem causa', 'Inconformismo', 'Rompimento'], general: 'Questionamento de regras obsoletas, desilusão com autoridades ou apego cego a dogmas.' } },
       { id: 'lovers', name: 'VI - Os Enamorados', number: 6, arcana: 'major', element: 'Ar', upright: { keywords: ['Escolhas morais', 'Alinhamento de valores', 'União', 'Harmonia', 'Atração'], general: 'Representa a união afetiva e a tomada de decisão consciente baseada no coração e nos valores essenciais.' }, reversed: { keywords: ['Desalinhamento', 'Conflito interno', 'Escolha duvidosa', 'Falta de diálogo'], general: 'Dissonância de valores, dúvidas paralisantes entre dois caminhos ou conflito de prioridades.' } },
       { id: 'chariot', name: 'VII - O Carro', number: 7, arcana: 'major', element: 'Água', upright: { keywords: ['Determinação', 'Vitória', 'Foco', 'Autocontrole', 'Superação'], general: 'O domínio sobre forças opostas através da força de vontade, avanço decidido em direção à meta e superação de obstáculos.' }, reversed: { keywords: ['Perda de controle', 'Agressividade', 'Falta de direção', 'Bloqueio'], general: 'Sensação de perder as rédeas da situação ou avanço desenfreado que causa desgaste.' } },
@@ -244,6 +265,101 @@
     const TAROT_CARDS_MAP = new Map(TAROT_CARDS.map(c => [c.id, c]));
 
     // =========================================================================
+    // MODELOS DE TIRAGEM CONSAGRADOS (SPREAD PRESETS)
+    // =========================================================================
+    const SPREAD_PRESETS = [
+      {
+        id: 'three_time',
+        name: 'Tríade do Tempo',
+        icon: '⏳',
+        cardCount: 3,
+        positions: ['Passado (Origem / Raízes)', 'Presente (Momento Atual)', 'Futuro (Tendência Imediata)'],
+        desc: 'Ideal para perguntas gerais e visão panorâmica da evolução dos acontecimentos.'
+      },
+      {
+        id: 'three_guidance',
+        name: 'Tríade de Orientação',
+        icon: '🛡️',
+        cardCount: 3,
+        positions: ['A Situação Real', 'O Desafio / Ponto Cego', 'O Conselho do Oráculo'],
+        desc: 'Focada em aconselhamento prático e superação de obstáculos.'
+      },
+      {
+        id: 'celtic_cross',
+        name: 'Cruz Celta Sagrada',
+        icon: '🔱',
+        cardCount: 10,
+        positions: [
+          '1. O Cerne / Momento Presente',
+          '2. O Desafio Cruzado (Obstáculo Imediato)',
+          '3. A Raiz Inconsciente / Passado Distante',
+          '4. O Passado Recente',
+          '5. A Coroa (O Melhor Desfecho Possível)',
+          '6. O Futuro Imediato',
+          '7. Sua Postura e Emoções',
+          '8. O Ambiente Externo e Pessoas',
+          '9. Esperanças e Temores Ocultos',
+          '10. O Desfecho Final e Síntese'
+        ],
+        desc: 'O método mais profundo e clássico do Rider-Waite-Smith para grandes dilemas de vida.'
+      },
+      {
+        id: 'temple_of_aphrodite',
+        name: 'Templo de Afrodite',
+        icon: '💖',
+        cardCount: 7,
+        positions: [
+          '1. O que você pensa sobre a relação',
+          '2. O que a outra pessoa pensa',
+          '3. O que você sente no coração',
+          '4. O que a outra pessoa sente',
+          '5. Sua atitude externa observável',
+          '6. A atitude externa da outra pessoa',
+          '7. Futuro do vínculo e síntese afetiva'
+        ],
+        desc: 'Especializada em casais, relações amorosas, encontros e dinâmicas afetivas.'
+      },
+      {
+        id: 'crossroads',
+        name: 'Encruzilhada de Decisão',
+        icon: '⚖️',
+        cardCount: 5,
+        positions: [
+          '1. O Cenário Atual & Dilema',
+          '2. Caminho A: Ação & Desdobramento',
+          '3. Caminho A: Consequência Final',
+          '4. Caminho B: Ação & Desdobramento',
+          '5. Caminho B: Consequência Final'
+        ],
+        desc: 'Compara duas escolhas ou caminhos diferentes de forma equilibrada.'
+      },
+      {
+        id: 'horseshoe',
+        name: 'Ferradura do Destino',
+        icon: '🗝️',
+        cardCount: 7,
+        positions: [
+          '1. O Passado',
+          '2. O Presente',
+          '3. Influências Ocultas',
+          '4. Obstáculo Central',
+          '5. O Ambiente ao Redor',
+          '6. Melhor Atitude',
+          '7. O Resultado Final'
+        ],
+        desc: 'Excelente para planejamento de longo prazo e novos ciclos.'
+      },
+      {
+        id: 'free',
+        name: 'Tiragem Livre',
+        icon: '🃏',
+        cardCount: 1,
+        positions: ['Posição Livre'],
+        desc: 'Adicione quantas cartas desejar e personalize cada posição.'
+      }
+    ];
+
+    // =========================================================================
     // SERVIÇOS: QUINTESSÊNCIA & STORAGE
     // =========================================================================
     function calculateQuintessence(cards) {
@@ -289,6 +405,16 @@
           if (idx >= 0) readings[idx] = reading;
           else readings.unshift(reading);
           localStorage.setItem('tarot_interpreter_readings', JSON.stringify(readings));
+        } catch (e) { console.error(e); }
+      },
+      saveNotes(readingId, notes) {
+        try {
+          const readings = this.getReadings();
+          const idx = readings.findIndex(r => r.id === readingId);
+          if (idx >= 0) {
+            readings[idx].userNotes = notes;
+            localStorage.setItem('tarot_interpreter_readings', JSON.stringify(readings));
+          }
         } catch (e) { console.error(e); }
       },
       deleteReading(id) {
@@ -710,8 +836,75 @@ Responda ESTRITAMENTE em formato JSON com o schema:
     }
 
     // =========================================================================
-    // COMPONENTES UI MÍSTICOS
+    // COMPONENTES UI MÍSTICOS & ILUSTRAÇÕES DE CARTAS
     // =========================================================================
+
+    // Componente: Visual da Carta de Tarot Ilustrada (com Borda Dourada e Flip)
+    function VisualTarotCard({ cardId, orientation = 'upright', position, size = 'md', onClick }) {
+      const card = TAROT_CARDS_MAP.get(cardId) || TAROT_CARDS[0];
+      const imageUrl = getCardImageUrl(cardId);
+      const isReversed = orientation === 'reversed';
+
+      const sizeClasses = {
+        sm: 'w-20 h-32 text-[10px]',
+        md: 'w-28 h-44 md:w-32 md:h-52 text-xs',
+        lg: 'w-40 h-64 md:w-48 md:h-76 text-sm',
+      }[size] || 'w-28 h-44 md:w-32 md:h-52 text-xs';
+
+      return (
+        <div
+          onClick={onClick}
+          className={`relative group flex flex-col items-center select-none ${onClick ? 'cursor-pointer' : ''}`}
+        >
+          {/* Card Container com Efeito 3D & Borda Dourada Imperial */}
+          <div
+            className={`relative rounded-xl overflow-hidden border-2 transition-all duration-300 shadow-2xl ${sizeClasses} ${
+              isReversed
+                ? 'border-purple-500/80 shadow-mystic-purple hover:shadow-purple-500/50'
+                : 'border-amber-400/80 shadow-mystic-gold hover:shadow-amber-400/50'
+            } bg-mystic-dark`}
+          >
+            {/* Imagem Original RWS Ilustrada */}
+            <img
+              src={imageUrl}
+              alt={card.name}
+              loading="lazy"
+              className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+                isReversed ? 'rotate-180' : ''
+              }`}
+            />
+
+            {/* Brilho Dourado Sutil de Sobreposição */}
+            <div className="absolute inset-0 bg-gradient-to-t from-mystic-void/80 via-transparent to-mystic-void/20 pointer-events-none"></div>
+
+            {/* Badge de Orientação */}
+            <div className="absolute bottom-1.5 left-1.5 right-1.5 flex justify-center pointer-events-none">
+              <span
+                className={`px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold font-mystic-serif backdrop-blur-md shadow-md ${
+                  isReversed
+                    ? 'bg-purple-950/90 text-purple-200 border border-purple-400/50'
+                    : 'bg-amber-950/90 text-amber-200 border border-amber-400/50'
+                }`}
+              >
+                {isReversed ? '🔄 Invertida' : '⬆️ Normal'}
+              </span>
+            </div>
+          </div>
+
+          {/* Nome e Posição da Carta */}
+          <div className="text-center mt-2 max-w-[140px]">
+            <span className="font-mystic-serif font-bold text-xs text-amber-200 block truncate">
+              {card.name}
+            </span>
+            {position && (
+              <span className="text-[11px] text-zinc-400 font-body block truncate italic">
+                {position}
+              </span>
+            )}
+          </div>
+        </div>
+      );
+    }
 
     // Componente: Upload / Captura de Foto com Redimensionamento
     function PhotoUploader({ photoBase64, onPhotoSelected }) {
@@ -839,7 +1032,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       );
     }
 
-    // Componente: Seletor Pesquisável das 78 Cartas
+    // Componente: Seletor Pesquisável das 78 Cartas com Preview Visual
     function TarotCardSelector({ selectedCardId, onSelectCard }) {
       const [isOpen, setIsOpen] = useState(false);
       const [searchTerm, setSearchTerm] = useState('');
@@ -876,32 +1069,25 @@ Responda ESTRITAMENTE em formato JSON com o schema:
         });
       }, [searchTerm, activeCategory]);
 
-      const getSuitBadge = (card) => {
-        if (card.arcana === 'major') {
-          return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500/40 shadow-sm">Arcano Maior</span>;
-        }
-        const map = {
-          wands: { label: 'Paus • Fogo 🜂', cls: 'bg-amber-950/80 text-amber-300 border-amber-500/40' },
-          cups: { label: 'Copas • Água 🜄', cls: 'bg-sky-950/80 text-sky-300 border-sky-500/40' },
-          swords: { label: 'Espadas • Ar 🜁', cls: 'bg-slate-900/90 text-slate-300 border-slate-500/40' },
-          pentacles: { label: 'Ouros • Terra 🜃', cls: 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' },
-        };
-        const s = map[card.suit];
-        return s ? <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${s.cls}`}>{s.label}</span> : null;
-      };
-
       return (
         <div className="relative w-full" ref={dropdownRef}>
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-mystic-dark/90 hover:bg-mystic-surface text-left rounded-xl border border-mystic-border hover:border-amber-400/60 focus:border-amber-400 outline-none transition-all shadow-md"
+            className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 bg-mystic-dark/90 hover:bg-mystic-surface text-left rounded-xl border border-mystic-border hover:border-amber-400/60 focus:border-amber-400 outline-none transition-all shadow-md"
           >
-            <div className="flex items-center gap-2.5 truncate">
+            <div className="flex items-center gap-3 truncate">
               {selectedCard ? (
                 <>
-                  <span className="text-amber-200 text-sm font-semibold truncate font-mystic-serif">{selectedCard.name}</span>
-                  {getSuitBadge(selectedCard)}
+                  <img
+                    src={getCardImageUrl(selectedCard.id)}
+                    alt={selectedCard.name}
+                    className="w-7 h-11 object-cover rounded border border-amber-400/60 shadow-sm flex-shrink-0"
+                  />
+                  <div className="flex flex-col truncate">
+                    <span className="text-amber-200 text-sm font-semibold truncate font-mystic-serif">{selectedCard.name}</span>
+                    <span className="text-[10px] text-amber-400/70 truncate">{selectedCard.element} • {selectedCard.upright.keywords.slice(0, 2).join(', ')}</span>
+                  </div>
                 </>
               ) : (
                 <span className="text-zinc-500 text-sm font-mystic-serif">Selecione uma das 78 cartas...</span>
@@ -911,7 +1097,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
           </button>
 
           {isOpen && (
-            <div className="absolute z-50 left-0 right-0 mt-2 bg-mystic-void border border-amber-500/40 rounded-2xl shadow-2xl max-h-[390px] flex flex-col overflow-hidden animate-fadeIn backdrop-blur-xl">
+            <div className="absolute z-50 left-0 right-0 mt-2 bg-mystic-void border border-amber-500/40 rounded-2xl shadow-2xl max-h-[420px] flex flex-col overflow-hidden animate-fadeIn backdrop-blur-xl">
               <div className="p-3.5 border-b border-mystic-border bg-mystic-dark/80">
                 <div className="relative">
                   <input
@@ -951,7 +1137,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 </div>
               </div>
 
-              <div className="overflow-y-auto max-h-[260px] divide-y divide-mystic-border/50 p-1.5">
+              <div className="overflow-y-auto max-h-[290px] divide-y divide-mystic-border/50 p-1.5">
                 {filtered.length === 0 ? (
                   <div className="py-8 text-center text-zinc-500 text-sm font-mystic-serif">Nenhuma carta encontrada para "{searchTerm}".</div>
                 ) : (
@@ -962,15 +1148,19 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                         key={card.id}
                         type="button"
                         onClick={() => { onSelectCard(card.id); setIsOpen(false); setSearchTerm(''); }}
-                        className={`w-full flex items-center justify-between gap-3 p-3 rounded-xl text-left transition-all ${
-                          isSelected ? 'bg-amber-500/20 text-amber-200 border-l-2 border-amber-400' : 'hover:bg-mystic-surface text-zinc-200'
+                        className={`w-full flex items-center gap-3.5 p-2.5 rounded-xl text-left transition-all ${
+                          isSelected ? 'bg-amber-500/20 text-amber-200 border-l-4 border-amber-400' : 'hover:bg-mystic-surface text-zinc-200'
                         }`}
                       >
+                        <img
+                          src={getCardImageUrl(card.id)}
+                          alt={card.name}
+                          className="w-8 h-12 object-cover rounded border border-amber-400/40 shadow-sm flex-shrink-0"
+                        />
                         <div className="flex flex-col gap-0.5 truncate">
                           <span className="font-mystic-serif font-medium text-sm text-zinc-100">{card.name}</span>
-                          <span className="text-[11px] text-zinc-400 truncate">{card.upright.keywords.slice(0, 3).join(' • ')}</span>
+                          <span className="text-[11px] text-amber-400/80 truncate">{card.element} • {card.upright.keywords.slice(0, 3).join(' • ')}</span>
                         </div>
-                        <div>{getSuitBadge(card)}</div>
                       </button>
                     );
                   })
@@ -982,7 +1172,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       );
     }
 
-    // Componente: Card de Carta Manual
+    // Componente: Card de Carta Manual com Miniatura Ilustrada
     function ReadingCardItem({ index, readingCard, onUpdateCard, onRemoveCard, canRemove }) {
       const cardData = TAROT_CARDS_MAP.get(readingCard.cardId);
 
@@ -1006,7 +1196,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-center">
             <div className="md:col-span-6">
               <label className="block text-xs font-mystic-serif text-amber-200/80 mb-1.5">Arcano Escolhido <span className="text-amber-400">*</span></label>
               <TarotCardSelector
@@ -1047,7 +1237,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 type="text"
                 value={readingCard.position || ''}
                 onChange={(e) => onUpdateCard(index, { ...readingCard, position: e.target.value })}
-                placeholder="Ex.: presente, obstáculo, conselho..."
+                placeholder="Ex.: presente, obstáculo..."
                 className="w-full px-3.5 py-2.5 bg-mystic-void border border-mystic-border focus:border-amber-400 rounded-xl text-xs text-zinc-100 placeholder-zinc-600 outline-none font-sans"
               />
             </div>
@@ -1069,30 +1259,259 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       );
     }
 
-    // Componente: Resumo Visual das Cartas
-    function ReadingSummary({ cards }) {
+    // Componente: Altar Virtual das Cartas (Exibição Ilustrada 3D)
+    function VirtualTarotAltar({ cards, onCardClick }) {
       return (
-        <div className="flex flex-wrap gap-3 items-center">
-          {cards.map((item, index) => {
-            const card = TAROT_CARDS_MAP.get(item.cardId) || TAROT_CARDS[0];
-            const isUpright = item.orientation === 'upright';
-            return (
-              <div key={index} className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-mystic-dark border border-amber-500/30 shadow-md">
-                <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center text-[10px] font-bold font-mystic-serif">{index + 1}</span>
-                <span className="text-xs font-bold text-amber-100 font-mystic-serif">{card.name}</span>
-                <span className="text-amber-500/40 text-xs">•</span>
-                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${isUpright ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30' : 'bg-purple-950 text-purple-300 border border-purple-500/40'}`}>
-                  {isUpright ? 'Normal' : 'Invertida'}
-                </span>
-                {item.position && (
-                  <>
-                    <span className="text-amber-500/40 text-xs">•</span>
-                    <span className="text-[11px] text-zinc-300 italic font-body">{item.position}</span>
-                  </>
-                )}
+        <div className="p-6 md:p-8 rounded-3xl bg-gradient-to-b from-mystic-card via-mystic-dark to-mystic-void border border-amber-500/40 shadow-mystic-gold relative overflow-hidden">
+          {/* Estampa do Pano de Leitura de Veludo / Geometria Sagrada */}
+          <div className="absolute inset-0 bg-[radial-gradient(#d4af37_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none"></div>
+
+          <div className="relative z-10">
+            <div className="text-center mb-6">
+              <span className="text-[11px] uppercase tracking-widest font-mystic-serif text-amber-300/80 block">
+                ✧ Altar de Disposição das Lâminas ✧
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
+              {cards.map((rc, idx) => (
+                <VisualTarotCard
+                  key={idx}
+                  cardId={rc.cardId}
+                  orientation={rc.orientation}
+                  position={rc.position || `Lâmina ${idx + 1}`}
+                  size="md"
+                  onClick={onCardClick ? () => onCardClick(rc.cardId) : undefined}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Modal de Estudo de Carta da Biblioteca
+    function CardStudyModal({ cardId, isOpen, onClose }) {
+      if (!isOpen || !cardId) return null;
+      const card = TAROT_CARDS_MAP.get(cardId) || TAROT_CARDS[0];
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn overflow-y-auto">
+          <div className="bg-mystic-dark border border-amber-500/50 rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Topo do Modal */}
+            <div className="p-5 border-b border-mystic-border flex items-center justify-between bg-mystic-void">
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl">📖</span>
+                <h3 className="font-mystic-title text-base md:text-lg text-gold-gradient font-bold">
+                  {card.name}
+                </h3>
               </div>
-            );
-          })}
+              <button onClick={onClose} className="text-zinc-400 hover:text-amber-200 text-lg">✕</button>
+            </div>
+
+            {/* Conteúdo com Ilustração e Sabedoria Esotérica */}
+            <div className="p-6 overflow-y-auto space-y-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                <div className="w-36 h-60 flex-shrink-0 rounded-2xl overflow-hidden border-2 border-amber-400 shadow-mystic-gold bg-black">
+                  <img
+                    src={getCardImageUrl(card.id)}
+                    alt={card.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-3 py-1 rounded-full bg-purple-950 text-purple-200 border border-purple-500/40 text-xs font-mystic-serif">
+                      {card.arcana === 'major' ? `Arcano Maior (Nº ${card.number})` : `Naipe de ${card.suit}`}
+                    </span>
+                    <span className="px-3 py-1 rounded-full bg-amber-950 text-amber-200 border border-amber-500/40 text-xs font-mystic-serif">
+                      Elemento {card.element}
+                    </span>
+                  </div>
+
+                  <p className="text-sm md:text-base text-zinc-200 font-body leading-relaxed italic">
+                    "{card.upright.general}"
+                  </p>
+
+                  {card.symbolism && (
+                    <div className="space-y-1.5 pt-2">
+                      <span className="text-xs font-bold text-amber-300 font-mystic-serif uppercase tracking-wider block">
+                        Simbologia Oculta (Pamela Colman Smith):
+                      </span>
+                      <ul className="text-xs text-zinc-300 font-body space-y-1 list-disc list-inside">
+                        {card.symbolism.map((sym, i) => (
+                          <li key={i}>{sym}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Posições Normal e Invertida */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/30 space-y-2">
+                  <h4 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-mystic-serif flex items-center gap-1.5">
+                    <span>⬆️</span>
+                    <span>Significado Normal (Luz)</span>
+                  </h4>
+                  <p className="text-xs text-amber-100/90 font-body leading-relaxed">
+                    {card.upright.general}
+                  </p>
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {card.upright.keywords.map((kw, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded bg-mystic-void text-[10px] text-amber-200/90 border border-amber-500/30">
+                        {kw}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-purple-950/30 border border-purple-500/40 space-y-2">
+                  <h4 className="text-xs font-bold text-purple-300 uppercase tracking-widest font-mystic-serif flex items-center gap-1.5">
+                    <span>🔄</span>
+                    <span>Significado Invertido (Sombra)</span>
+                  </h4>
+                  <p className="text-xs text-purple-100/90 font-body leading-relaxed">
+                    {card.reversed.general}
+                  </p>
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {card.reversed.keywords.map((kw, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded bg-mystic-void text-[10px] text-purple-200/90 border border-purple-500/30">
+                        {kw}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-mystic-border bg-mystic-void flex justify-end">
+              <button
+                onClick={onClose}
+                className="px-6 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 font-mystic-serif font-bold text-xs shadow-mystic-gold"
+              >
+                Concluir Estudo
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // PÁGINA: BIBLIOTECA COMPLETA DOS 78 ARCANOS (GRIMÓRIO DE ESTUDO)
+    // =========================================================================
+    function LibraryPage({ onSelectCardToStudy }) {
+      const [category, setCategory] = useState('all');
+      const [searchTerm, setSearchTerm] = useState('');
+      const [selectedCardId, setSelectedCardId] = useState(null);
+
+      const filtered = useMemo(() => {
+        return TAROT_CARDS.filter(card => {
+          const match = card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            card.upright.keywords.some(k => k.toLowerCase().includes(searchTerm.toLowerCase()));
+          if (!match) return false;
+          if (category === 'all') return true;
+          if (category === 'major') return card.arcana === 'major';
+          if (category === 'wands') return card.suit === 'wands';
+          if (category === 'cups') return card.suit === 'cups';
+          if (category === 'swords') return card.suit === 'swords';
+          if (category === 'pentacles') return card.suit === 'pentacles';
+          return true;
+        });
+      }, [searchTerm, category]);
+
+      return (
+        <div className="space-y-8 animate-fadeIn max-w-6xl mx-auto pb-16">
+          <div className="text-center space-y-3 pt-2 pb-2">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-950/60 via-amber-950/40 to-purple-950/60 border border-amber-500/40 text-amber-200 text-xs font-mystic-serif shadow-mystic-gold">
+              <span>📖</span>
+              <span>Compêndio Sagrado dos 78 Arcanos</span>
+              <span>📖</span>
+            </div>
+            <h1 className="text-3xl md:text-5xl font-extrabold font-mystic-title text-gold-gradient tracking-wide">
+              Biblioteca do Tarot Rider-Waite
+            </h1>
+            <p className="text-sm md:text-base text-zinc-300 font-body max-w-2xl mx-auto leading-relaxed">
+              Explore o simbolismo hermético, iconografia e sabedoria oculta de cada uma das 78 lâminas originais de 1909.
+            </p>
+          </div>
+
+          {/* Filtros & Barra de Busca */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl mystic-card">
+            <div className="relative w-full sm:w-80">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar arcano por nome ou palavra-chave..."
+                className="w-full pl-9 pr-4 py-2.5 bg-mystic-void border border-mystic-border focus:border-amber-400 rounded-xl text-xs md:text-sm text-zinc-100 placeholder-zinc-500 outline-none"
+              />
+              <span className="absolute left-3 top-3 text-amber-400 text-xs">🔍</span>
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 text-xs">
+              {[
+                { id: 'all', label: 'Todas (78)' },
+                { id: 'major', label: 'Maiores (22)' },
+                { id: 'wands', label: 'Paus 🜂' },
+                { id: 'cups', label: 'Copas 🜄' },
+                { id: 'swords', label: 'Espadas 🜁' },
+                { id: 'pentacles', label: 'Ouros 🜃' },
+              ].map(cat => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setCategory(cat.id)}
+                  className={`px-3.5 py-2 rounded-xl font-mystic-serif whitespace-nowrap transition-all ${
+                    category === cat.id
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 font-bold shadow-mystic-gold'
+                      : 'bg-mystic-surface text-zinc-300 hover:text-amber-200 border border-mystic-border/60'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Grid dos Arcanos com Ilustrações */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+            {filtered.map(card => (
+              <div
+                key={card.id}
+                onClick={() => setSelectedCardId(card.id)}
+                className="p-3 rounded-2xl mystic-card hover:border-amber-400/80 cursor-pointer transition-all flex flex-col items-center gap-2.5 group shadow-lg hover:shadow-mystic-gold hover:-translate-y-1"
+              >
+                <div className="w-full aspect-[2/3] rounded-xl overflow-hidden border border-amber-400/40 bg-black relative">
+                  <img
+                    src={getCardImageUrl(card.id)}
+                    alt={card.name}
+                    loading="lazy"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-mystic-void/80 via-transparent to-transparent pointer-events-none"></div>
+                </div>
+
+                <div className="text-center w-full">
+                  <h4 className="font-mystic-serif font-bold text-xs text-amber-200 truncate group-hover:text-amber-300">
+                    {card.name}
+                  </h4>
+                  <span className="text-[10px] text-zinc-400 font-body truncate block">
+                    {card.upright.keywords.slice(0, 2).join(', ')}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <CardStudyModal
+            cardId={selectedCardId}
+            isOpen={Boolean(selectedCardId)}
+            onClose={() => setSelectedCardId(null)}
+          />
         </div>
       );
     }
@@ -1159,14 +1578,19 @@ Responda ESTRITAMENTE em formato JSON com o schema:
     }
 
     // =========================================================================
-    // PÁGINA: NOVA INTERPRETAÇÃO (MANUAL OU POR FOTO)
+    // PÁGINA: NOVA INTERPRETAÇÃO (MANUAL OU POR FOTO COM MODELOS DE TIRAGEM)
     // =========================================================================
     function NewReadingPage({ onReadingComplete, onOpenSettings }) {
       const [inputMode, setInputMode] = useState('photo');
+      const [selectedPresetId, setSelectedPresetId] = useState('three_time');
       const [question, setQuestion] = useState('');
       const [context, setContext] = useState('');
       const [photoBase64, setPhotoBase64] = useState(null);
-      const [cards, setCards] = useState([{ cardId: 'fool', orientation: 'upright', position: '' }]);
+      const [cards, setCards] = useState([
+        { cardId: 'fool', orientation: 'upright', position: 'Passado (Origem / Raízes)' },
+        { cardId: 'magician', orientation: 'upright', position: 'Presente (Momento Atual)' },
+        { cardId: 'sun', orientation: 'upright', position: 'Futuro (Tendência Imediata)' },
+      ]);
       const [style, setStyle] = useState('reflective');
       const [validationError, setValidationError] = useState(null);
       const [isLoading, setIsLoading] = useState(false);
@@ -1177,8 +1601,21 @@ Responda ESTRITAMENTE em formato JSON com o schema:
         setHasApiKey(Boolean(key && key.trim().length > 10));
       }, []);
 
+      // Aplicar modelo de tiragem pré-definido
+      const handleSelectPreset = (preset) => {
+        setSelectedPresetId(preset.id);
+        if (preset.id === 'free') return;
+
+        const newCards = preset.positions.map((pos, idx) => ({
+          cardId: cards[idx]?.cardId || TAROT_CARDS[idx % TAROT_CARDS.length].id,
+          orientation: cards[idx]?.orientation || 'upright',
+          position: pos,
+        }));
+        setCards(newCards);
+      };
+
       const handleAddCard = () => {
-        setCards([...cards, { cardId: '', orientation: 'upright', position: '' }]);
+        setCards([...cards, { cardId: '', orientation: 'upright', position: `Lâmina ${cards.length + 1}` }]);
         setValidationError(null);
       };
 
@@ -1294,14 +1731,6 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               Consulta ao Oráculo
             </h1>
 
-            <div className="flex items-center justify-center gap-3 text-amber-400/60 text-sm">
-              <span>☽</span>
-              <span className="h-px w-16 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent"></span>
-              <span>✧</span>
-              <span className="h-px w-16 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent"></span>
-              <span>☾</span>
-            </div>
-
             <p className="text-sm md:text-base text-zinc-300 font-body max-w-2xl mx-auto leading-relaxed">
               Consagre as cartas retiradas fisicamente com o seu baralho. Envie a <strong>foto da tiragem</strong> para decodificação visual por IA ou informe os arcanos manualmente.
             </p>
@@ -1408,18 +1837,49 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 )}
               </div>
             ) : (
-              <div className="p-6 md:p-7 rounded-3xl mystic-card space-y-5">
-                <div className="flex items-center justify-between pb-4 border-b border-mystic-border">
-                  <div>
-                    <h3 className="text-base md:text-lg font-bold text-gold-gradient font-mystic-title">Lâminas da Tiragem</h3>
-                    <p className="text-xs text-zinc-400 font-body mt-0.5">Informe os arcanos retirados fisicamente com o seu baralho.</p>
+              <div className="p-6 md:p-7 rounded-3xl mystic-card space-y-6">
+                {/* Seletor de Modelos de Tiragem (Spread Presets) */}
+                <div>
+                  <div className="flex items-center justify-between pb-3 border-b border-mystic-border mb-3">
+                    <div>
+                      <h3 className="text-base md:text-lg font-bold text-gold-gradient font-mystic-title">
+                        Modelos de Tiragem Consagrados
+                      </h3>
+                      <p className="text-xs text-zinc-400 font-body">Escolha a disposição para preencher as posições automaticamente.</p>
+                    </div>
                   </div>
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/40">
-                    {cards.length} {cards.length === 1 ? 'carta' : 'cartas'}
-                  </span>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                    {SPREAD_PRESETS.map((preset) => {
+                      const isSelected = selectedPresetId === preset.id;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => handleSelectPreset(preset)}
+                          className={`p-3 rounded-xl text-left border transition-all flex flex-col justify-between ${
+                            isSelected
+                              ? 'bg-amber-500/20 border-amber-400 text-amber-200 shadow-mystic-gold'
+                              : 'bg-mystic-void/70 border-mystic-border hover:border-amber-400/40 text-zinc-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-base">{preset.icon}</span>
+                            <span className="text-xs font-bold font-mystic-serif text-amber-100">{preset.name}</span>
+                          </div>
+                          <span className="text-[10px] text-zinc-400 font-body">{preset.cardCount} {preset.cardCount === 1 ? 'carta' : 'cartas'}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="space-y-4">
+                {/* Altar das Cartas Escolhidas */}
+                <div className="pt-2">
+                  <VirtualTarotAltar cards={cards} />
+                </div>
+
+                <div className="space-y-4 pt-2">
                   {cards.map((card, idx) => (
                     <ReadingCardItem
                       key={idx}
@@ -1517,17 +1977,54 @@ Responda ESTRITAMENTE em formato JSON com o schema:
     }
 
     // =========================================================================
-    // PÁGINA: RESULTADO DA INTERPRETAÇÃO (AS 5 SEÇÕES + QUINTESSÊNCIA + FOTO)
+    // PÁGINA: RESULTADO DA INTERPRETAÇÃO COM VOZ, NOTAS E CARTÃO DE COMPARTILHAMENTO
     // =========================================================================
     function ReadingResultPage({ reading, onNewReading, onGoToHistory }) {
       const [copied, setCopied] = useState(false);
       const [showPrompt, setShowPrompt] = useState(false);
       const [showPhoto, setShowPhoto] = useState(false);
+      const [showShareModal, setShowShareModal] = useState(false);
+      const [isSpeaking, setIsSpeaking] = useState(false);
+      const [notes, setNotes] = useState(reading.userNotes || '');
+      const [notesSaved, setNotesSaved] = useState(false);
       const interp = reading.structuredInterpretation;
 
       if (!interp) return <div className="p-8 text-center text-zinc-400 font-mystic-serif">Leitura não encontrada.</div>;
 
       const quint = calculateQuintessence(reading.cards);
+
+      // Leitura por Voz (Web Speech API)
+      const handleToggleSpeech = () => {
+        if (!('speechSynthesis' in window)) {
+          alert('A síntese de voz não é suportada neste navegador.');
+          return;
+        }
+
+        if (isSpeaking) {
+          window.speechSynthesis.cancel();
+          setIsSpeaking(false);
+          return;
+        }
+
+        window.speechSynthesis.cancel();
+        const textToRead = `Visão geral: ${interp.overview}. Síntese da leitura: ${interp.synthesis}`;
+        const utterance = new SpeechSynthesisUtterance(textToRead);
+        utterance.lang = 'pt-BR';
+        utterance.rate = 0.92;
+        utterance.pitch = 0.95;
+
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => setIsSpeaking(false);
+
+        setIsSpeaking(true);
+        window.speechSynthesis.speak(utterance);
+      };
+
+      const handleSaveNotes = () => {
+        storageService.saveNotes(reading.id, notes);
+        setNotesSaved(true);
+        setTimeout(() => setNotesSaved(false), 2000);
+      };
 
       const handleCopy = () => {
         const text = `🔮 LEITURA DE TAROT (RWS - Estilo: ${reading.interpretationStyle})\nPergunta: "${reading.question}"\n\n1. VISÃO GERAL:\n${interp.overview}\n\n4. SÍNTESE:\n${interp.synthesis}`;
@@ -1555,21 +2052,38 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Botão de Voz do Oráculo */}
+              <button
+                type="button"
+                onClick={handleToggleSpeech}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-mystic-serif border transition-all flex items-center gap-1.5 ${
+                  isSpeaking
+                    ? 'bg-amber-500 text-zinc-950 font-bold border-amber-400 shadow-mystic-gold animate-pulse'
+                    : 'bg-mystic-surface text-amber-200 border-mystic-border hover:border-amber-400'
+                }`}
+              >
+                <span>{isSpeaking ? '⏹️' : '🔊'}</span>
+                <span>{isSpeaking ? 'Pausar Voz' : 'Ouvir Leitura'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowShareModal(true)}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-mystic-serif bg-mystic-surface text-amber-300 border border-mystic-border hover:border-amber-400 transition-all flex items-center gap-1"
+              >
+                <span>✨</span>
+                <span>Gerar Cartão</span>
+              </button>
+
               <button
                 type="button"
                 onClick={handleCopy}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-mystic-serif bg-mystic-surface text-amber-200 border border-mystic-border hover:border-amber-400 transition-all"
+                className="px-3.5 py-1.5 rounded-xl text-xs font-mystic-serif bg-mystic-surface text-zinc-300 border border-mystic-border hover:border-amber-400 transition-all"
               >
-                {copied ? '✓ Copiado!' : '📋 Copiar leitura'}
+                {copied ? '✓ Copiado!' : '📋 Copiar'}
               </button>
-              <button
-                type="button"
-                onClick={() => setShowPrompt(true)}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-mystic-serif bg-mystic-surface text-amber-300 border border-mystic-border hover:border-amber-400 transition-all"
-              >
-                🤖 Prompt da IA
-              </button>
+
               <button
                 type="button"
                 onClick={onNewReading}
@@ -1580,10 +2094,8 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             </div>
           </div>
 
-          {/* Pergunta e Contexto e Foto */}
+          {/* Pergunta e Contexto */}
           <div className="p-7 md:p-8 rounded-3xl mystic-card space-y-6 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
-
             <div>
               <span className="text-xs font-bold uppercase tracking-widest text-amber-400/90 font-mystic-serif flex items-center gap-2">
                 <span>✦</span>
@@ -1629,13 +2141,6 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               </div>
             )}
 
-            <div className="pt-4 border-t border-mystic-border/70">
-              <span className="text-xs font-bold uppercase tracking-widest text-amber-300/80 block mb-3 font-mystic-serif">
-                Cartas Consagradas ({reading.cards.length})
-              </span>
-              <ReadingSummary cards={reading.cards} />
-            </div>
-
             {/* Destaque da Quintessência */}
             <div className="p-4 md:p-5 rounded-2xl bg-gradient-to-r from-amber-950/40 via-purple-950/40 to-amber-950/40 border border-amber-500/40 flex items-center gap-3.5 shadow-mystic-gold">
               <span className="text-3xl">🌟</span>
@@ -1649,6 +2154,9 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               </div>
             </div>
           </div>
+
+          {/* Altar das Cartas da Leitura com Imagens RWS Originais */}
+          <VirtualTarotAltar cards={reading.cards} />
 
           {/* 1. VISÃO GERAL */}
           <section className="p-7 md:p-8 rounded-3xl mystic-card space-y-4 shadow-xl">
@@ -1679,49 +2187,60 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               </div>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-6">
               {interp.cardByCard.map((item, idx) => {
                 const isUpright = item.orientation === 'upright';
                 return (
-                  <div key={idx} className="p-6 rounded-2xl bg-mystic-dark/90 border border-mystic-border hover:border-amber-400/40 transition-all space-y-3.5 shadow-md">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-3">
-                        <span className="w-7 h-7 rounded-full bg-mystic-void border border-mystic-border text-amber-300 flex items-center justify-center text-xs font-mystic-serif font-bold">
-                          {idx + 1}
-                        </span>
-                        <h4 className="text-base md:text-lg font-bold text-amber-100 font-mystic-serif">
-                          {item.card.name}
-                        </h4>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${isUpright ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' : 'bg-purple-950 text-purple-300 border-purple-500/40'}`}>
-                          {isUpright ? '⬆️ Normal' : '🔄 Invertida'}
-                        </span>
-                        {item.position && (
-                          <span className="text-xs font-medium px-3 py-1 rounded-full bg-mystic-void text-zinc-300 border border-mystic-border font-body">
-                            Posição: {item.position}
+                  <div key={idx} className="p-6 rounded-2xl bg-mystic-dark/90 border border-mystic-border hover:border-amber-400/40 transition-all flex flex-col md:flex-row gap-6 items-center md:items-start shadow-md">
+                    {/* Miniatura Ilustrada da Carta */}
+                    <div className="w-24 h-38 md:w-28 md:h-44 flex-shrink-0 rounded-xl overflow-hidden border-2 border-amber-400/60 shadow-mystic-gold bg-black">
+                      <img
+                        src={getCardImageUrl(item.card.id)}
+                        alt={item.card.name}
+                        className={`w-full h-full object-cover ${!isUpright ? 'rotate-180' : ''}`}
+                      />
+                    </div>
+
+                    <div className="space-y-3 flex-1 w-full">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          <span className="w-7 h-7 rounded-full bg-mystic-void border border-mystic-border text-amber-300 flex items-center justify-center text-xs font-mystic-serif font-bold">
+                            {idx + 1}
                           </span>
-                        )}
+                          <h4 className="text-base md:text-lg font-bold text-amber-100 font-mystic-serif">
+                            {item.card.name}
+                          </h4>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${isUpright ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' : 'bg-purple-950 text-purple-300 border-purple-500/40'}`}>
+                            {isUpright ? '⬆️ Normal' : '🔄 Invertida'}
+                          </span>
+                          {item.position && (
+                            <span className="text-xs font-medium px-3 py-1 rounded-full bg-mystic-void text-zinc-300 border border-mystic-border font-body">
+                              {item.position}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex flex-wrap gap-1.5">
-                      {item.keywords.map((kw, i) => (
-                        <span key={i} className="px-2.5 py-0.5 rounded-full bg-mystic-void text-amber-200/80 text-[11px] border border-mystic-border/80">
-                          {kw}
-                        </span>
-                      ))}
-                    </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {item.keywords.map((kw, i) => (
+                          <span key={i} className="px-2.5 py-0.5 rounded-full bg-mystic-void text-amber-200/80 text-[11px] border border-mystic-border/80">
+                            {kw}
+                          </span>
+                        ))}
+                      </div>
 
-                    <p className="text-base text-zinc-200 font-body leading-relaxed pt-1">
-                      {item.meaning}
-                    </p>
-
-                    {item.nuanceNotes && (
-                      <p className="text-xs text-amber-200/70 italic pt-2 border-t border-mystic-border/50 font-body">
-                        ✦ <span className="font-semibold text-amber-300">Nuance Hermenêutica:</span> {item.nuanceNotes}
+                      <p className="text-base text-zinc-200 font-body leading-relaxed pt-1">
+                        {item.meaning}
                       </p>
-                    )}
+
+                      {item.nuanceNotes && (
+                        <p className="text-xs text-amber-200/70 italic pt-2 border-t border-mystic-border/50 font-body">
+                          ✦ <span className="font-semibold text-amber-300">Nuance Hermenêutica:</span> {item.nuanceNotes}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -1853,6 +2372,41 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             </section>
           )}
 
+          {/* Seção: Diário Pessoal do Consulente (Notas & Insights) */}
+          <section className="p-7 md:p-8 rounded-3xl mystic-card space-y-4 shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-mystic-border">
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl">✍️</span>
+                <h3 className="text-lg font-bold font-mystic-title text-gold-gradient">
+                  Diário & Reflexões Pessoais
+                </h3>
+              </div>
+              {notesSaved && (
+                <span className="text-xs text-emerald-400 font-mystic-serif animate-fadeIn">
+                  ✓ Salvo no Grimório!
+                </span>
+              )}
+            </div>
+
+            <textarea
+              rows={3}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Escreva suas impressões, sentimentos ou o que aconteceu nos dias seguintes a esta consulta..."
+              className="w-full p-4 bg-mystic-void border border-mystic-border focus:border-amber-400 rounded-2xl text-sm text-zinc-100 placeholder-zinc-600 outline-none leading-relaxed resize-y font-sans shadow-inner"
+            />
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleSaveNotes}
+                className="px-5 py-2 rounded-xl bg-amber-500/20 text-amber-200 border border-amber-500/40 hover:bg-amber-500/30 text-xs font-mystic-serif transition-all"
+              >
+                Salvar Anotação
+              </button>
+            </div>
+          </section>
+
           {/* Botões Finais */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <button
@@ -1870,6 +2424,72 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               📜 Ver Histórico
             </button>
           </div>
+
+          {/* Modal do Cartão Místico para Compartilhar / Baixar */}
+          {showShareModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn overflow-y-auto">
+              <div className="bg-mystic-dark border border-amber-500/50 rounded-3xl max-w-xl w-full p-6 md:p-8 space-y-6 shadow-2xl">
+                <div className="flex items-center justify-between pb-3 border-b border-mystic-border">
+                  <h4 className="font-mystic-title text-base font-bold text-gold-gradient">
+                    ✧ Cartão Místico da Tiragem ✧
+                  </h4>
+                  <button onClick={() => setShowShareModal(false)} className="text-zinc-400 hover:text-amber-200">✕</button>
+                </div>
+
+                {/* Pré-visualização do Cartão */}
+                <div className="p-6 rounded-3xl bg-mystic-void border-2 border-amber-500/60 shadow-mystic-gold text-center space-y-4 print-card">
+                  <span className="text-[10px] uppercase font-mystic-serif tracking-widest text-amber-400 block">
+                    Tarot Interpreter • Rider-Waite-Smith
+                  </span>
+
+                  <h3 className="font-mystic-title text-base md:text-lg font-bold text-gold-gradient">
+                    "{reading.question}"
+                  </h3>
+
+                  <div className="flex justify-center gap-3 py-2 flex-wrap">
+                    {reading.cards.map((rc, i) => (
+                      <div key={i} className="w-16 h-26 rounded-lg overflow-hidden border border-amber-400/60 bg-black">
+                        <img
+                          src={getCardImageUrl(rc.cardId)}
+                          alt={rc.cardId}
+                          className={`w-full h-full object-cover ${rc.orientation === 'reversed' ? 'rotate-180' : ''}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-xs md:text-sm text-zinc-300 font-body italic line-clamp-4">
+                    "{interp.synthesis}"
+                  </p>
+
+                  <div className="pt-2 border-t border-mystic-border/50 text-[10px] text-amber-300/80 font-mystic-serif">
+                    🌟 Quintessência: {quint.card.name} • {formattedDate}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="px-4 py-2.5 rounded-xl bg-mystic-surface text-amber-200 border border-mystic-border text-xs font-mystic-serif hover:border-amber-400"
+                  >
+                    🖨️ Imprimir / Salvar PDF
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`🔮 Tarot Interpreter\n"${reading.question}"\n\nSíntese: "${interp.synthesis}"\n🌟 Quintessência: ${quint.card.name}`);
+                      alert('Resumo do cartão copiado para a área de transferência!');
+                    }}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 font-mystic-serif font-bold text-xs shadow-mystic-gold"
+                  >
+                    📋 Copiar para WhatsApp
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Modal Foto Ampliada */}
           {showPhoto && reading.photoBase64 && (
@@ -1893,38 +2513,12 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               </div>
             </div>
           )}
-
-          {/* Modal do Prompt */}
-          {showPrompt && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-              <div className="bg-mystic-dark border border-amber-500/40 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-                <div className="p-4 border-b border-mystic-border flex items-center justify-between bg-mystic-void">
-                  <h4 className="font-mystic-title font-bold text-amber-200 text-sm">Prompt Hermenêutico de IA</h4>
-                  <button onClick={() => setShowPrompt(false)} className="text-zinc-400 hover:text-zinc-100">✕</button>
-                </div>
-                <div className="p-4 overflow-y-auto font-mono text-xs text-zinc-300 bg-mystic-void leading-relaxed whitespace-pre-wrap select-all">
-                  {generateInterpretationPrompt(reading)}
-                </div>
-                <div className="p-3 border-t border-mystic-border flex justify-end gap-2">
-                  <button
-                    onClick={() => { navigator.clipboard.writeText(generateInterpretationPrompt(reading)); alert('Prompt copiado!'); }}
-                    className="px-4 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-mystic-serif"
-                  >
-                    Copiar Prompt
-                  </button>
-                  <button onClick={() => setShowPrompt(false)} className="px-4 py-2 rounded-xl bg-mystic-surface text-zinc-200 text-xs font-mystic-serif">
-                    Fechar
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       );
     }
 
     // =========================================================================
-    // PÁGINA: HISTÓRICO
+    // PÁGINA: HISTÓRICO (GRIMÓRIO)
     // =========================================================================
     function HistoryPage({ onSelectReading, onNewReading }) {
       const [readings, setReadings] = useState([]);
@@ -1944,7 +2538,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       const filtered = useMemo(() => {
         if (!searchTerm.trim()) return readings;
         const term = searchTerm.toLowerCase();
-        return readings.filter(r => r.question.toLowerCase().includes(term) || (r.context && r.context.toLowerCase().includes(term)));
+        return readings.filter(r => r.question.toLowerCase().includes(term) || (r.context && r.context.toLowerCase().includes(term)) || (r.userNotes && r.userNotes.toLowerCase().includes(term)));
       }, [readings, searchTerm]);
 
       return (
@@ -1955,7 +2549,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 <span>📜</span>
                 <span>Grimório de Tiragens</span>
               </h1>
-              <p className="text-xs md:text-sm text-zinc-400 font-body mt-1">Revisite as revelações oraculares consagradas.</p>
+              <p className="text-xs md:text-sm text-zinc-400 font-body mt-1">Revisite as revelações oraculares consagradas e suas anotações pessoais.</p>
             </div>
             <button
               onClick={onNewReading}
@@ -1971,7 +2565,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar por pergunta ou contexto..."
+                placeholder="Buscar por pergunta, contexto ou anotação pessoal..."
                 className="w-full pl-10 pr-4 py-3 bg-mystic-dark border border-mystic-border focus:border-amber-400 rounded-2xl text-xs md:text-sm text-zinc-100 placeholder-zinc-500 outline-none shadow-inner"
               />
               <span className="absolute left-3.5 top-3.5 text-amber-400 text-xs">🔍</span>
@@ -2033,12 +2627,22 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                         "{reading.question}"
                       </h3>
                       {reading.context && <p className="text-xs text-zinc-400 font-body italic line-clamp-1 mt-1">Contexto: {reading.context}</p>}
+                      {reading.userNotes && <p className="text-xs text-amber-300/80 font-body italic line-clamp-1 mt-1">✍️ Nota: {reading.userNotes}</p>}
                     </div>
 
                     <div className="pt-3 border-t border-mystic-border/70 flex items-center justify-between gap-4 flex-wrap">
-                      <ReadingSummary cards={reading.cards} />
+                      <div className="flex gap-2">
+                        {reading.cards.map((rc, i) => (
+                          <img
+                            key={i}
+                            src={getCardImageUrl(rc.cardId)}
+                            alt={rc.cardId}
+                            className={`w-7 h-11 object-cover rounded border border-amber-400/40 ${rc.orientation === 'reversed' ? 'rotate-180' : ''}`}
+                          />
+                        ))}
+                      </div>
                       <span className="text-xs font-bold font-mystic-serif text-amber-400 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                        <span>Ver interpretação</span>
+                        <span>Ver revelação</span>
                         <span>→</span>
                       </span>
                     </div>
@@ -2052,7 +2656,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
     }
 
     // =========================================================================
-    // APP PRINCIPAL
+    // APP PRINCIPAL COM NAVEGAÇÃO COMPLETA
     // =========================================================================
     function App() {
       const [tab, setTab] = useState('new');
@@ -2098,22 +2702,32 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                     <span className="font-mystic-title font-bold text-lg md:text-xl text-gold-gradient tracking-wider">Tarot Interpreter</span>
                     <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/40">RWS</span>
                   </div>
-                  <p className="text-xs text-zinc-400 font-body hidden sm:block">Oráculo Rider-Waite-Smith • Manual ou Visão por IA</p>
+                  <p className="text-xs text-zinc-400 font-body hidden sm:block">Oráculo Rider-Waite-Smith • Imagens Originais & IA</p>
                 </div>
               </button>
 
-              <nav className="flex items-center gap-2.5">
+              <nav className="flex items-center gap-2 md:gap-2.5">
                 <button
                   onClick={handleNewReading}
-                  className={`px-4 py-2 rounded-xl text-xs md:text-sm font-mystic-serif transition-all flex items-center gap-1.5 ${
+                  className={`px-3.5 py-2 rounded-xl text-xs md:text-sm font-mystic-serif transition-all flex items-center gap-1.5 ${
                     tab === 'new' ? 'bg-amber-500/20 text-amber-200 border border-amber-500/50 shadow-mystic-gold' : 'text-zinc-300 hover:text-amber-200'
                   }`}
                 >
                   <span>✨ Nova Consulta</span>
                 </button>
+
+                <button
+                  onClick={() => { setTab('library'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className={`px-3.5 py-2 rounded-xl text-xs md:text-sm font-mystic-serif transition-all flex items-center gap-1.5 ${
+                    tab === 'library' ? 'bg-amber-500/20 text-amber-200 border border-amber-500/50 shadow-mystic-gold' : 'text-zinc-300 hover:text-amber-200'
+                  }`}
+                >
+                  <span>📖 78 Arcanos</span>
+                </button>
+
                 <button
                   onClick={() => setTab('history')}
-                  className={`px-4 py-2 rounded-xl text-xs md:text-sm font-mystic-serif transition-all flex items-center gap-2 ${
+                  className={`px-3.5 py-2 rounded-xl text-xs md:text-sm font-mystic-serif transition-all flex items-center gap-2 ${
                     tab === 'history' ? 'bg-amber-500/20 text-amber-200 border border-amber-500/50 shadow-mystic-gold' : 'text-zinc-300 hover:text-amber-200'
                   }`}
                 >
@@ -2124,6 +2738,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                     </span>
                   )}
                 </button>
+
                 <button
                   onClick={() => setIsSettingsOpen(true)}
                   title="Configurar Chave de IA"
@@ -2143,6 +2758,9 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 onReadingComplete={handleComplete}
                 onOpenSettings={() => setIsSettingsOpen(true)}
               />
+            )}
+            {tab === 'library' && (
+              <LibraryPage />
             )}
             {tab === 'result' && currentReading && (
               <ReadingResultPage
