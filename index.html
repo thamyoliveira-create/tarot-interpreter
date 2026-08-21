@@ -3,14 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Arcana — Oráculo Sagrado & Grimório de Bruxaria Rider-Waite-Smith</title>
+  <title>Arcana — Oráculo Sagrado & Grimório Rider-Waite-Smith</title>
   <meta name="description" content="Grimório e oráculo místico de Tarot Rider-Waite-Smith com visão computacional por IA, biblioteca de arcanos e sabedoria hermética." />
   <meta name="theme-color" content="#05020a" />
 
-  <!-- Google Fonts Místicas & Bruxaria: Almendra Display, UnifrakturMaguntia, MedievalSharp, Cinzel Decorative, Cormorant Garamond & Plus Jakarta Sans -->
+  <!-- Google Fonts Complementares: Almendra, MedievalSharp & Cormorant Garamond -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Almendra+Display&family=Almendra:ital,wght@0,400;0,700;1,400;1,700&family=Cinzel+Decorative:wght@700;900&family=MedievalSharp&family=UnifrakturMaguntia&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Almendra:ital,wght@0,400;0,700;1,400;1,700&family=MedievalSharp&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* =========================================================================
+       FONTE OFICIAL: DEVIL CANDLE & DEVIL CANDLE ALT
+       ========================================================================= */
+    @font-face {
+      font-family: "Devil Candle";
+      font-style: normal;
+      font-weight: normal;
+      font-display: swap;
+      src: url("https://db.onlinewebfonts.com/t/60ba228c3991d31611c6bd9df3bd5c06.woff2") format("woff2"),
+           url("https://db.onlinewebfonts.com/t/60ba228c3991d31611c6bd9df3bd5c06.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Devil Candle Alt";
+      font-style: normal;
+      font-weight: normal;
+      font-display: swap;
+      src: url("https://db.onlinewebfonts.com/t/5b4b042f1cc8c5932d8f37897f9cb2f5.woff2") format("woff2"),
+           url("https://db.onlinewebfonts.com/t/5b4b042f1cc8c5932d8f37897f9cb2f5.ttf") format("truetype");
+    }
+  </style>
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -21,13 +44,13 @@
         extend: {
           colors: {
             witch: {
-              void: '#040108',
-              night: '#090412',
-              coven: '#110724',
-              parchment: '#170b2e',
-              border: '#4a2574',
-              gold: '#eac368',
-              goldBright: '#fff0a8',
+              void: '#030107',
+              night: '#080312',
+              coven: '#100624',
+              parchment: '#170a2d',
+              border: '#4c2275',
+              gold: '#ebc469',
+              goldBright: '#fff3b0',
               goldDark: '#99731d',
               blood: '#881337',
               bloodGlow: '#e11d48',
@@ -36,17 +59,16 @@
             },
           },
           fontFamily: {
-            witch: ['"Almendra Display"', '"UnifrakturMaguntia"', 'serif'],
-            gothic: ['"UnifrakturMaguntia"', '"MedievalSharp"', 'serif'],
-            medieval: ['"MedievalSharp"', 'serif'],
-            cinzel: ['"Cinzel Decorative"', 'serif'],
-            book: ['Almendra', '"Cormorant Garamond"', 'serif'],
+            devil: ['"Devil Candle"', '"Devil Candle Alt"', '"MedievalSharp"', 'serif'],
+            devilAlt: ['"Devil Candle Alt"', '"Devil Candle"', 'serif'],
+            medieval: ['"MedievalSharp"', '"Almendra"', 'serif'],
+            book: ['Almendra', '"Cormorant Garamond"', 'Georgia', 'serif'],
             sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
           },
           boxShadow: {
-            'witch-gold': '0 0 30px -5px rgba(234, 195, 104, 0.3)',
-            'witch-coven': '0 0 45px -8px rgba(147, 51, 234, 0.35)',
-            'witch-blood': '0 0 35px -8px rgba(225, 29, 72, 0.3)',
+            'witch-gold': '0 0 30px -5px rgba(235, 196, 105, 0.35)',
+            'witch-coven': '0 0 45px -8px rgba(147, 51, 234, 0.4)',
+            'witch-blood': '0 0 35px -8px rgba(225, 29, 72, 0.35)',
           }
         }
       }
@@ -61,45 +83,45 @@
   <style>
     /* Fundo de Bruxaria & Altar Cósmico de Sombras */
     body {
-      background-color: #040108;
+      background-color: #030107;
       background-image: 
-        radial-gradient(ellipse at 50% -10%, rgba(147, 51, 234, 0.35) 0%, transparent 65%),
-        radial-gradient(circle at 10% 35%, rgba(136, 19, 55, 0.22) 0%, transparent 45%),
-        radial-gradient(circle at 90% 65%, rgba(168, 85, 247, 0.25) 0%, transparent 50%),
-        radial-gradient(circle at 50% 100%, rgba(46, 16, 101, 0.45) 0%, transparent 70%);
+        radial-gradient(ellipse at 50% -15%, rgba(147, 51, 234, 0.4) 0%, transparent 65%),
+        radial-gradient(circle at 10% 40%, rgba(136, 19, 55, 0.25) 0%, transparent 45%),
+        radial-gradient(circle at 90% 65%, rgba(168, 85, 247, 0.28) 0%, transparent 50%),
+        radial-gradient(circle at 50% 100%, rgba(46, 16, 101, 0.5) 0%, transparent 70%);
       background-attachment: fixed;
       color: #f3e8ff;
       font-family: 'Almendra', 'Cormorant Garamond', Georgia, serif;
       overflow-x: hidden;
     }
 
-    /* Brumas & Partículas de Feitiço Animadas */
-    .spell-stars {
+    /* Brumas & Faíscas de Vela de Bruxaria */
+    .candle-embers {
       background-image: 
-        radial-gradient(2px 2px at 20px 30px, #eac368, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 20px 30px, #ebc469, rgba(0,0,0,0)),
         radial-gradient(2px 2px at 40px 70px, #c084fc, rgba(0,0,0,0)),
-        radial-gradient(1px 1px at 90px 40px, #fff, rgba(0,0,0,0)),
-        radial-gradient(2px 2px at 160px 120px, #eac368, rgba(0,0,0,0)),
-        radial-gradient(1.5px 1.5px at 230px 190px, #e11d48, rgba(0,0,0,0));
+        radial-gradient(1.5px 1.5px at 90px 40px, #fff, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 160px 120px, #ebc469, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 230px 190px, #e11d48, rgba(0,0,0,0));
       background-repeat: repeat;
-      background-size: 250px 250px;
-      opacity: 0.25;
-      animation: floatMist 40s linear infinite;
+      background-size: 260px 260px;
+      opacity: 0.3;
+      animation: floatEmbers 35s linear infinite;
     }
 
-    @keyframes floatMist {
+    @keyframes floatEmbers {
       from { background-position: 0 0; }
-      to { background-position: 250px 500px; }
+      to { background-position: 260px -520px; }
     }
 
-    /* Fontes de Bruxaria & Grimório */
-    .font-witch-title {
-      font-family: 'Almendra Display', 'UnifrakturMaguntia', 'Cinzel Decorative', serif;
-      letter-spacing: 0.04em;
-    }
-    .font-gothic-title {
-      font-family: 'UnifrakturMaguntia', 'MedievalSharp', serif;
+    /* Classes Utilitárias da Fonte Devil Candle */
+    .font-devil-title {
+      font-family: 'Devil Candle', 'Devil Candle Alt', 'MedievalSharp', serif;
       letter-spacing: 0.05em;
+    }
+    .font-devil-alt {
+      font-family: 'Devil Candle Alt', 'Devil Candle', 'MedievalSharp', serif;
+      letter-spacing: 0.04em;
     }
     .font-medieval-serif {
       font-family: 'MedievalSharp', 'Almendra', serif;
@@ -111,56 +133,49 @@
       line-height: 1.8;
     }
 
-    /* Ouro Encantado & Brilho de Fogo Sagrado */
+    /* Ouro Encantado & Brilho Flamejante */
     .text-witch-gold {
-      background: linear-gradient(135deg, #fff0a8 0%, #eac368 40%, #c49626 80%, #fff4c2 100%);
+      background: linear-gradient(135deg, #fff3b0 0%, #ebc469 40%, #c49626 80%, #fff6c9 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 12px rgba(234, 195, 104, 0.4));
+      filter: drop-shadow(0 0 14px rgba(235, 196, 105, 0.45));
     }
     .text-witch-purple {
       background: linear-gradient(135deg, #f3e8ff 0%, #c084fc 50%, #e9d5ff 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 10px rgba(192, 132, 252, 0.4));
+      filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.45));
     }
 
-    /* Grimório / Cartões com Borda de Runa Antiga */
+    /* Cartões / Grimório de Bruxaria */
     .witch-card {
-      background: linear-gradient(170deg, rgba(23, 11, 46, 0.88) 0%, rgba(9, 4, 18, 0.96) 100%);
-      border: 1px solid rgba(234, 195, 104, 0.35);
+      background: linear-gradient(170deg, rgba(23, 10, 45, 0.88) 0%, rgba(8, 3, 18, 0.96) 100%);
+      border: 1px solid rgba(235, 196, 105, 0.35);
       backdrop-filter: blur(14px);
-      box-shadow: 0 0 25px -5px rgba(147, 51, 234, 0.25), inset 0 0 20px -5px rgba(234, 195, 104, 0.08);
+      box-shadow: 0 0 25px -5px rgba(147, 51, 234, 0.25), inset 0 0 20px -5px rgba(235, 196, 105, 0.08);
       position: relative;
     }
     .witch-card:hover {
-      border-color: rgba(234, 195, 104, 0.65);
-      box-shadow: 0 0 35px -5px rgba(234, 195, 104, 0.3), inset 0 0 25px -5px rgba(147, 51, 234, 0.15);
-    }
-
-    /* Moldura de Pergaminho e Selos de Bruxaria */
-    .witch-border-ornament {
-      border: 2px solid rgba(234, 195, 104, 0.4);
-      outline: 1px dashed rgba(147, 51, 234, 0.6);
-      outline-offset: 4px;
+      border-color: rgba(235, 196, 105, 0.65);
+      box-shadow: 0 0 35px -5px rgba(235, 196, 105, 0.35), inset 0 0 25px -5px rgba(147, 51, 234, 0.18);
     }
 
     @keyframes pulseSigil {
-      0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.4; }
-      50% { transform: scale(1.05) rotate(3deg); opacity: 0.8; }
+      0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.35; }
+      50% { transform: scale(1.05) rotate(3deg); opacity: 0.75; }
     }
     @keyframes fadeInWitch {
       from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .animate-sigil { animation: pulseSigil 6s ease-in-out infinite; }
+    .animate-sigil { animation: pulseSigil 7s ease-in-out infinite; }
     .animate-fadeIn { animation: fadeInWitch 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
     /* Custom Scrollbar Místico */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: #040108; }
-    ::-webkit-scrollbar-thumb { background: #4a2574; border-radius: 4px; border: 1px solid rgba(234, 195, 104, 0.3); }
-    ::-webkit-scrollbar-thumb:hover { background: #eac368; }
+    ::-webkit-scrollbar-track { background: #030107; }
+    ::-webkit-scrollbar-thumb { background: #4c2275; border-radius: 4px; border: 1px solid rgba(235, 196, 105, 0.3); }
+    ::-webkit-scrollbar-thumb:hover { background: #ebc469; }
 
     @media print {
       body { background: white !important; color: black !important; }
@@ -170,14 +185,14 @@
   </style>
 </head>
 <body class="antialiased selection:bg-amber-400 selection:text-black min-h-screen relative">
-  {/* Camada de Partículas Cósmicas / Brumas de Feitiço */}
-  <div class="fixed inset-0 spell-stars pointer-events-none z-0"></div>
+  {/* Camada de Faíscas de Vela & Brumas de Feitiço */}
+  <div class="fixed inset-0 candle-embers pointer-events-none z-0"></div>
 
-  {/* Sigilo Mágico de Fundo (Círculo de Bruxaria) */}
-  <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full border border-amber-500/10 pointer-events-none z-0 animate-sigil hidden md:block">
+  {/* Sigilo Ritualístico de Fundo */}
+  <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[720px] h-[720px] rounded-full border border-amber-500/10 pointer-events-none z-0 animate-sigil hidden md:block">
     <div className="w-full h-full rounded-full border border-purple-500/10 flex items-center justify-center p-12">
       <div className="w-full h-full rounded-full border border-dashed border-amber-500/10 flex items-center justify-center">
-        <span className="text-[120px] text-amber-500/5 select-none font-gothic-title">🜏 ☽ ◯ ☾ 🜂</span>
+        <span className="text-[110px] text-amber-500/5 select-none font-devil-title">🜏 ☽ ◯ ☾ 🜂</span>
       </div>
     </div>
   </div>
@@ -186,7 +201,7 @@
     <div class="min-h-screen flex items-center justify-center">
       <div class="flex flex-col items-center gap-4">
         <div class="w-14 h-14 border-2 border-amber-500/20 border-t-amber-400 rounded-full animate-spin"></div>
-        <p class="text-sm font-semibold text-amber-300 font-gothic-title tracking-widest uppercase">
+        <p class="text-sm font-semibold text-amber-300 font-devil-title tracking-widest uppercase">
           ✧ Convocando o Grimório Sagrado ✧
         </p>
       </div>
@@ -949,9 +964,9 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             </div>
           </div>
 
-          {/* Nome e Posição da Carta em Fonte Gótica */}
+          {/* Nome e Posição da Carta em Fonte Devil Candle / Medieval */}
           <div className="text-center mt-2 max-w-[140px]">
-            <span className="font-medieval-serif font-bold text-xs text-amber-200 block truncate">
+            <span className="font-devil-title font-bold text-xs text-amber-200 block truncate tracking-wider">
               {card.name}
             </span>
             {position && (
@@ -1038,14 +1053,14 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-3.5 py-1.5 rounded-xl bg-witch-parchment text-amber-200 hover:bg-witch-coven text-xs font-medieval-serif border border-witch-border transition-all hover:border-amber-400"
+                      className="px-3.5 py-1.5 rounded-xl bg-witch-parchment text-amber-200 hover:bg-witch-coven text-xs font-devil-title border border-witch-border transition-all hover:border-amber-400"
                     >
                       Trocar foto
                     </button>
                     <button
                       type="button"
                       onClick={() => onPhotoSelected(null)}
-                      className="px-3.5 py-1.5 rounded-xl bg-rose-950/80 text-rose-200 hover:bg-rose-900 text-xs font-medium border border-rose-800/60 transition-colors"
+                      className="px-3.5 py-1.5 rounded-xl bg-rose-950/80 text-rose-200 hover:bg-rose-900 text-xs font-medium border border-rose-800/60 transition-colors font-medieval-serif"
                     >
                       Remover
                     </button>
@@ -1070,7 +1085,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               </div>
 
               <div className="space-y-1">
-                <h4 className="font-witch-title text-xl md:text-2xl text-witch-gold font-bold">
+                <h4 className="font-devil-title text-2xl md:text-3xl text-witch-gold font-bold">
                   Fotografe sua Mesa Sagrada
                 </h4>
                 <p className="text-xs md:text-sm text-purple-200/80 font-book max-w-md mx-auto leading-relaxed">
@@ -1080,7 +1095,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
               <button
                 type="button"
-                className="mt-1 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-purple-900/40 to-amber-500/20 text-amber-200 border border-amber-500/50 hover:border-amber-400 text-xs font-gothic-title tracking-wider shadow-md transition-all group-hover:shadow-witch-gold"
+                className="mt-1 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-purple-900/40 to-amber-500/20 text-amber-200 border border-amber-500/50 hover:border-amber-400 text-xs font-devil-title tracking-wider shadow-md transition-all group-hover:shadow-witch-gold"
               >
                 ✧ Abrir Câmera do Oráculo ✧
               </button>
@@ -1143,12 +1158,12 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                     className="w-7 h-11 object-cover rounded border border-amber-400/60 shadow-sm flex-shrink-0"
                   />
                   <div className="flex flex-col truncate">
-                    <span className="text-amber-200 text-sm font-semibold truncate font-medieval-serif">{selectedCard.name}</span>
-                    <span className="text-[10px] text-amber-400/80 truncate">{selectedCard.element} • {selectedCard.upright.keywords.slice(0, 2).join(', ')}</span>
+                    <span className="text-amber-200 text-sm font-semibold truncate font-devil-title tracking-wide">{selectedCard.name}</span>
+                    <span className="text-[10px] text-amber-400/80 truncate font-book">{selectedCard.element} • {selectedCard.upright.keywords.slice(0, 2).join(', ')}</span>
                   </div>
                 </>
               ) : (
-                <span className="text-zinc-400 text-sm font-medieval-serif">Escolha um dos 78 arcanos...</span>
+                <span className="text-zinc-400 text-sm font-devil-title">Escolha um dos 78 arcanos...</span>
               )}
             </div>
             <span className="text-amber-400 text-xs">{isOpen ? '▲' : '▼'}</span>
@@ -1185,7 +1200,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                       key={cat.id}
                       type="button"
                       onClick={() => setActiveCategory(cat.id)}
-                      className={`px-3 py-1 rounded-lg text-[11px] font-medieval-serif whitespace-nowrap transition-all ${
+                      className={`px-3 py-1 rounded-lg text-[11px] font-devil-title whitespace-nowrap transition-all ${
                         activeCategory === cat.id ? 'bg-amber-500 text-black font-bold shadow-md' : 'bg-witch-parchment text-purple-200 hover:text-amber-200'
                       }`}
                     >
@@ -1216,8 +1231,8 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                           className="w-8 h-12 object-cover rounded border border-amber-400/40 shadow-sm flex-shrink-0"
                         />
                         <div className="flex flex-col gap-0.5 truncate">
-                          <span className="font-medieval-serif font-medium text-sm text-zinc-100">{card.name}</span>
-                          <span className="text-[11px] text-amber-400/80 truncate">{card.element} • {card.upright.keywords.slice(0, 3).join(' • ')}</span>
+                          <span className="font-devil-title font-medium text-sm text-zinc-100">{card.name}</span>
+                          <span className="text-[11px] text-amber-400/80 truncate font-book">{card.element} • {card.upright.keywords.slice(0, 3).join(' • ')}</span>
                         </div>
                       </button>
                     );
@@ -1238,10 +1253,10 @@ Responda ESTRITAMENTE em formato JSON com o schema:
         <div className="p-4 md:p-5 rounded-2xl witch-card space-y-4 shadow-md hover:shadow-witch-gold transition-all">
           <div className="flex items-center justify-between gap-3 pb-3 border-b border-witch-border/60">
             <div className="flex items-center gap-2.5">
-              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-amber-400/20 to-purple-900/40 border border-amber-500/50 text-amber-300 text-xs font-bold font-gothic-title shadow-sm">
+              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-amber-400/20 to-purple-900/40 border border-amber-500/50 text-amber-300 text-xs font-bold font-devil-title shadow-sm">
                 {index + 1}
               </span>
-              <h4 className="text-sm font-semibold text-amber-100 font-medieval-serif">Lâmina Sagrada {index + 1}</h4>
+              <h4 className="text-base font-semibold text-amber-100 font-devil-title tracking-wide">Lâmina Sagrada {index + 1}</h4>
             </div>
             {canRemove && (
               <button
@@ -1256,7 +1271,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-center">
             <div className="md:col-span-6">
-              <label className="block text-xs font-medieval-serif text-amber-200/90 mb-1.5">Arcano Escolhido <span className="text-amber-400">*</span></label>
+              <label className="block text-xs font-devil-title text-amber-200/90 mb-1.5">Arcano Escolhido <span className="text-amber-400">*</span></label>
               <TarotCardSelector
                 selectedCardId={readingCard.cardId}
                 onSelectCard={(id) => onUpdateCard(index, { ...readingCard, cardId: id })}
@@ -1264,12 +1279,12 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             </div>
 
             <div className="md:col-span-3">
-              <label className="block text-xs font-medieval-serif text-amber-200/90 mb-1.5">Orientação</label>
+              <label className="block text-xs font-devil-title text-amber-200/90 mb-1.5">Orientação</label>
               <div className="grid grid-cols-2 gap-1.5 p-1 bg-black rounded-xl border border-witch-border">
                 <button
                   type="button"
                   onClick={() => onUpdateCard(index, { ...readingCard, orientation: 'upright' })}
-                  className={`py-2 px-2 rounded-lg text-xs font-medieval-serif transition-all text-center flex items-center justify-center gap-1 ${
+                  className={`py-2 px-2 rounded-lg text-xs font-devil-title transition-all text-center flex items-center justify-center gap-1 ${
                     readingCard.orientation === 'upright' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold shadow-md' : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
@@ -1278,7 +1293,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 <button
                   type="button"
                   onClick={() => onUpdateCard(index, { ...readingCard, orientation: 'reversed' })}
-                  className={`py-2 px-2 rounded-lg text-xs font-medieval-serif transition-all text-center flex items-center justify-center gap-1 ${
+                  className={`py-2 px-2 rounded-lg text-xs font-devil-title transition-all text-center flex items-center justify-center gap-1 ${
                     readingCard.orientation === 'reversed' ? 'bg-purple-950 text-purple-200 font-bold border border-purple-500/50 shadow-md' : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
@@ -1288,7 +1303,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             </div>
 
             <div className="md:col-span-3">
-              <label className="block text-xs font-medieval-serif text-amber-200/90 mb-1.5">
+              <label className="block text-xs font-devil-title text-amber-200/90 mb-1.5">
                 Posição / Função <span className="text-zinc-500 text-[10px]">(opcional)</span>
               </label>
               <input
@@ -1303,7 +1318,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
           {cardData && (
             <div className="pt-3 border-t border-witch-border/40 flex items-center gap-2 flex-wrap text-xs">
-              <span className="text-[11px] text-amber-400 font-medieval-serif">
+              <span className="text-[11px] text-amber-400 font-devil-title">
                 {readingCard.orientation === 'upright' ? '✦ Forças Diretas:' : '☾ Forças Invertidas:'}
               </span>
               {(readingCard.orientation === 'upright' ? cardData.upright.keywords : cardData.reversed.keywords).slice(0, 4).map((kw, i) => (
@@ -1322,11 +1337,11 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       return (
         <div className="p-6 md:p-8 rounded-3xl bg-gradient-to-b from-witch-parchment via-witch-night to-witch-void border-2 border-amber-500/40 shadow-witch-gold relative overflow-hidden">
           {/* Estampa de Altar de Feitiço / Geometria Oculta */}
-          <div className="absolute inset-0 bg-[radial-gradient(#eac368_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(#ebc469_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none"></div>
 
           <div className="relative z-10">
             <div className="text-center mb-6">
-              <span className="text-xs uppercase tracking-widest font-gothic-title text-witch-gold block">
+              <span className="text-sm uppercase tracking-widest font-devil-title text-witch-gold block">
                 ✧ ☽ ◯ ☾ Altar de Consagração das Lâminas ☽ ◯ ☾ ✧
               </span>
             </div>
@@ -1360,7 +1375,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             <div className="p-5 border-b border-witch-border flex items-center justify-between bg-witch-void">
               <div className="flex items-center gap-2.5">
                 <span className="text-2xl">📖</span>
-                <h3 className="font-witch-title text-xl md:text-2xl text-witch-gold font-bold">
+                <h3 className="font-devil-title text-2xl md:text-3xl text-witch-gold font-bold">
                   {card.name}
                 </h3>
               </div>
@@ -1380,10 +1395,10 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
                 <div className="space-y-3">
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 rounded-full bg-purple-950 text-purple-200 border border-purple-500/40 text-xs font-medieval-serif">
+                    <span className="px-3 py-1 rounded-full bg-purple-950 text-purple-200 border border-purple-500/40 text-xs font-devil-title">
                       {card.arcana === 'major' ? `Arcano Maior (Nº ${card.number})` : `Naipe de ${card.suit}`}
                     </span>
-                    <span className="px-3 py-1 rounded-full bg-amber-950 text-amber-200 border border-amber-500/40 text-xs font-medieval-serif">
+                    <span className="px-3 py-1 rounded-full bg-amber-950 text-amber-200 border border-amber-500/40 text-xs font-devil-title">
                       Elemento {card.element}
                     </span>
                   </div>
@@ -1394,7 +1409,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
                   {card.symbolism && (
                     <div className="space-y-1.5 pt-2">
-                      <span className="text-xs font-bold text-amber-300 font-gothic-title uppercase tracking-wider block">
+                      <span className="text-xs font-bold text-amber-300 font-devil-title uppercase tracking-wider block">
                         Simbologia Oculta (Pamela Colman Smith):
                       </span>
                       <ul className="text-xs text-zinc-300 space-y-1 list-disc list-inside">
@@ -1410,7 +1425,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               {/* Posições Normal e Invertida */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 <div className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/40 space-y-2">
-                  <h4 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-gothic-title flex items-center gap-1.5">
+                  <h4 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-devil-title flex items-center gap-1.5">
                     <span>⬆️</span>
                     <span>Luz & Manifestação Direta</span>
                   </h4>
@@ -1427,7 +1442,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 </div>
 
                 <div className="p-4 rounded-2xl bg-purple-950/30 border border-purple-500/50 space-y-2">
-                  <h4 className="text-xs font-bold text-purple-300 uppercase tracking-widest font-gothic-title flex items-center gap-1.5">
+                  <h4 className="text-xs font-bold text-purple-300 uppercase tracking-widest font-devil-title flex items-center gap-1.5">
                     <span>🔄</span>
                     <span>Sombra & Trabalho Oculto</span>
                   </h4>
@@ -1448,7 +1463,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             <div className="p-4 border-t border-witch-border bg-witch-void flex justify-end">
               <button
                 onClick={onClose}
-                className="px-6 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-gothic-title font-bold text-xs shadow-witch-gold"
+                className="px-6 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-devil-title font-bold text-xs shadow-witch-gold"
               >
                 Concluir Estudo
               </button>
@@ -1482,14 +1497,14 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       }, [searchTerm, category]);
 
       return (
-        <div className="space-y-8 animate-fadeIn max-w-6xl mx-auto pb-16">
+        <div className="space-y-8 animate-fadeIn max-w-6xl mx-auto pb-16 font-book">
           <div className="text-center space-y-3 pt-2 pb-2">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-950/60 via-amber-950/40 to-purple-950/60 border border-amber-500/40 text-amber-200 text-xs font-gothic-title shadow-witch-gold">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-950/60 via-amber-950/40 to-purple-950/60 border border-amber-500/40 text-amber-200 text-xs font-devil-title shadow-witch-gold">
               <span>🜏</span>
               <span>Compêndio Sagrado das 78 Lâminas</span>
               <span>🜏</span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-extrabold font-witch-title text-witch-gold tracking-wide">
+            <h1 className="text-4xl md:text-6xl font-extrabold font-devil-title text-witch-gold tracking-wide">
               Grimório das 78 Lâminas
             </h1>
             <p className="text-base md:text-lg text-purple-200/90 font-book max-w-2xl mx-auto leading-relaxed">
@@ -1523,7 +1538,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                   key={cat.id}
                   type="button"
                   onClick={() => setCategory(cat.id)}
-                  className={`px-3.5 py-2 rounded-xl font-medieval-serif whitespace-nowrap transition-all ${
+                  className={`px-3.5 py-2 rounded-xl font-devil-title whitespace-nowrap transition-all ${
                     category === cat.id
                       ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold shadow-witch-gold'
                       : 'bg-witch-parchment text-purple-200 hover:text-amber-200 border border-witch-border/60'
@@ -1554,7 +1569,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 </div>
 
                 <div className="text-center w-full">
-                  <h4 className="font-medieval-serif font-bold text-xs text-amber-200 truncate group-hover:text-amber-300">
+                  <h4 className="font-devil-title font-bold text-xs text-amber-200 truncate group-hover:text-amber-300 tracking-wide">
                     {card.name}
                   </h4>
                   <span className="text-[10px] text-zinc-400 font-book truncate block">
@@ -1600,7 +1615,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             <div className="flex items-center justify-between pb-4 border-b border-witch-border">
               <div className="flex items-center gap-2.5">
                 <span className="text-2xl">🗝️</span>
-                <h3 className="font-witch-title text-xl text-witch-gold font-bold">Chave de Visão por IA (Gemini)</h3>
+                <h3 className="font-devil-title text-2xl text-witch-gold font-bold">Chave de Visão por IA (Gemini)</h3>
               </div>
               <button type="button" onClick={onClose} className="text-zinc-400 hover:text-amber-200">✕</button>
             </div>
@@ -1610,7 +1625,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 Para consagrar a <strong>visão computacional em tempo real</strong> e permitir que a IA leia cada detalhe iconográfico da sua foto, insira sua chave gratuita do Google Gemini:
               </p>
               <div>
-                <label className="block text-xs font-medieval-serif text-amber-300 mb-1.5">Google Gemini API Key:</label>
+                <label className="block text-xs font-devil-title text-amber-300 mb-1.5">Google Gemini API Key:</label>
                 <input
                   type="password"
                   value={apiKey}
@@ -1626,7 +1641,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
             <div className="flex items-center justify-end gap-3 pt-2 border-t border-witch-border">
               <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl bg-witch-parchment text-zinc-300 text-xs font-medieval-serif">Cancelar</button>
-              <button type="button" onClick={handleSave} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black text-xs font-bold font-gothic-title shadow-witch-gold">
+              <button type="button" onClick={handleSave} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black text-xs font-bold font-devil-title shadow-witch-gold">
                 {saved ? '✓ Consagrado!' : 'Salvar Chave'}
               </button>
             </div>
@@ -1779,13 +1794,13 @@ Responda ESTRITAMENTE em formato JSON com o schema:
         <div className="space-y-10 animate-fadeIn max-w-4xl mx-auto pb-12 font-book">
           {/* Header de Bruxaria com Símbolos Ocultos */}
           <div className="text-center space-y-4 pt-2 pb-2">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-950/70 via-amber-950/50 to-purple-950/70 border border-amber-500/40 text-amber-200 text-xs font-gothic-title shadow-witch-gold">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-950/70 via-amber-950/50 to-purple-950/70 border border-amber-500/40 text-amber-200 text-xs font-devil-title shadow-witch-gold">
               <span>🜏</span>
               <span>Oráculo & Grimório Sagrado Rider-Waite</span>
               <span>🜏</span>
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-extrabold font-witch-title text-witch-gold tracking-wide leading-tight">
+            <h1 className="text-4xl md:text-6xl font-extrabold font-devil-title text-witch-gold tracking-wide leading-tight">
               Consulta ao Oráculo
             </h1>
 
@@ -1808,7 +1823,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <button
                 type="button"
                 onClick={() => { setInputMode('photo'); setValidationError(null); }}
-                className={`flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-gothic-title font-bold transition-all flex items-center justify-center gap-2 ${
+                className={`flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-devil-title font-bold transition-all flex items-center justify-center gap-2 ${
                   inputMode === 'photo' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-witch-gold' : 'text-zinc-400 hover:text-amber-200'
                 }`}
               >
@@ -1819,7 +1834,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <button
                 type="button"
                 onClick={() => { setInputMode('manual'); setValidationError(null); }}
-                className={`flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-gothic-title font-bold transition-all flex items-center justify-center gap-2 ${
+                className={`flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-devil-title font-bold transition-all flex items-center justify-center gap-2 ${
                   inputMode === 'manual' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-witch-gold' : 'text-zinc-400 hover:text-amber-200'
                 }`}
               >
@@ -1830,7 +1845,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
             {/* Pergunta */}
             <div className="p-6 md:p-7 rounded-3xl witch-card space-y-3">
-              <label className="block text-base font-bold text-amber-200 font-witch-title flex items-center justify-between">
+              <label className="block text-base font-bold text-amber-200 font-devil-title flex items-center justify-between">
                 <span>Qual é a sua pergunta ao Oráculo? <span className="text-amber-400">*</span></span>
                 <span className="text-xs font-normal text-amber-400/70 font-medieval-serif">Obrigatório</span>
               </label>
@@ -1845,7 +1860,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
             {/* Contexto */}
             <div className="p-6 md:p-7 rounded-3xl witch-card space-y-3">
-              <label className="block text-base font-bold text-amber-200/90 font-witch-title flex items-center justify-between">
+              <label className="block text-base font-bold text-amber-200/90 font-devil-title flex items-center justify-between">
                 <span>Contexto pessoal da situação</span>
                 <span className="text-xs font-normal text-zinc-500 font-medieval-serif">Opcional</span>
               </label>
@@ -1863,13 +1878,13 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <div className="p-6 md:p-7 rounded-3xl witch-card space-y-5">
                 <div className="flex items-center justify-between pb-4 border-b border-witch-border">
                   <div>
-                    <h3 className="text-lg md:text-xl font-bold text-witch-gold font-witch-title flex items-center gap-2">
+                    <h3 className="text-xl md:text-2xl font-bold text-witch-gold font-devil-title flex items-center gap-2">
                       <span>📸</span>
                       <span>Foto da Tiragem Física</span>
                     </h3>
                     <p className="text-xs text-zinc-400 font-book mt-0.5">Fotografe as cartas dispostas sobre seu altar ou mesa de leitura.</p>
                   </div>
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 shadow-sm font-medieval-serif">
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 shadow-sm font-devil-title">
                     Visão Computacional
                   </span>
                 </div>
@@ -1882,7 +1897,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 {!hasApiKey && (
                   <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/40 via-purple-950/30 to-amber-950/40 border border-amber-500/30 flex items-start justify-between gap-3 text-xs text-amber-200">
                     <div className="space-y-1">
-                      <p className="font-semibold font-medieval-serif flex items-center gap-1.5">
+                      <p className="font-semibold font-devil-title flex items-center gap-1.5">
                         <span>🗝️</span>
                         <span>Deseja reconhecimento real de pixels com Gemini?</span>
                       </p>
@@ -1894,7 +1909,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                       <button
                         type="button"
                         onClick={onOpenSettings}
-                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold text-xs whitespace-nowrap shadow-witch-gold hover:from-amber-400 hover:to-amber-500 font-gothic-title"
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold text-xs whitespace-nowrap shadow-witch-gold hover:from-amber-400 hover:to-amber-500 font-devil-title"
                       >
                         Inserir chave
                       </button>
@@ -1908,7 +1923,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 <div>
                   <div className="flex items-center justify-between pb-3 border-b border-witch-border mb-3">
                     <div>
-                      <h3 className="text-lg md:text-xl font-bold text-witch-gold font-witch-title">
+                      <h3 className="text-xl md:text-2xl font-bold text-witch-gold font-devil-title">
                         Modelos de Tiragem Consagrados
                       </h3>
                       <p className="text-xs text-zinc-400 font-book">Escolha a disposição ritualística para preencher as posições automaticamente.</p>
@@ -1931,7 +1946,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                         >
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-base">{preset.icon}</span>
-                            <span className="text-xs font-bold font-medieval-serif text-amber-100">{preset.name}</span>
+                            <span className="text-xs font-bold font-devil-title text-amber-100 tracking-wide">{preset.name}</span>
                           </div>
                           <span className="text-[10px] text-zinc-400 font-book">{preset.cardCount} {preset.cardCount === 1 ? 'carta' : 'cartas'}</span>
                         </button>
@@ -1961,7 +1976,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 <button
                   type="button"
                   onClick={handleAddCard}
-                  className="w-full py-3.5 px-4 rounded-2xl border border-dashed border-amber-500/40 hover:border-amber-400 bg-black/40 hover:bg-amber-500/10 text-amber-200 text-xs md:text-sm font-gothic-title transition-all flex items-center justify-center gap-2 group shadow-sm"
+                  className="w-full py-3.5 px-4 rounded-2xl border border-dashed border-amber-500/40 hover:border-amber-400 bg-black/40 hover:bg-amber-500/10 text-amber-200 text-xs md:text-sm font-devil-title transition-all flex items-center justify-center gap-2 group shadow-sm"
                 >
                   <span>➕ Invocar mais uma lâmina à tiragem</span>
                 </button>
@@ -1971,7 +1986,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             {/* Estilo */}
             <div className="p-6 md:p-7 rounded-3xl witch-card space-y-4">
               <div>
-                <h3 className="text-lg md:text-xl font-bold text-witch-gold font-witch-title">
+                <h3 className="text-xl md:text-2xl font-bold text-witch-gold font-devil-title">
                   Prisma Interpretativo
                 </h3>
                 <p className="text-xs text-zinc-400 font-book">Escolha a ótica hermenêutica para a decodificação dos símbolos.</p>
@@ -1994,11 +2009,11 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                       <div>
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-lg">{opt.icon}</span>
-                          <span className={`text-sm font-bold font-medieval-serif ${isSelected ? 'text-amber-300' : 'text-zinc-200'}`}>{opt.label}</span>
+                          <span className={`text-sm font-bold font-devil-title tracking-wide ${isSelected ? 'text-amber-300' : 'text-zinc-200'}`}>{opt.label}</span>
                         </div>
                         <p className="text-xs text-zinc-400 font-book leading-relaxed">{opt.desc}</p>
                       </div>
-                      {isSelected && <span className="text-[10px] font-bold text-amber-400 mt-3 font-gothic-title">✦ Consagrado</span>}
+                      {isSelected && <span className="text-[10px] font-bold text-amber-400 mt-3 font-devil-title">✦ Consagrado</span>}
                     </button>
                   );
                 })}
@@ -2007,7 +2022,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
             {/* Alerta de Validação */}
             {validationError && (
-              <div className="p-4 rounded-2xl bg-rose-950/70 border border-rose-800 text-rose-200 text-xs md:text-sm flex items-center gap-3 animate-shake font-medieval-serif">
+              <div className="p-4 rounded-2xl bg-rose-950/70 border border-rose-800 text-rose-200 text-xs md:text-sm flex items-center gap-3 animate-shake font-devil-title">
                 <span className="text-xl">⚠️</span>
                 <span>{validationError}</span>
               </div>
@@ -2018,12 +2033,12 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-4 md:py-5 px-8 rounded-3xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-witch-title font-bold text-xl md:text-2xl tracking-wider shadow-witch-gold hover:shadow-2xl active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                className="w-full py-4 md:py-5 px-8 rounded-3xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-devil-title font-bold text-2xl md:text-3xl tracking-wider shadow-witch-gold hover:shadow-2xl active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
               >
                 {isLoading ? (
                   <>
                     <div className="w-6 h-6 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
-                    <span className="font-gothic-title">Consultando o Grimório Ancestral...</span>
+                    <span className="font-devil-title text-xl">Consultando o Grimório Ancestral...</span>
                   </>
                 ) : (
                   <>
@@ -2113,7 +2128,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <span className="text-amber-500/40">•</span>
               <span className="text-amber-300 capitalize">Prisma {reading.interpretationStyle}</span>
               {reading.photoBase64 && (
-                <span className="px-2.5 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 text-[10px] font-semibold">
+                <span className="px-2.5 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 text-[10px] font-semibold font-devil-title">
                   📸 Leitura por Imagem
                 </span>
               )}
@@ -2123,7 +2138,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <button
                 type="button"
                 onClick={handleToggleSpeech}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-gothic-title border transition-all flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-devil-title border transition-all flex items-center gap-1.5 ${
                   isSpeaking
                     ? 'bg-amber-500 text-black font-bold border-amber-400 shadow-witch-gold animate-pulse'
                     : 'bg-witch-parchment text-amber-200 border-witch-border hover:border-amber-400'
@@ -2136,7 +2151,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <button
                 type="button"
                 onClick={() => setShowShareModal(true)}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-gothic-title bg-witch-parchment text-amber-300 border border-witch-border hover:border-amber-400 transition-all flex items-center gap-1"
+                className="px-3.5 py-1.5 rounded-xl text-xs font-devil-title bg-witch-parchment text-amber-300 border border-witch-border hover:border-amber-400 transition-all flex items-center gap-1"
               >
                 <span>✨</span>
                 <span>Gerar Cartão</span>
@@ -2153,7 +2168,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <button
                 type="button"
                 onClick={onNewReading}
-                className="px-4 py-1.5 rounded-xl text-xs font-bold font-gothic-title bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-witch-gold hover:from-amber-400 hover:to-amber-500 transition-all"
+                className="px-4 py-1.5 rounded-xl text-xs font-bold font-devil-title bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-witch-gold hover:from-amber-400 hover:to-amber-500 transition-all"
               >
                 ✨ Nova consulta
               </button>
@@ -2163,18 +2178,18 @@ Responda ESTRITAMENTE em formato JSON com o schema:
           {/* Pergunta e Contexto */}
           <div className="p-7 md:p-8 rounded-3xl witch-card space-y-6 shadow-2xl relative overflow-hidden">
             <div>
-              <span className="text-xs font-bold uppercase tracking-widest text-amber-400 font-gothic-title flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-widest text-amber-400 font-devil-title flex items-center gap-2">
                 <span>✦</span>
                 <span>A Pergunta do Consulente</span>
               </span>
-              <h2 className="text-3xl md:text-4xl font-bold font-witch-title text-witch-gold mt-2 leading-relaxed">
+              <h2 className="text-3xl md:text-5xl font-bold font-devil-title text-witch-gold mt-2 leading-relaxed">
                 "{reading.question}"
               </h2>
             </div>
 
             {reading.context && (
               <div className="pt-4 border-t border-witch-border/60">
-                <span className="text-xs font-semibold text-amber-300/90 font-medieval-serif block mb-1.5">Contexto pessoal:</span>
+                <span className="text-xs font-semibold text-amber-300/90 font-devil-title block mb-1.5">Contexto pessoal:</span>
                 <p className="text-base text-zinc-300 italic bg-black/60 p-4 rounded-2xl border border-witch-border/50 leading-relaxed">
                   {reading.context}
                 </p>
@@ -2185,7 +2200,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             {reading.photoBase64 && (
               <div className="pt-4 border-t border-witch-border/60">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold uppercase tracking-widest text-amber-400 font-gothic-title">
+                  <span className="text-xs font-bold uppercase tracking-widest text-amber-400 font-devil-title">
                     Registro Visual da Mesa Sagrada
                   </span>
                   <button
@@ -2211,7 +2226,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-950/50 via-purple-950/50 to-amber-950/50 border border-amber-500/50 flex items-center gap-4 shadow-witch-gold">
               <span className="text-4xl">🌟</span>
               <div>
-                <span className="font-witch-title font-bold text-witch-gold text-lg md:text-xl block">
+                <span className="font-devil-title font-bold text-witch-gold text-xl md:text-2xl block">
                   Quintessência Oculta: {quint.card.name} (Arcano {quint.number})
                 </span>
                 <span className="text-xs md:text-sm text-purple-200">
@@ -2227,10 +2242,10 @@ Responda ESTRITAMENTE em formato JSON com o schema:
           {/* 1. VISÃO GERAL */}
           <section className="p-7 md:p-8 rounded-3xl witch-card space-y-4 shadow-xl">
             <div className="flex items-center gap-3 pb-3 border-b border-witch-border">
-              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-gothic-title font-bold text-sm">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-devil-title font-bold text-sm">
                 I
               </span>
-              <h3 className="text-2xl font-bold font-witch-title text-witch-gold">
+              <h3 className="text-2xl md:text-3xl font-bold font-devil-title text-witch-gold">
                 Visão Geral da Tiragem
               </h3>
             </div>
@@ -2242,11 +2257,11 @@ Responda ESTRITAMENTE em formato JSON com o schema:
           {/* 2. CARTA POR CARTA */}
           <section className="p-7 md:p-8 rounded-3xl witch-card space-y-6 shadow-xl">
             <div className="flex items-center gap-3 pb-3 border-b border-witch-border">
-              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-gothic-title font-bold text-sm">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-devil-title font-bold text-sm">
                 II
               </span>
               <div>
-                <h3 className="text-2xl font-bold font-witch-title text-witch-gold">
+                <h3 className="text-2xl md:text-3xl font-bold font-devil-title text-witch-gold">
                   Hermenêutica Carta por Carta
                 </h3>
                 <p className="text-xs text-zinc-400 font-book">Significado profundo, iconografia e dinamismo arquetípico.</p>
@@ -2270,10 +2285,10 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                     <div className="space-y-3 flex-1 w-full">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-3">
-                          <span className="w-7 h-7 rounded-full bg-witch-void border border-witch-border text-amber-300 flex items-center justify-center text-xs font-gothic-title font-bold">
+                          <span className="w-7 h-7 rounded-full bg-witch-void border border-witch-border text-amber-300 flex items-center justify-center text-xs font-devil-title font-bold">
                             {idx + 1}
                           </span>
-                          <h4 className="text-lg md:text-xl font-bold text-amber-100 font-medieval-serif">
+                          <h4 className="text-xl md:text-2xl font-bold text-amber-100 font-devil-title tracking-wide">
                             {item.card.name}
                           </h4>
                         </div>
@@ -2291,7 +2306,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
                       <div className="flex flex-wrap gap-1.5">
                         {item.keywords.map((kw, i) => (
-                          <span key={i} className="px-2.5 py-0.5 rounded-full bg-black text-amber-200/80 text-[11px] border border-witch-border/80">
+                          <span key={i} className="px-2.5 py-0.5 rounded-full bg-black text-amber-200/80 text-[11px] border border-witch-border/80 font-book">
                             {kw}
                           </span>
                         ))}
@@ -2316,11 +2331,11 @@ Responda ESTRITAMENTE em formato JSON com o schema:
           {/* 3. RELAÇÃO ENTRE AS CARTAS */}
           <section className="p-7 md:p-8 rounded-3xl witch-card space-y-6 shadow-xl">
             <div className="flex items-center gap-3 pb-3 border-b border-witch-border">
-              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-gothic-title font-bold text-sm">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-devil-title font-bold text-sm">
                 III
               </span>
               <div>
-                <h3 className="text-2xl font-bold font-witch-title text-witch-gold">
+                <h3 className="text-2xl md:text-3xl font-bold font-devil-title text-witch-gold">
                   Alquimia & Sinergia dos Arcanos
                 </h3>
                 <p className="text-xs text-zinc-400 font-book">Equilíbrio dos 4 elementos, arcanos maiores e diálogos simbólicos.</p>
@@ -2329,20 +2344,20 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
               <div className="p-5 rounded-2xl bg-black/70 border border-witch-border space-y-2">
-                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-gothic-title">Equilíbrio dos 4 Elementos</h5>
+                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-devil-title">Equilíbrio dos 4 Elementos</h5>
                 <p className="text-sm text-zinc-300 leading-relaxed">{interp.cardsRelationship.elementBalance}</p>
               </div>
               <div className="p-5 rounded-2xl bg-black/70 border border-witch-border space-y-2">
-                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-gothic-title">Arcanos Maiores & Destino</h5>
+                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-devil-title">Arcanos Maiores & Destino</h5>
                 <p className="text-sm text-zinc-300 leading-relaxed">{interp.cardsRelationship.majorArcanaSignificance}</p>
               </div>
               <div className="p-5 rounded-2xl bg-black/70 border border-witch-border md:col-span-2 space-y-2">
-                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-gothic-title">Sinergias, Tensões & Contrastes</h5>
+                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-devil-title">Sinergias, Tensões & Contrastes</h5>
                 <p className="text-sm text-zinc-300 leading-relaxed">{interp.cardsRelationship.synergiesAndContrasts}</p>
               </div>
               {interp.cardsRelationship.numericalOrNarrativeFlow && (
                 <div className="p-5 rounded-2xl bg-black/70 border border-witch-border md:col-span-2 space-y-2">
-                  <h5 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-gothic-title">Quintessência & Fluxo Narrativo</h5>
+                  <h5 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-devil-title">Quintessência & Fluxo Narrativo</h5>
                   <p className="text-sm text-zinc-300 leading-relaxed">{interp.cardsRelationship.numericalOrNarrativeFlow}</p>
                 </div>
               )}
@@ -2352,10 +2367,10 @@ Responda ESTRITAMENTE em formato JSON com o schema:
           {/* 4. SÍNTESE DA LEITURA */}
           <section className="p-7 md:p-8 rounded-3xl bg-gradient-to-r from-amber-950/70 via-purple-950/70 to-amber-950/70 border-2 border-amber-500/60 shadow-witch-gold space-y-4">
             <div className="flex items-center gap-3">
-              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500 text-black font-gothic-title font-bold text-sm shadow-md">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500 text-black font-devil-title font-bold text-sm shadow-md">
                 IV
               </span>
-              <h3 className="text-2xl font-bold font-witch-title text-witch-gold">
+              <h3 className="text-2xl md:text-3xl font-bold font-devil-title text-witch-gold">
                 Síntese do Oráculo
               </h3>
             </div>
@@ -2367,11 +2382,11 @@ Responda ESTRITAMENTE em formato JSON com o schema:
           {/* 5. PONTOS DE ATENÇÃO */}
           <section className="p-7 md:p-8 rounded-3xl witch-card space-y-6 shadow-xl">
             <div className="flex items-center gap-3 pb-3 border-b border-witch-border">
-              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-gothic-title font-bold text-sm">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-devil-title font-bold text-sm">
                 V
               </span>
               <div>
-                <h3 className="text-2xl font-bold font-witch-title text-witch-gold">
+                <h3 className="text-2xl md:text-3xl font-bold font-devil-title text-witch-gold">
                   Pontos de Atenção & Soberania
                 </h3>
                 <p className="text-xs text-zinc-400 font-book">Diretrizes conscientes para guiar seu livre arbítrio.</p>
@@ -2380,28 +2395,28 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-5 rounded-2xl bg-emerald-950/30 border border-emerald-800/50 space-y-2.5">
-                <h4 className="text-xs font-bold text-emerald-300 uppercase tracking-widest font-gothic-title">🌿 Forças Favoráveis</h4>
+                <h4 className="text-xs font-bold text-emerald-300 uppercase tracking-widest font-devil-title">🌿 Forças Favoráveis</h4>
                 <ul className="space-y-2 text-sm text-emerald-100/90 list-disc list-inside">
                   {interp.attentionPoints.favorable.map((item, i) => <li key={i}>{item}</li>)}
                 </ul>
               </div>
 
               <div className="p-5 rounded-2xl bg-rose-950/30 border border-rose-800/50 space-y-2.5">
-                <h4 className="text-xs font-bold text-rose-300 uppercase tracking-widest font-gothic-title">⚡ Desafios & Cuidados</h4>
+                <h4 className="text-xs font-bold text-rose-300 uppercase tracking-widest font-devil-title">⚡ Desafios & Cuidados</h4>
                 <ul className="space-y-2 text-sm text-rose-100/90 list-disc list-inside">
                   {interp.attentionPoints.challenging.map((item, i) => <li key={i}>{item}</li>)}
                 </ul>
               </div>
 
               <div className="p-5 rounded-2xl bg-sky-950/30 border border-sky-800/50 space-y-2.5">
-                <h4 className="text-xs font-bold text-sky-300 uppercase tracking-widest font-gothic-title">🌊 Em Aberto no Tempo</h4>
+                <h4 className="text-xs font-bold text-sky-300 uppercase tracking-widest font-devil-title">🌊 Em Aberto no Tempo</h4>
                 <ul className="space-y-2 text-sm text-sky-100/90 list-disc list-inside">
                   {interp.attentionPoints.undefinedOrOpen.map((item, i) => <li key={i}>{item}</li>)}
                 </ul>
               </div>
 
               <div className="p-5 rounded-2xl bg-amber-950/30 border border-amber-800/50 space-y-2.5">
-                <h4 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-gothic-title">🧭 Postura Recomendada</h4>
+                <h4 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-devil-title">🧭 Postura Recomendada</h4>
                 <ul className="space-y-2 text-sm text-amber-100/90 list-disc list-inside">
                   {interp.attentionPoints.attitudeDependent.map((item, i) => <li key={i}>{item}</li>)}
                 </ul>
@@ -2415,7 +2430,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <div className="flex items-center gap-3">
                 <span className="text-3xl">🪞</span>
                 <div>
-                  <h3 className="text-xl md:text-2xl font-bold font-witch-title text-purple-200">
+                  <h3 className="text-2xl md:text-3xl font-bold font-devil-title text-purple-200">
                     Espelho da Alma: Perguntas para Auto-Reflexão
                   </h3>
                   <p className="text-xs text-purple-300/80 font-book">
@@ -2430,7 +2445,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                     key={i}
                     className="p-4 bg-black/80 rounded-2xl border border-purple-900/60 text-base text-purple-100 flex items-start gap-3 shadow-sm font-book"
                   >
-                    <span className="text-amber-400 font-bold font-gothic-title text-base">{i + 1}.</span>
+                    <span className="text-amber-400 font-bold font-devil-title text-base">{i + 1}.</span>
                     <span className="leading-relaxed">{q}</span>
                   </div>
                 ))}
@@ -2443,12 +2458,12 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             <div className="flex items-center justify-between pb-3 border-b border-witch-border">
               <div className="flex items-center gap-2.5">
                 <span className="text-2xl">✍️</span>
-                <h3 className="text-xl font-bold font-witch-title text-witch-gold">
+                <h3 className="text-2xl font-bold font-devil-title text-witch-gold">
                   Diário & Reflexões do Consulente
                 </h3>
               </div>
               {notesSaved && (
-                <span className="text-xs text-emerald-400 font-gothic-title animate-fadeIn">
+                <span className="text-xs text-emerald-400 font-devil-title animate-fadeIn">
                   ✓ Gravado no Grimório!
                 </span>
               )}
@@ -2466,7 +2481,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <button
                 type="button"
                 onClick={handleSaveNotes}
-                className="px-5 py-2 rounded-xl bg-amber-500/20 text-amber-200 border border-amber-500/40 hover:bg-amber-500/30 text-xs font-gothic-title transition-all"
+                className="px-5 py-2 rounded-xl bg-amber-500/20 text-amber-200 border border-amber-500/40 hover:bg-amber-500/30 text-xs font-devil-title transition-all"
               >
                 Salvar Anotação
               </button>
@@ -2478,14 +2493,14 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             <button
               type="button"
               onClick={onNewReading}
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-witch-title font-bold text-base md:text-xl shadow-witch-gold hover:from-amber-400 hover:to-amber-500 transition-all flex items-center justify-center gap-2.5"
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-devil-title font-bold text-xl md:text-2xl shadow-witch-gold hover:from-amber-400 hover:to-amber-500 transition-all flex items-center justify-center gap-2.5"
             >
               <span>✨ Nova Consulta Oracular</span>
             </button>
             <button
               type="button"
               onClick={onGoToHistory}
-              className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-witch-night text-amber-200 border border-witch-border hover:border-amber-400/50 text-sm font-gothic-title transition-all"
+              className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-witch-night text-amber-200 border border-witch-border hover:border-amber-400/50 text-sm font-devil-title transition-all"
             >
               📜 Ver Grimório
             </button>
@@ -2496,7 +2511,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn overflow-y-auto">
               <div className="bg-witch-night border-2 border-amber-500/60 rounded-3xl max-w-xl w-full p-6 md:p-8 space-y-6 shadow-2xl">
                 <div className="flex items-center justify-between pb-3 border-b border-witch-border">
-                  <h4 className="font-witch-title text-xl font-bold text-witch-gold">
+                  <h4 className="font-devil-title text-2xl font-bold text-witch-gold">
                     ✧ Cartão do Oráculo ✧
                   </h4>
                   <button onClick={() => setShowShareModal(false)} className="text-zinc-400 hover:text-amber-200">✕</button>
@@ -2504,11 +2519,11 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
                 {/* Pré-visualização do Cartão */}
                 <div className="p-6 rounded-3xl bg-black border-2 border-amber-500/60 shadow-witch-gold text-center space-y-4 print-card font-book">
-                  <span className="text-xs uppercase font-gothic-title tracking-widest text-amber-400 block">
+                  <span className="text-xs uppercase font-devil-title tracking-widest text-amber-400 block">
                     Arcana • Rider-Waite-Smith
                   </span>
 
-                  <h3 className="font-witch-title text-xl md:text-2xl font-bold text-witch-gold">
+                  <h3 className="font-devil-title text-2xl md:text-3xl font-bold text-witch-gold">
                     "{reading.question}"
                   </h3>
 
@@ -2548,7 +2563,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                       navigator.clipboard.writeText(`🔮 Arcana • Oráculo RWS\n"${reading.question}"\n\nSíntese: "${interp.synthesis}"\n🌟 Quintessência: ${quint.card.name}`);
                       alert('Resumo do cartão copiado para a área de transferência!');
                     }}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-gothic-title font-bold text-xs shadow-witch-gold"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-devil-title font-bold text-xs shadow-witch-gold"
                   >
                     📋 Copiar para WhatsApp
                   </button>
@@ -2572,7 +2587,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 <button
                   type="button"
                   onClick={() => setShowPhoto(false)}
-                  className="absolute top-4 right-4 px-4 py-2 rounded-full bg-black text-zinc-100 text-xs font-gothic-title font-bold border border-witch-border"
+                  className="absolute top-4 right-4 px-4 py-2 rounded-full bg-black text-zinc-100 text-xs font-devil-title font-bold border border-witch-border"
                 >
                   ✕ Fechar
                 </button>
@@ -2611,7 +2626,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
         <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn pb-16 font-book">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-witch-border">
             <div>
-              <h1 className="text-3xl md:text-5xl font-bold font-witch-title text-witch-gold flex items-center gap-3">
+              <h1 className="text-3xl md:text-5xl font-bold font-devil-title text-witch-gold flex items-center gap-3">
                 <span>📜</span>
                 <span>Grimório de Tiragens</span>
               </h1>
@@ -2619,7 +2634,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             </div>
             <button
               onClick={onNewReading}
-              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-gothic-title font-bold text-sm shadow-witch-gold transition-all flex items-center gap-2"
+              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-devil-title font-bold text-sm shadow-witch-gold transition-all flex items-center gap-2"
             >
               <span>✨ Nova Consulta</span>
             </button>
@@ -2641,7 +2656,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
           {filtered.length === 0 ? (
             <div className="text-center py-16 px-4 rounded-3xl witch-card space-y-4">
               <span className="text-5xl block">🎴</span>
-              <h3 className="text-2xl font-bold font-witch-title text-zinc-200">
+              <h3 className="text-2xl font-bold font-devil-title text-zinc-200">
                 {readings.length === 0 ? 'Nenhuma leitura consagrada ainda' : 'Nenhuma consulta encontrada'}
               </h3>
               <p className="text-sm text-zinc-400 max-w-md mx-auto">
@@ -2650,7 +2665,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               {readings.length === 0 && (
                 <button
                   onClick={onNewReading}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-gothic-title font-bold text-sm shadow-witch-gold"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-devil-title font-bold text-sm shadow-witch-gold"
                 >
                   <span>✨ Consagrar Primeira Leitura</span>
                 </button>
@@ -2674,7 +2689,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                         <span className="text-amber-500/40">•</span>
                         <span className="text-amber-300 font-medium capitalize">Prisma {reading.interpretationStyle}</span>
                         {reading.photoBase64 && (
-                          <span className="px-2.5 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 text-[10px]">
+                          <span className="px-2.5 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 text-[10px] font-devil-title">
                             📸 Foto
                           </span>
                         )}
@@ -2689,7 +2704,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                     </div>
 
                     <div>
-                      <h3 className="text-xl md:text-2xl font-bold font-witch-title text-zinc-100 group-hover:text-amber-200 transition-colors leading-snug">
+                      <h3 className="text-2xl md:text-3xl font-bold font-devil-title text-zinc-100 group-hover:text-amber-200 transition-colors leading-snug tracking-wide">
                         "{reading.question}"
                       </h3>
                       {reading.context && <p className="text-xs text-zinc-400 italic line-clamp-1 mt-1">Contexto: {reading.context}</p>}
@@ -2707,7 +2722,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                           />
                         ))}
                       </div>
-                      <span className="text-xs font-bold font-gothic-title text-amber-400 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                      <span className="text-xs font-bold font-devil-title text-amber-400 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
                         <span>Ver revelação</span>
                         <span>→</span>
                       </span>
@@ -2765,8 +2780,8 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-witch-title font-extrabold text-2xl md:text-3xl text-witch-gold tracking-wide">Arcana</span>
-                    <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-gothic-title">RWS</span>
+                    <span className="font-devil-title font-extrabold text-3xl md:text-4xl text-witch-gold tracking-wider">Arcana</span>
+                    <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-devil-title">RWS</span>
                   </div>
                   <p className="text-xs text-purple-200/70 font-book hidden sm:block">Oráculo Sagrado • Bruxaria & Hermetismo Rider-Waite</p>
                 </div>
@@ -2775,7 +2790,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <nav className="flex items-center gap-2 md:gap-2.5">
                 <button
                   onClick={handleNewReading}
-                  className={`px-3.5 py-2 rounded-xl text-xs md:text-sm font-gothic-title transition-all flex items-center gap-1.5 ${
+                  className={`px-3.5 py-2 rounded-xl text-xs md:text-sm font-devil-title transition-all flex items-center gap-1.5 ${
                     tab === 'new' ? 'bg-amber-500/20 text-amber-200 border border-amber-500/60 shadow-witch-gold' : 'text-zinc-300 hover:text-amber-200'
                   }`}
                 >
@@ -2784,7 +2799,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
                 <button
                   onClick={() => { setTab('library'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className={`px-3.5 py-2 rounded-xl text-xs md:text-sm font-gothic-title transition-all flex items-center gap-1.5 ${
+                  className={`px-3.5 py-2 rounded-xl text-xs md:text-sm font-devil-title transition-all flex items-center gap-1.5 ${
                     tab === 'library' ? 'bg-amber-500/20 text-amber-200 border border-amber-500/60 shadow-witch-gold' : 'text-zinc-300 hover:text-amber-200'
                   }`}
                 >
@@ -2793,7 +2808,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
                 <button
                   onClick={() => setTab('history')}
-                  className={`px-3.5 py-2 rounded-xl text-xs md:text-sm font-gothic-title transition-all flex items-center gap-2 ${
+                  className={`px-3.5 py-2 rounded-xl text-xs md:text-sm font-devil-title transition-all flex items-center gap-2 ${
                     tab === 'history' ? 'bg-amber-500/20 text-amber-200 border border-amber-500/60 shadow-witch-gold' : 'text-zinc-300 hover:text-amber-200'
                   }`}
                 >
@@ -2845,10 +2860,10 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
           {/* Rodapé de Bruxaria */}
           <footer className="mt-auto border-t border-witch-border/60 bg-witch-void/95 py-8 px-4 text-center text-xs text-zinc-400 space-y-2 relative z-10 font-book">
-            <p className="font-witch-title text-witch-gold text-lg">
+            <p className="font-devil-title text-witch-gold text-2xl">
               ✧ Arcana — Oráculo Sagrado & Hermenêutica Rider-Waite-Smith ✧
             </p>
-            <p className="text-xs text-purple-200/70 max-w-xl mx-auto">
+            <p className="text-xs text-purple-200/70 max-w-xl mx-auto font-book">
               As lâminas sagradas não predizem sentenças imutáveis, mas iluminam os caminhos ocultos para o seu livre arbítrio e autoconhecimento.
             </p>
           </footer>
