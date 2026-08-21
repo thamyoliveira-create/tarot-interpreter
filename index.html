@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Tarot Interpreter — Interpretação Rider-Waite-Smith</title>
-  <meta name="description" content="Aplicativo de interpretação de Tarot Rider-Waite-Smith com leitura manual e análise visual por foto com IA." />
-  <meta name="theme-color" content="#09090b" />
+  <title>Tarot Interpreter — Oráculo & Hermenêutica Rider-Waite-Smith</title>
+  <meta name="description" content="Santuário místico de interpretação de Tarot Rider-Waite-Smith com leitura manual e visão computacional por IA." />
+  <meta name="theme-color" content="#06040a" />
 
-  <!-- Google Fonts: Cinzel & Plus Jakarta Sans -->
+  <!-- Google Fonts: Cinzel Decorative, Cinzel, Cormorant Garamond & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -20,18 +20,31 @@
       theme: {
         extend: {
           colors: {
-            tarot: {
-              bg: '#09090b',
-              card: '#121118',
-              gold: '#d4af37',
-              goldLight: '#f6e05e',
-              accent: '#b45309',
+            mystic: {
+              void: '#06040a',
+              dark: '#0d0817',
+              surface: '#130e22',
+              card: '#18122b',
+              border: '#39255c',
+              gold: '#e6c667',
+              goldLight: '#fae49e',
+              goldDark: '#b38e2d',
+              purpleGlow: '#8b5cf6',
+              rubyGlow: '#f43f5e',
+              amberGlow: '#f59e0b',
             },
           },
           fontFamily: {
+            title: ['"Cinzel Decorative"', 'serif', 'Georgia'],
             serif: ['Cinzel', 'serif', 'Georgia'],
+            body: ['"Cormorant Garamond"', 'Georgia', 'serif'],
             sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
             mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+          },
+          boxShadow: {
+            'mystic-gold': '0 0 25px -5px rgba(230, 198, 103, 0.25)',
+            'mystic-purple': '0 0 35px -8px rgba(139, 92, 246, 0.3)',
+            'mystic-glow': '0 0 40px -10px rgba(217, 119, 6, 0.2)',
           }
         }
       }
@@ -44,38 +57,90 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
+    /* Fundo Cósmico & Estrelas Cintilantes */
     body {
-      background-color: #09090b;
-      color: #f4f4f5;
+      background-color: #06040a;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(88, 28, 135, 0.25) 0%, transparent 60%),
+        radial-gradient(circle at 10% 40%, rgba(217, 119, 6, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 90% 70%, rgba(109, 40, 217, 0.18) 0%, transparent 50%),
+        radial-gradient(circle at 50% 100%, rgba(30, 15, 55, 0.4) 0%, transparent 70%);
+      background-attachment: fixed;
+      color: #ede9fe;
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     }
-    h1, h2, h3, h4, .font-serif {
-      font-family: 'Cinzel', serif, Georgia;
-      letter-spacing: 0.02em;
+
+    .font-mystic-title {
+      font-family: 'Cinzel Decorative', 'Cinzel', serif;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
+    .font-mystic-serif {
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.03em;
+    }
+    .font-mystic-body {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.125rem;
+      line-height: 1.75;
+    }
+
+    /* Brilho Dourado Metálico */
+    .text-gold-gradient {
+      background: linear-gradient(135deg, #fae49e 0%, #d4af37 50%, #fef3c7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .text-purple-gradient {
+      background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 50%, #f3e8ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Borda Dourada Imperial */
+    .mystic-border {
+      border: 1px solid rgba(230, 198, 103, 0.3);
+      box-shadow: 0 0 20px -3px rgba(139, 92, 246, 0.15), inset 0 0 15px -3px rgba(230, 198, 103, 0.05);
+    }
+    .mystic-card {
+      background: linear-gradient(165deg, rgba(24, 18, 43, 0.85) 0%, rgba(13, 8, 23, 0.95) 100%);
+      border: 1px solid rgba(230, 198, 103, 0.25);
+      backdrop-filter: blur(12px);
+    }
+    .mystic-card:hover {
+      border-color: rgba(230, 198, 103, 0.5);
+      box-shadow: 0 0 30px -5px rgba(230, 198, 103, 0.2);
+    }
+
+    /* Animações Místicas */
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.03); }
+    }
+    @keyframes floatStar {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(5deg); }
+    }
+    @keyframes fadeInSlow {
+      from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-4px); }
-      40%, 80% { transform: translateX(4px); }
-    }
-    .animate-fadeIn { animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    .animate-shake { animation: shake 0.3s ease-in-out; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #09090b; }
-    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+    .animate-pulseGlow { animation: pulseGlow 4s ease-in-out infinite; }
+    .animate-floatStar { animation: floatStar 5s ease-in-out infinite; }
+    .animate-fadeIn { animation: fadeInSlow 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-track { background: #06040a; }
+    ::-webkit-scrollbar-thumb { background: #39255c; border-radius: 4px; border: 1px solid rgba(230, 198, 103, 0.2); }
     ::-webkit-scrollbar-thumb:hover { background: #d4af37; }
   </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 antialiased selection:bg-amber-500 selection:text-zinc-950">
+<body class="antialiased selection:bg-amber-500 selection:text-zinc-950 min-h-screen relative overflow-x-hidden">
   <div id="root">
     <div class="min-h-screen flex items-center justify-center">
-      <div class="flex flex-col items-center gap-3">
-        <div class="w-10 h-10 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin"></div>
-        <p class="text-xs font-semibold text-zinc-400 font-serif">Carregando Tarot Interpreter...</p>
+      <div class="flex flex-col items-center gap-4">
+        <div class="w-12 h-12 border-2 border-amber-500/20 border-t-amber-400 rounded-full animate-spin"></div>
+        <p class="text-xs font-semibold text-amber-200/80 font-mystic-serif tracking-widest uppercase">
+          ✧ Convocando o Oráculo ✧
+        </p>
       </div>
     </div>
   </div>
@@ -112,7 +177,7 @@
       { id: 'world', name: 'XXI - O Mundo', number: 21, arcana: 'major', element: 'Terra', upright: { keywords: ['Conclusão triunfante', 'Plenitude', 'Integração', 'Realização total', 'Celebração'], general: 'O coroamento de uma jornada: integração de lições, encerramento de um ciclo com maestria e sentimento de totalidade.' }, reversed: { keywords: ['Ciclo incompleto', 'Falta de encerramento', 'Pendências'], general: 'Sensação de que falta um detalhe para fechar um ciclo importante ou hesitação em dar o ponto final.' } },
 
       // Paus (Wands - Fogo)
-      { id: 'ace_of_wands', name: 'Ás de Paus', arcana: 'minor', suit: 'wands', rank: 'Ás', element: 'Fogo', upright: { keywords: ['Centelha inicial', 'Inspiração', 'Nova paixão', 'Entusiasmo'], general: 'Surgimento de uma nova ideia brilhante, paixão renovada ou impulso criativo irresistível.' }, reversed: { keywords: ['Falta de energia', 'Atrasos no início', 'Hesitação'], general: 'Dificuldade em tirar a ideia do papel ou falta de ânimo passageira.' } },
+      { id: 'ace_of_wands', name: 'Ás de Paus', arcana: 'minor', suit: 'wands', rank: 'Ás', element: 'Fogo', upright: { keywords: ['Centelha divina', 'Inspiração', 'Paixão', 'Entusiasmo'], general: 'Surgimento de uma nova ideia brilhante, paixão renovada ou impulso criativo irresistível.' }, reversed: { keywords: ['Falta de energia', 'Atrasos no início', 'Hesitação'], general: 'Dificuldade em tirar a ideia do papel ou falta de ânimo passageira.' } },
       { id: 'two_of_wands', name: 'Dois de Paus', arcana: 'minor', suit: 'wands', rank: '2', element: 'Fogo', upright: { keywords: ['Planejamento', 'Visão de futuro', 'Decisão de expansão'], general: 'Planejar os próximos passos mantendo a base segura já conquistada.' }, reversed: { keywords: ['Medo do desconhecido', 'Planejamento excessivo', 'Insegurança'], general: 'Ficar preso na zona de conforto pelo receio de arriscar a expansão.' } },
       { id: 'three_of_wands', name: 'Três de Paus', arcana: 'minor', suit: 'wands', rank: '3', element: 'Fogo', upright: { keywords: ['Expansão', 'Navios chegando', 'Progresso confirmado'], general: 'Os primeiros frutos do esforço aparecem; oportunidades se ampliam.' }, reversed: { keywords: ['Demora nos resultados', 'Obstáculos logísticos'], general: 'Atrasos nas respostas esperadas ou necessidade de recalibrar prazos.' } },
       { id: 'four_of_wands', name: 'Quatro de Paus', arcana: 'minor', suit: 'wands', rank: '4', element: 'Fogo', upright: { keywords: ['Celebração', 'Harmonia no lar', 'Conquista festejada'], general: 'Momento de alegria, festividade, união familiar e celebração de marcos importantes.' }, reversed: { keywords: ['Conflitos no lar', 'Tensão em celebrações'], general: 'Pequenos desentendimentos domésticos ou desarmonia passageira.' } },
@@ -128,7 +193,7 @@
       { id: 'king_of_wands', name: 'Rei de Paus', arcana: 'minor', suit: 'wands', rank: 'Rei', element: 'Fogo', upright: { keywords: ['Liderança visionária', 'Empreendedorismo', 'Honra'], general: 'Líder nato que inspira com visão grandiosa, integridade moral e capacidade realizadora.' }, reversed: { keywords: ['Autoritarismo', 'Arrogância', 'Impaciência tirânica'], general: 'Imposição de vontades à força, desconsiderando os limites alheios.' } },
 
       // Copas (Cups - Água)
-      { id: 'ace_of_cups', name: 'Ás de Copas', arcana: 'minor', suit: 'cups', rank: 'Ás', element: 'Água', upright: { keywords: ['Amor abundante', 'Novo afeto', 'Abertura emocional', 'Paz'], general: 'Transbordar de sentimentos puros, renovação afetiva e profunda paz de espírito.' }, reversed: { keywords: ['Bloqueio afetivo', 'Amor reprimido', 'Vazio emocional'], general: 'Dificuldade de expressar sentimentos ou mágoas retidas que fecham o coração.' } },
+      { id: 'ace_of_cups', name: 'Ás de Copas', arcana: 'minor', suit: 'cups', rank: 'Ás', element: 'Água', upright: { keywords: ['Amor abundante', 'Graça divina', 'Abertura emocional', 'Paz'], general: 'Transbordar de sentimentos puros, renovação afetiva e profunda paz de espírito.' }, reversed: { keywords: ['Bloqueio afetivo', 'Amor reprimido', 'Vazio emocional'], general: 'Dificuldade de expressar sentimentos ou mágoas retidas que fecham o coração.' } },
       { id: 'two_of_cups', name: 'Dois de Copas', arcana: 'minor', suit: 'cups', rank: '2', element: 'Água', upright: { keywords: ['Conexão mútua', 'Reciprocidade', 'Afinidade', 'Parceria'], general: 'Encontro harmonioso entre duas pessoas, troca sincera de afeto e entendimento mútuo.' }, reversed: { keywords: ['Desencontro afetivo', 'Falta de reciprocidade', 'Ruptura'], general: 'Dificuldade de sintonia emocional ou expectativas desalinhadas na troca afetiva.' } },
       { id: 'three_of_cups', name: 'Três de Copas', arcana: 'minor', suit: 'cups', rank: '3', element: 'Água', upright: { keywords: ['Celebração em grupo', 'Amizade verdadeira', 'Apoio mútuo'], general: 'Confraternização com pessoas queridas, rede de afeto e comemoração de vitórias coletivas.' }, reversed: { keywords: ['Intromissão de terceiros', 'Fofocas', 'Superficialidade'], general: 'Influências externas prejudicando relações ou amizades superficiais.' } },
       { id: 'four_of_cups', name: 'Quatro de Copas', arcana: 'minor', suit: 'cups', rank: '4', element: 'Água', upright: { keywords: ['Apatia', 'Tédio afetivo', 'Oportunidade ignorada'], general: 'Foco no que falta, tornando-se cego para novas dádivas e convites à sua frente.' }, reversed: { keywords: ['Despertar da apatia', 'Aceitação de novas chances'], general: 'Superação do desânimo e abertura para acolher novas propostas afetivas.' } },
@@ -645,7 +710,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
     }
 
     // =========================================================================
-    // COMPONENTES UI
+    // COMPONENTES UI MÍSTICOS
     // =========================================================================
 
     // Componente: Upload / Captura de Foto com Redimensionamento
@@ -703,32 +768,33 @@ Responda ESTRITAMENTE em formato JSON com o schema:
           />
 
           {photoBase64 ? (
-            <div className="relative rounded-2xl overflow-hidden border border-amber-500/40 bg-zinc-950 p-2 shadow-2xl">
-              <div className="relative max-h-[360px] flex items-center justify-center overflow-hidden rounded-xl bg-black">
+            <div className="relative rounded-2xl overflow-hidden mystic-border bg-mystic-dark p-2 shadow-mystic-purple">
+              <div className="relative max-h-[380px] flex items-center justify-center overflow-hidden rounded-xl bg-black">
                 <img
                   src={photoBase64}
                   alt="Foto da Tiragem de Tarot"
-                  className="max-h-[360px] w-auto object-contain rounded-lg shadow-inner"
+                  className="max-h-[380px] w-auto object-contain rounded-lg shadow-2xl"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent pointer-events-none"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-mystic-void/90 via-transparent to-transparent pointer-events-none"></div>
 
-                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-zinc-950/90 text-amber-300 border border-amber-500/30 backdrop-blur-md">
-                    📸 Foto pronta para leitura por IA
+                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-mystic-dark/90 text-mystic-goldLight border border-mystic-gold/40 backdrop-blur-md flex items-center gap-1.5 shadow-md">
+                    <span>🔮</span>
+                    <span>Foto consagrada para leitura por IA</span>
                   </span>
 
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-3 py-1 rounded-lg bg-zinc-900 text-zinc-200 hover:bg-zinc-800 text-xs font-medium border border-zinc-700 transition-colors"
+                      className="px-3.5 py-1.5 rounded-xl bg-mystic-surface text-amber-200 hover:bg-mystic-card text-xs font-mystic-serif border border-mystic-border transition-all hover:border-amber-400/50"
                     >
                       Trocar foto
                     </button>
                     <button
                       type="button"
                       onClick={() => onPhotoSelected(null)}
-                      className="px-3 py-1 rounded-lg bg-rose-950 text-rose-200 hover:bg-rose-900 text-xs font-medium border border-rose-800 transition-colors"
+                      className="px-3.5 py-1.5 rounded-xl bg-rose-950/80 text-rose-200 hover:bg-rose-900 text-xs font-medium border border-rose-800/60 transition-colors"
                     >
                       Remover
                     </button>
@@ -742,31 +808,30 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               onDragLeave={() => setIsDragging(false)}
               onDrop={(e) => { e.preventDefault(); setIsDragging(false); if (e.dataTransfer.files?.[0]) processFile(e.dataTransfer.files[0]); }}
               onClick={() => fileInputRef.current?.click()}
-              className={`p-8 md:p-10 rounded-2xl border-2 border-dashed cursor-pointer text-center transition-all flex flex-col items-center justify-center gap-3 ${
+              className={`p-8 md:p-12 rounded-2xl border-2 border-dashed cursor-pointer text-center transition-all flex flex-col items-center justify-center gap-4 relative overflow-hidden group ${
                 isDragging
-                  ? 'border-amber-400 bg-amber-500/10'
-                  : 'border-zinc-700 hover:border-amber-400/70 bg-zinc-900/40 hover:bg-amber-500/5'
+                  ? 'border-amber-400 bg-amber-500/10 shadow-mystic-gold'
+                  : 'border-mystic-border/70 hover:border-amber-400/70 bg-mystic-dark/60 hover:bg-purple-950/20'
               }`}
             >
-              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center justify-center text-3xl shadow-inner">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500/20 via-purple-900/30 to-zinc-950 border border-amber-500/40 text-amber-300 flex items-center justify-center text-4xl shadow-mystic-gold group-hover:scale-105 transition-transform">
                 📷
               </div>
 
-              <div>
-                <h4 className="font-serif font-bold text-base text-zinc-100 mb-1">
-                  Tire uma foto ou envie a imagem da sua tiragem
+              <div className="space-y-1">
+                <h4 className="font-mystic-title text-base md:text-lg text-gold-gradient font-bold">
+                  Fotografe sua Tiragem de Cartas
                 </h4>
-                <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
-                  Arraste e solte o arquivo aqui ou clique para selecionar. A IA identificará cada carta
-                  e sua orientação (normal/invertida).
+                <p className="text-xs md:text-sm text-zinc-400 max-w-md mx-auto leading-relaxed">
+                  Arraste e solte o arquivo ou toque para capturar com a câmera. A IA revelará os arcanos, orientações e posições sagradas.
                 </p>
               </div>
 
               <button
                 type="button"
-                className="mt-2 px-4 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 text-xs font-semibold font-serif transition-colors"
+                className="mt-1 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-purple-900/30 to-amber-500/20 text-amber-200 border border-amber-500/50 hover:border-amber-400 text-xs font-mystic-serif tracking-wide shadow-md transition-all group-hover:shadow-mystic-gold"
               >
-                Tirar foto com a câmera ou escolher arquivo
+                ✧ Abrir Câmera ou Selecionar Imagem ✧
               </button>
             </div>
           )}
@@ -813,13 +878,13 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
       const getSuitBadge = (card) => {
         if (card.arcana === 'major') {
-          return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500/30">Arcano Maior</span>;
+          return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500/40 shadow-sm">Arcano Maior</span>;
         }
         const map = {
-          wands: { label: 'Paus • Fogo', cls: 'bg-amber-950 text-amber-300 border-amber-500/30' },
-          cups: { label: 'Copas • Água', cls: 'bg-sky-950 text-sky-300 border-sky-500/30' },
-          swords: { label: 'Espadas • Ar', cls: 'bg-slate-800 text-slate-300 border-slate-500/30' },
-          pentacles: { label: 'Ouros • Terra', cls: 'bg-emerald-950 text-emerald-300 border-emerald-500/30' },
+          wands: { label: 'Paus • Fogo 🜂', cls: 'bg-amber-950/80 text-amber-300 border-amber-500/40' },
+          cups: { label: 'Copas • Água 🜄', cls: 'bg-sky-950/80 text-sky-300 border-sky-500/40' },
+          swords: { label: 'Espadas • Ar 🜁', cls: 'bg-slate-900/90 text-slate-300 border-slate-500/40' },
+          pentacles: { label: 'Ouros • Terra 🜃', cls: 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' },
         };
         const s = map[card.suit];
         return s ? <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${s.cls}`}>{s.label}</span> : null;
@@ -830,36 +895,36 @@ Responda ESTRITAMENTE em formato JSON com o schema:
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 bg-zinc-900/90 hover:bg-zinc-800/90 text-left rounded-lg border border-zinc-700 hover:border-amber-500/50 focus:border-amber-400 outline-none transition-all shadow-sm"
+            className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-mystic-dark/90 hover:bg-mystic-surface text-left rounded-xl border border-mystic-border hover:border-amber-400/60 focus:border-amber-400 outline-none transition-all shadow-md"
           >
             <div className="flex items-center gap-2.5 truncate">
               {selectedCard ? (
                 <>
-                  <span className="text-amber-300 text-sm font-semibold truncate font-serif">{selectedCard.name}</span>
+                  <span className="text-amber-200 text-sm font-semibold truncate font-mystic-serif">{selectedCard.name}</span>
                   {getSuitBadge(selectedCard)}
                 </>
               ) : (
-                <span className="text-zinc-500 text-sm">Selecione uma das 78 cartas...</span>
+                <span className="text-zinc-500 text-sm font-mystic-serif">Selecione uma das 78 cartas...</span>
               )}
             </div>
-            <span className="text-zinc-400 text-xs">{isOpen ? '▲' : '▼'}</span>
+            <span className="text-amber-400/70 text-xs">{isOpen ? '▲' : '▼'}</span>
           </button>
 
           {isOpen && (
-            <div className="absolute z-50 left-0 right-0 mt-1.5 bg-zinc-950 border border-amber-500/30 rounded-xl shadow-2xl max-h-[380px] flex flex-col overflow-hidden animate-fadeIn">
-              <div className="p-3 border-b border-zinc-800 bg-zinc-900/50">
+            <div className="absolute z-50 left-0 right-0 mt-2 bg-mystic-void border border-amber-500/40 rounded-2xl shadow-2xl max-h-[390px] flex flex-col overflow-hidden animate-fadeIn backdrop-blur-xl">
+              <div className="p-3.5 border-b border-mystic-border bg-mystic-dark/80">
                 <div className="relative">
                   <input
                     ref={inputRef}
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Digitar nome da carta (ex: O Louco, 3 de Copas)..."
-                    className="w-full pl-8 pr-8 py-2 bg-zinc-950 border border-zinc-700 focus:border-amber-400 rounded-lg text-sm text-zinc-100 placeholder-zinc-500 outline-none"
+                    placeholder="Digitar nome da carta (ex: O Mago, 3 de Copas)..."
+                    className="w-full pl-9 pr-8 py-2.5 bg-mystic-void border border-mystic-border focus:border-amber-400 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 outline-none"
                   />
-                  <span className="absolute left-2.5 top-2 text-zinc-500 text-xs">🔍</span>
+                  <span className="absolute left-3 top-2.5 text-amber-400 text-xs">🔮</span>
                   {searchTerm && (
-                    <button type="button" onClick={() => setSearchTerm('')} className="absolute right-2.5 top-2 text-zinc-400 hover:text-zinc-200 text-xs">✕</button>
+                    <button type="button" onClick={() => setSearchTerm('')} className="absolute right-3 top-2.5 text-zinc-400 hover:text-zinc-200 text-xs">✕</button>
                   )}
                 </div>
 
@@ -876,8 +941,8 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                       key={cat.id}
                       type="button"
                       onClick={() => setActiveCategory(cat.id)}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-medium whitespace-nowrap transition-all ${
-                        activeCategory === cat.id ? 'bg-amber-500 text-zinc-950 font-bold' : 'bg-zinc-800/80 text-zinc-400 hover:text-zinc-200'
+                      className={`px-3 py-1 rounded-lg text-[11px] font-mystic-serif whitespace-nowrap transition-all ${
+                        activeCategory === cat.id ? 'bg-amber-500 text-zinc-950 font-bold shadow-md' : 'bg-mystic-surface text-zinc-400 hover:text-amber-200'
                       }`}
                     >
                       {cat.label}
@@ -886,9 +951,9 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 </div>
               </div>
 
-              <div className="overflow-y-auto max-h-[260px] divide-y divide-zinc-900/60 p-1">
+              <div className="overflow-y-auto max-h-[260px] divide-y divide-mystic-border/50 p-1.5">
                 {filtered.length === 0 ? (
-                  <div className="py-8 text-center text-zinc-500 text-sm">Nenhuma carta encontrada para "{searchTerm}".</div>
+                  <div className="py-8 text-center text-zinc-500 text-sm font-mystic-serif">Nenhuma carta encontrada para "{searchTerm}".</div>
                 ) : (
                   filtered.map(card => {
                     const isSelected = card.id === selectedCardId;
@@ -897,12 +962,12 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                         key={card.id}
                         type="button"
                         onClick={() => { onSelectCard(card.id); setIsOpen(false); setSearchTerm(''); }}
-                        className={`w-full flex items-center justify-between gap-3 p-2.5 rounded-lg text-left transition-colors ${
-                          isSelected ? 'bg-amber-500/20 text-amber-200 border-l-2 border-amber-400' : 'hover:bg-zinc-900 text-zinc-200'
+                        className={`w-full flex items-center justify-between gap-3 p-3 rounded-xl text-left transition-all ${
+                          isSelected ? 'bg-amber-500/20 text-amber-200 border-l-2 border-amber-400' : 'hover:bg-mystic-surface text-zinc-200'
                         }`}
                       >
                         <div className="flex flex-col gap-0.5 truncate">
-                          <span className="font-serif font-medium text-sm text-zinc-100">{card.name}</span>
+                          <span className="font-mystic-serif font-medium text-sm text-zinc-100">{card.name}</span>
                           <span className="text-[11px] text-zinc-400 truncate">{card.upright.keywords.slice(0, 3).join(' • ')}</span>
                         </div>
                         <div>{getSuitBadge(card)}</div>
@@ -922,19 +987,19 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       const cardData = TAROT_CARDS_MAP.get(readingCard.cardId);
 
       return (
-        <div className="p-4 md:p-5 rounded-xl bg-zinc-900/70 border border-zinc-800 hover:border-amber-500/30 transition-all shadow-md">
-          <div className="flex items-center justify-between gap-3 mb-3.5 pb-2.5 border-b border-zinc-800">
-            <div className="flex items-center gap-2">
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold font-serif">
+        <div className="p-4 md:p-5 rounded-2xl mystic-card space-y-4 shadow-md hover:shadow-mystic-glow transition-all">
+          <div className="flex items-center justify-between gap-3 pb-3 border-b border-mystic-border/70">
+            <div className="flex items-center gap-2.5">
+              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-amber-400/20 to-purple-900/40 border border-amber-500/50 text-amber-300 text-xs font-bold font-mystic-serif shadow-sm">
                 {index + 1}
               </span>
-              <h4 className="text-sm font-semibold text-zinc-200 font-serif">Carta {index + 1}</h4>
+              <h4 className="text-sm font-semibold text-amber-100 font-mystic-serif">Lâmina {index + 1}</h4>
             </div>
             {canRemove && (
               <button
                 type="button"
                 onClick={() => onRemoveCard(index)}
-                className="text-xs text-zinc-500 hover:text-rose-400 hover:bg-rose-950/40 px-2.5 py-1 rounded-md transition-colors"
+                className="text-xs text-zinc-500 hover:text-rose-400 hover:bg-rose-950/40 px-2.5 py-1 rounded-lg transition-colors font-mystic-serif"
               >
                 🗑️ Remover
               </button>
@@ -943,7 +1008,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5">
             <div className="md:col-span-6">
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Carta <span className="text-amber-400">*</span></label>
+              <label className="block text-xs font-mystic-serif text-amber-200/80 mb-1.5">Arcano Escolhido <span className="text-amber-400">*</span></label>
               <TarotCardSelector
                 selectedCardId={readingCard.cardId}
                 onSelectCard={(id) => onUpdateCard(index, { ...readingCard, cardId: id })}
@@ -951,13 +1016,13 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             </div>
 
             <div className="md:col-span-3">
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Orientação</label>
-              <div className="grid grid-cols-2 gap-1.5 p-1 bg-zinc-950 rounded-lg border border-zinc-800">
+              <label className="block text-xs font-mystic-serif text-amber-200/80 mb-1.5">Orientação Sagrada</label>
+              <div className="grid grid-cols-2 gap-1.5 p-1 bg-mystic-void rounded-xl border border-mystic-border">
                 <button
                   type="button"
                   onClick={() => onUpdateCard(index, { ...readingCard, orientation: 'upright' })}
-                  className={`py-1.5 px-2 rounded text-xs font-medium transition-all text-center flex items-center justify-center gap-1 ${
-                    readingCard.orientation === 'upright' ? 'bg-amber-500 text-zinc-950 font-bold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+                  className={`py-2 px-2 rounded-lg text-xs font-mystic-serif transition-all text-center flex items-center justify-center gap-1 ${
+                    readingCard.orientation === 'upright' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 font-bold shadow-md' : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   <span>⬆️ Normal</span>
@@ -965,8 +1030,8 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 <button
                   type="button"
                   onClick={() => onUpdateCard(index, { ...readingCard, orientation: 'reversed' })}
-                  className={`py-1.5 px-2 rounded text-xs font-medium transition-all text-center flex items-center justify-center gap-1 ${
-                    readingCard.orientation === 'reversed' ? 'bg-purple-900 text-purple-200 font-bold border border-purple-500/40 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+                  className={`py-2 px-2 rounded-lg text-xs font-mystic-serif transition-all text-center flex items-center justify-center gap-1 ${
+                    readingCard.orientation === 'reversed' ? 'bg-purple-950 text-purple-200 font-bold border border-purple-500/50 shadow-md' : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   <span>🔄 Invertida</span>
@@ -975,26 +1040,28 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             </div>
 
             <div className="md:col-span-3">
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                Posição na tiragem <span className="text-zinc-500 text-[10px]">(opcional)</span>
+              <label className="block text-xs font-mystic-serif text-amber-200/80 mb-1.5">
+                Posição / Função <span className="text-zinc-500 text-[10px]">(opcional)</span>
               </label>
               <input
                 type="text"
                 value={readingCard.position || ''}
                 onChange={(e) => onUpdateCard(index, { ...readingCard, position: e.target.value })}
-                placeholder="Ex.: situação atual, desafio..."
-                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 focus:border-amber-400 rounded-lg text-xs text-zinc-100 placeholder-zinc-600 outline-none"
+                placeholder="Ex.: presente, obstáculo, conselho..."
+                className="w-full px-3.5 py-2.5 bg-mystic-void border border-mystic-border focus:border-amber-400 rounded-xl text-xs text-zinc-100 placeholder-zinc-600 outline-none font-sans"
               />
             </div>
           </div>
 
           {cardData && (
-            <div className="mt-3 pt-2.5 border-t border-zinc-800/50 flex items-center gap-2 flex-wrap text-xs text-zinc-400">
-              <span className="text-[11px] text-zinc-500 font-medium">
-                {readingCard.orientation === 'upright' ? 'Aspectos normais:' : 'Aspectos invertidos:'}
+            <div className="pt-3 border-t border-mystic-border/50 flex items-center gap-2 flex-wrap text-xs">
+              <span className="text-[11px] text-amber-400/80 font-mystic-serif">
+                {readingCard.orientation === 'upright' ? '✦ Forças Diretas:' : '☾ Forças Invertidas:'}
               </span>
               {(readingCard.orientation === 'upright' ? cardData.upright.keywords : cardData.reversed.keywords).slice(0, 4).map((kw, i) => (
-                <span key={i} className="px-2 py-0.5 rounded bg-zinc-950 border border-zinc-800 text-zinc-300 text-[11px]">{kw}</span>
+                <span key={i} className="px-2.5 py-0.5 rounded-full bg-mystic-void border border-mystic-border text-amber-200/90 text-[11px] font-sans">
+                  {kw}
+                </span>
               ))}
             </div>
           )}
@@ -1005,22 +1072,22 @@ Responda ESTRITAMENTE em formato JSON com o schema:
     // Componente: Resumo Visual das Cartas
     function ReadingSummary({ cards }) {
       return (
-        <div className="flex flex-wrap gap-2.5 items-center">
+        <div className="flex flex-wrap gap-3 items-center">
           {cards.map((item, index) => {
             const card = TAROT_CARDS_MAP.get(item.cardId) || TAROT_CARDS[0];
             const isUpright = item.orientation === 'upright';
             return (
-              <div key={index} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 shadow-sm">
-                <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center text-[10px] font-bold font-serif">{index + 1}</span>
-                <span className="text-xs font-semibold text-zinc-100 font-serif">{card.name}</span>
-                <span className="text-zinc-600 text-xs">•</span>
-                <span className={`text-[11px] font-medium px-1.5 py-0.2 rounded ${isUpright ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30' : 'bg-purple-900/40 text-purple-300 border border-purple-500/30'}`}>
+              <div key={index} className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-mystic-dark border border-amber-500/30 shadow-md">
+                <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center text-[10px] font-bold font-mystic-serif">{index + 1}</span>
+                <span className="text-xs font-bold text-amber-100 font-mystic-serif">{card.name}</span>
+                <span className="text-amber-500/40 text-xs">•</span>
+                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${isUpright ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30' : 'bg-purple-950 text-purple-300 border border-purple-500/40'}`}>
                   {isUpright ? 'Normal' : 'Invertida'}
                 </span>
                 {item.position && (
                   <>
-                    <span className="text-zinc-600 text-xs">•</span>
-                    <span className="text-[11px] text-zinc-400 italic">{item.position}</span>
+                    <span className="text-amber-500/40 text-xs">•</span>
+                    <span className="text-[11px] text-zinc-300 italic font-body">{item.position}</span>
                   </>
                 )}
               </div>
@@ -1051,40 +1118,39 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       };
 
       return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-zinc-950 border border-amber-500/30 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">⚙️</span>
-                <h3 className="font-serif font-bold text-base text-amber-200">Conexão com Google Gemini (IA)</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+          <div className="bg-mystic-dark border border-amber-500/40 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-mystic-border">
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl">🗝️</span>
+                <h3 className="font-mystic-title text-base md:text-lg text-gold-gradient font-bold">Chave Sagrada de IA (Gemini)</h3>
               </div>
-              <button type="button" onClick={onClose} className="text-zinc-400 hover:text-zinc-100">✕</button>
+              <button type="button" onClick={onClose} className="text-zinc-400 hover:text-amber-200">✕</button>
             </div>
 
-            <div className="space-y-3 text-xs md:text-sm text-zinc-300 leading-relaxed">
+            <div className="space-y-4 text-xs md:text-sm text-zinc-300 leading-relaxed">
               <p>
-                Para habilitar a <strong>leitura visual de fotos</strong> e interpretação com IA do Google Gemini em tempo real,
-                insira sua chave de API abaixo:
+                Para consagrar a <strong>visão computacional em tempo real</strong> e permitir que a IA leia cada detalhe iconográfico da sua foto, insira sua chave gratuita do Google Gemini:
               </p>
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 mb-1.5 font-mono">Google Gemini API Key:</label>
+                <label className="block text-xs font-mystic-serif text-amber-300 mb-1.5">Google Gemini API Key:</label>
                 <input
                   type="password"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="AIzaSy..."
-                  className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 focus:border-amber-400 rounded-xl text-xs font-mono text-zinc-100 placeholder-zinc-600 outline-none"
+                  className="w-full px-4 py-3 bg-mystic-void border border-mystic-border focus:border-amber-400 rounded-xl text-xs font-mono text-zinc-100 placeholder-zinc-600 outline-none shadow-inner"
                 />
               </div>
-              <p className="text-zinc-400 text-[11px]">
-                Você pode obter uma chave gratuita em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-amber-400 underline">aistudio.google.com</a>.
+              <p className="text-zinc-400 text-xs">
+                ✦ Obtenha sua chave gratuitamente em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-amber-300 underline font-medium">aistudio.google.com</a>.
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
-              <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl bg-zinc-900 text-zinc-300 text-xs">Cancelar</button>
-              <button type="button" onClick={handleSave} className="px-5 py-2 rounded-xl bg-amber-500 text-zinc-950 text-xs font-bold font-serif shadow-md">
-                {saved ? '✓ Salvo!' : 'Salvar Chave'}
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-mystic-border">
+              <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl bg-mystic-surface text-zinc-300 text-xs font-mystic-serif">Cancelar</button>
+              <button type="button" onClick={handleSave} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 text-xs font-bold font-mystic-serif shadow-mystic-gold">
+                {saved ? '✓ Consagrado!' : 'Salvar Chave'}
               </button>
             </div>
           </div>
@@ -1131,19 +1197,19 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       const handleSubmit = async (e) => {
         e.preventDefault();
         if (!question.trim()) {
-          setValidationError('Por favor, informe a sua pergunta para orientar a interpretação.');
+          setValidationError('Por favor, formule a sua pergunta para orientar o Oráculo.');
           return;
         }
 
         if (inputMode === 'photo') {
           if (!photoBase64) {
-            setValidationError('Por favor, envie ou tire uma foto da sua tiragem de cartas.');
+            setValidationError('Por favor, capture ou envie a foto da sua tiragem de cartas.');
             return;
           }
         } else {
           const unselected = cards.findIndex(c => !c.cardId || c.cardId.trim() === '');
           if (unselected !== -1) {
-            setValidationError(`Por favor, selecione qual carta você tirou para a Carta ${unselected + 1}.`);
+            setValidationError(`Por favor, selecione qual carta você tirou para a Lâmina ${unselected + 1}.`);
             return;
           }
         }
@@ -1215,28 +1281,40 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       ];
 
       return (
-        <div className="space-y-8 animate-fadeIn max-w-4xl mx-auto">
-          <div className="text-center space-y-3 pt-2 pb-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold">
-              <span>🔮</span>
-              <span>Interpretação Profunda Rider-Waite-Smith • Manual ou Foto</span>
+        <div className="space-y-10 animate-fadeIn max-w-4xl mx-auto pb-12">
+          {/* Header Místico com Símbolos */}
+          <div className="text-center space-y-4 pt-2 pb-2">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-950/60 via-amber-950/40 to-purple-950/60 border border-amber-500/40 text-amber-200 text-xs font-mystic-serif shadow-mystic-gold">
+              <span>✦</span>
+              <span>Hermenêutica Sagrada Rider-Waite-Smith</span>
+              <span>✦</span>
             </div>
-            <h1 className="text-2xl md:text-4xl font-extrabold font-serif text-zinc-100 tracking-wide">
-              Nova Interpretação de Tarot
+
+            <h1 className="text-3xl md:text-5xl font-extrabold font-mystic-title text-gold-gradient tracking-wide leading-tight">
+              Consulta ao Oráculo
             </h1>
-            <p className="text-xs md:text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-              Tire suas cartas fisicamente e informe-as manualmente ou envie uma <strong>foto da tiragem</strong> para a IA identificar os arcanos e realizar a interpretação completa.
+
+            <div className="flex items-center justify-center gap-3 text-amber-400/60 text-sm">
+              <span>☽</span>
+              <span className="h-px w-16 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent"></span>
+              <span>✧</span>
+              <span className="h-px w-16 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent"></span>
+              <span>☾</span>
+            </div>
+
+            <p className="text-sm md:text-base text-zinc-300 font-body max-w-2xl mx-auto leading-relaxed">
+              Consagre as cartas retiradas fisicamente com o seu baralho. Envie a <strong>foto da tiragem</strong> para decodificação visual por IA ou informe os arcanos manualmente.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-7">
+          <form onSubmit={handleSubmit} className="space-y-8">
             {/* Seletor de Modo: Foto vs Manual */}
-            <div className="flex items-center justify-center p-1.5 bg-zinc-900 rounded-2xl border border-zinc-800 max-w-md mx-auto shadow-lg">
+            <div className="flex items-center justify-center p-1.5 bg-mystic-void/90 rounded-2xl border border-amber-500/30 max-w-md mx-auto shadow-mystic-purple backdrop-blur-md">
               <button
                 type="button"
                 onClick={() => { setInputMode('photo'); setValidationError(null); }}
-                className={`flex-1 py-2.5 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-                  inputMode === 'photo' ? 'bg-amber-500 text-zinc-950 font-serif font-bold shadow-md' : 'text-zinc-400 hover:text-zinc-200'
+                className={`flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-mystic-serif font-bold transition-all flex items-center justify-center gap-2 ${
+                  inputMode === 'photo' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 shadow-mystic-gold' : 'text-zinc-400 hover:text-amber-200'
                 }`}
               >
                 <span>📸</span>
@@ -1246,8 +1324,8 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <button
                 type="button"
                 onClick={() => { setInputMode('manual'); setValidationError(null); }}
-                className={`flex-1 py-2.5 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-                  inputMode === 'manual' ? 'bg-amber-500 text-zinc-950 font-serif font-bold shadow-md' : 'text-zinc-400 hover:text-zinc-200'
+                className={`flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-mystic-serif font-bold transition-all flex items-center justify-center gap-2 ${
+                  inputMode === 'manual' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 shadow-mystic-gold' : 'text-zinc-400 hover:text-amber-200'
                 }`}
               >
                 <span>✍️</span>
@@ -1256,48 +1334,48 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             </div>
 
             {/* Pergunta */}
-            <div className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl">
-              <label className="block text-sm font-semibold text-amber-100 mb-2 font-serif flex items-center justify-between">
-                <span>Qual é a sua pergunta? <span className="text-amber-400">*</span></span>
-                <span className="text-[11px] font-normal text-zinc-500">Obrigatório</span>
+            <div className="p-6 md:p-7 rounded-3xl mystic-card space-y-3">
+              <label className="block text-sm font-bold text-amber-200 font-mystic-serif flex items-center justify-between">
+                <span>Qual é a sua pergunta ao Tarot? <span className="text-amber-400">*</span></span>
+                <span className="text-[11px] font-normal text-amber-400/60">Obrigatório</span>
               </label>
               <textarea
                 rows={3}
                 value={question}
                 onChange={(e) => { setQuestion(e.target.value); if (validationError) setValidationError(null); }}
-                placeholder="Como tende a evoluir minha relação com essa pessoa?"
-                className="w-full p-3.5 bg-zinc-900 border border-zinc-700 focus:border-amber-400 focus:ring-1 focus:ring-amber-400/40 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 outline-none leading-relaxed resize-y"
+                placeholder="Exemplo: Como tende a evoluir minha relação com essa pessoa? / Qual caminho profissional favorece minha missão?"
+                className="w-full p-4 bg-mystic-void border border-mystic-border focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 rounded-2xl text-sm md:text-base text-zinc-100 placeholder-zinc-600 outline-none leading-relaxed resize-y font-sans shadow-inner"
               />
             </div>
 
             {/* Contexto */}
-            <div className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-zinc-800 shadow-xl">
-              <label className="block text-sm font-semibold text-zinc-200 mb-2 font-serif flex items-center justify-between">
-                <span>Contexto adicional</span>
+            <div className="p-6 md:p-7 rounded-3xl mystic-card space-y-3">
+              <label className="block text-sm font-bold text-amber-200/90 font-mystic-serif flex items-center justify-between">
+                <span>Contexto pessoal da situação</span>
                 <span className="text-[11px] font-normal text-zinc-500">Opcional</span>
               </label>
               <textarea
                 rows={2}
                 value={context}
                 onChange={(e) => setContext(e.target.value)}
-                placeholder="Adicione informações que podem ajudar na interpretação. Não é necessário informar nomes reais."
-                className="w-full p-3.5 bg-zinc-900 border border-zinc-700 focus:border-amber-400 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 outline-none leading-relaxed resize-y"
+                placeholder="Detalhes sobre a situação atual que ajudam o oráculo a aprofundar os arquétipos..."
+                className="w-full p-4 bg-mystic-void border border-mystic-border focus:border-amber-400 rounded-2xl text-sm text-zinc-100 placeholder-zinc-600 outline-none leading-relaxed resize-y font-sans shadow-inner"
               />
             </div>
 
             {/* Área da Leitura: Modo Foto vs Modo Manual */}
             {inputMode === 'photo' ? (
-              <div className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+              <div className="p-6 md:p-7 rounded-3xl mystic-card space-y-5">
+                <div className="flex items-center justify-between pb-4 border-b border-mystic-border">
                   <div>
-                    <h3 className="text-base font-bold text-amber-100 font-serif flex items-center gap-2">
+                    <h3 className="text-base md:text-lg font-bold text-gold-gradient font-mystic-title flex items-center gap-2">
                       <span>📸</span>
                       <span>Foto da Tiragem Física</span>
                     </h3>
-                    <p className="text-xs text-zinc-400 mt-0.5">Envie uma foto nítida das cartas na mesa para leitura automática.</p>
+                    <p className="text-xs text-zinc-400 font-body mt-0.5">Capture as cartas dispostas sobre sua mesa de leitura.</p>
                   </div>
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30">
-                    Visão Computacional IA
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 shadow-sm">
+                    Visão Computacional
                   </span>
                 </div>
 
@@ -1307,21 +1385,21 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 />
 
                 {!hasApiKey && (
-                  <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start justify-between gap-3 text-xs text-amber-200">
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/40 via-purple-950/30 to-amber-950/40 border border-amber-500/30 flex items-start justify-between gap-3 text-xs text-amber-200">
                     <div className="space-y-1">
-                      <p className="font-semibold flex items-center gap-1.5">
-                        <span>🔑</span>
-                        <span>Deseja reconhecimento real de imagem com Gemini?</span>
+                      <p className="font-semibold font-mystic-serif flex items-center gap-1.5">
+                        <span>🗝️</span>
+                        <span>Deseja reconhecimento real de pixels com Gemini?</span>
                       </p>
-                      <p className="text-[11px] text-zinc-400">
-                        Insira sua chave gratuita do Google Gemini para a IA analisar os pixels de cada carta.
+                      <p className="text-xs text-zinc-400 font-body">
+                        Insira sua chave gratuita do Google Gemini para a IA ler cada arcano exato da sua imagem.
                       </p>
                     </div>
                     {onOpenSettings && (
                       <button
                         type="button"
                         onClick={onOpenSettings}
-                        className="px-3 py-1.5 rounded-lg bg-amber-500 text-zinc-950 font-bold text-xs whitespace-nowrap shadow-sm hover:bg-amber-400"
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 font-bold text-xs whitespace-nowrap shadow-mystic-gold hover:from-amber-400 hover:to-amber-500 font-mystic-serif"
                       >
                         Inserir chave
                       </button>
@@ -1330,18 +1408,18 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 )}
               </div>
             ) : (
-              <div className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+              <div className="p-6 md:p-7 rounded-3xl mystic-card space-y-5">
+                <div className="flex items-center justify-between pb-4 border-b border-mystic-border">
                   <div>
-                    <h3 className="text-base font-bold text-amber-100 font-serif">Cartas da tiragem</h3>
-                    <p className="text-xs text-zinc-400 mt-0.5">Informe as cartas que você tirou fisicamente com o seu baralho.</p>
+                    <h3 className="text-base md:text-lg font-bold text-gold-gradient font-mystic-title">Lâminas da Tiragem</h3>
+                    <p className="text-xs text-zinc-400 font-body mt-0.5">Informe os arcanos retirados fisicamente com o seu baralho.</p>
                   </div>
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/40">
                     {cards.length} {cards.length === 1 ? 'carta' : 'cartas'}
                   </span>
                 </div>
 
-                <div className="space-y-3.5">
+                <div className="space-y-4">
                   {cards.map((card, idx) => (
                     <ReadingCardItem
                       key={idx}
@@ -1357,18 +1435,23 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 <button
                   type="button"
                   onClick={handleAddCard}
-                  className="w-full py-3 px-4 rounded-xl border border-dashed border-zinc-700 hover:border-amber-400/60 bg-zinc-900/40 hover:bg-amber-500/5 text-zinc-300 hover:text-amber-200 text-xs md:text-sm font-medium transition-all flex items-center justify-center gap-2 group"
+                  className="w-full py-3.5 px-4 rounded-2xl border border-dashed border-amber-500/40 hover:border-amber-400 bg-mystic-void/40 hover:bg-amber-500/10 text-amber-200 text-xs md:text-sm font-mystic-serif transition-all flex items-center justify-center gap-2 group shadow-sm"
                 >
-                  <span>➕ Adicionar carta</span>
+                  <span>➕ Adicionar mais uma carta à tiragem</span>
                 </button>
               </div>
             )}
 
             {/* Estilo */}
-            <div className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-zinc-800 shadow-xl">
-              <h3 className="text-sm font-bold text-amber-100 mb-1 font-serif">Estilo da interpretação</h3>
-              <p className="text-xs text-zinc-400 mb-4">Escolha a profundidade e a ótica interpretativa para a análise.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="p-6 md:p-7 rounded-3xl mystic-card space-y-4">
+              <div>
+                <h3 className="text-sm md:text-base font-bold text-gold-gradient font-mystic-title">
+                  Prisma Interpretativo
+                </h3>
+                <p className="text-xs text-zinc-400 font-body">Escolha a ótica hermenêutica para a decodificação dos símbolos.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
                 {styleOptions.map((opt) => {
                   const isSelected = style === opt.id;
                   return (
@@ -1376,18 +1459,20 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                       key={opt.id}
                       type="button"
                       onClick={() => setStyle(opt.id)}
-                      className={`p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between ${
-                        isSelected ? 'bg-amber-500/15 border-amber-400 text-amber-200 shadow-md ring-1 ring-amber-400/40' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-700'
+                      className={`p-4 rounded-2xl text-left border transition-all flex flex-col justify-between ${
+                        isSelected
+                          ? 'bg-gradient-to-br from-amber-500/20 via-purple-950/40 to-mystic-card border-amber-400 text-amber-200 shadow-mystic-gold ring-1 ring-amber-400/50'
+                          : 'bg-mystic-void/80 border-mystic-border text-zinc-300 hover:border-amber-500/40'
                       }`}
                     >
                       <div>
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span>{opt.icon}</span>
-                          <span className={`text-sm font-bold font-serif ${isSelected ? 'text-amber-300' : 'text-zinc-200'}`}>{opt.label}</span>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-lg">{opt.icon}</span>
+                          <span className={`text-sm font-bold font-mystic-serif ${isSelected ? 'text-amber-300' : 'text-zinc-200'}`}>{opt.label}</span>
                         </div>
-                        <p className="text-[11px] text-zinc-400 leading-relaxed">{opt.desc}</p>
+                        <p className="text-xs text-zinc-400 font-body leading-relaxed">{opt.desc}</p>
                       </div>
-                      {isSelected && <span className="text-[10px] font-bold text-amber-400 mt-2.5">✓ Selecionado</span>}
+                      {isSelected && <span className="text-[10px] font-bold text-amber-400 mt-3 font-mystic-serif">✦ Selecionado</span>}
                     </button>
                   );
                 })}
@@ -1396,9 +1481,9 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
             {/* Alerta de Validação */}
             {validationError && (
-              <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-200 text-xs md:text-sm flex items-center gap-3 animate-shake">
-                <span className="text-lg">⚠️</span>
-                <span>{validationError}</span>
+              <div className="p-4 rounded-2xl bg-rose-950/60 border border-rose-800/80 text-rose-200 text-xs md:text-sm flex items-center gap-3 animate-shake">
+                <span className="text-xl">⚠️</span>
+                <span className="font-mystic-serif">{validationError}</span>
               </div>
             )}
 
@@ -1407,24 +1492,20 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-serif font-bold text-base md:text-lg tracking-wide shadow-xl shadow-amber-950/40 active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                className="w-full py-4 md:py-5 px-8 rounded-3xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-mystic-title font-bold text-base md:text-xl tracking-wider shadow-mystic-gold hover:shadow-2xl active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
               >
                 {isLoading ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-zinc-950/20 border-t-zinc-950 rounded-full animate-spin"></div>
-                    <span>
-                      {inputMode === 'photo'
-                        ? 'Analisando foto com IA e decodificando arcanos...'
-                        : 'Decodificando camadas simbólicas da tiragem...'}
-                    </span>
+                    <div className="w-6 h-6 border-2 border-zinc-950/20 border-t-zinc-950 rounded-full animate-spin"></div>
+                    <span className="font-mystic-serif">Consultando o Livro de Thoth...</span>
                   </>
                 ) : (
                   <>
-                    <span className="text-xl">{inputMode === 'photo' ? '📸' : '✨'}</span>
+                    <span className="text-2xl">{inputMode === 'photo' ? '📸' : '🔮'}</span>
                     <span>
                       {inputMode === 'photo'
-                        ? 'Identificar cartas na foto e interpretar'
-                        : 'Interpretar tiragem profunda'}
+                        ? 'Decodificar Foto & Interpretar'
+                        : 'Revelar Interpretação do Oráculo'}
                     </span>
                   </>
                 )}
@@ -1444,7 +1525,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       const [showPhoto, setShowPhoto] = useState(false);
       const interp = reading.structuredInterpretation;
 
-      if (!interp) return <div className="p-8 text-center text-zinc-400">Leitura não encontrada.</div>;
+      if (!interp) return <div className="p-8 text-center text-zinc-400 font-mystic-serif">Leitura não encontrada.</div>;
 
       const quint = calculateQuintessence(reading.cards);
 
@@ -1460,17 +1541,17 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       });
 
       return (
-        <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn pb-12">
-          {/* Top Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-zinc-950 border border-zinc-800">
-            <div className="flex items-center gap-2 text-xs text-zinc-400">
+        <div className="max-w-4xl mx-auto space-y-10 animate-fadeIn pb-16">
+          {/* Top Bar Mística */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl mystic-card">
+            <div className="flex items-center gap-2 text-xs text-zinc-400 font-mystic-serif">
               <span>📅</span>
               <span>{formattedDate}</span>
-              <span className="text-zinc-600">•</span>
-              <span className="text-amber-400 capitalize font-medium">Estilo {reading.interpretationStyle}</span>
+              <span className="text-amber-500/40">•</span>
+              <span className="text-amber-300 capitalize">Prisma {reading.interpretationStyle}</span>
               {reading.photoBase64 && (
-                <span className="px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/30 text-[10px] font-semibold">
-                  📸 Leitura por Foto
+                <span className="px-2.5 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 text-[10px] font-semibold">
+                  📸 Leitura por Imagem
                 </span>
               )}
             </div>
@@ -1478,40 +1559,45 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               <button
                 type="button"
                 onClick={handleCopy}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-900 text-zinc-200 border border-zinc-700 hover:border-amber-500/40 transition-all"
+                className="px-3.5 py-1.5 rounded-xl text-xs font-mystic-serif bg-mystic-surface text-amber-200 border border-mystic-border hover:border-amber-400 transition-all"
               >
                 {copied ? '✓ Copiado!' : '📋 Copiar leitura'}
               </button>
               <button
                 type="button"
                 onClick={() => setShowPrompt(true)}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-900 text-zinc-300 border border-zinc-700 hover:border-amber-500/40 transition-all"
+                className="px-3.5 py-1.5 rounded-xl text-xs font-mystic-serif bg-mystic-surface text-amber-300 border border-mystic-border hover:border-amber-400 transition-all"
               >
                 🤖 Prompt da IA
               </button>
               <button
                 type="button"
                 onClick={onNewReading}
-                className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-zinc-950 hover:bg-amber-400 transition-all"
+                className="px-4 py-1.5 rounded-xl text-xs font-bold font-mystic-serif bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 shadow-mystic-gold hover:from-amber-400 hover:to-amber-500 transition-all"
               >
-                ✨ Nova tiragem
+                ✨ Nova consulta
               </button>
             </div>
           </div>
 
           {/* Pergunta e Contexto e Foto */}
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 border border-amber-500/30 shadow-2xl space-y-4">
+          <div className="p-7 md:p-8 rounded-3xl mystic-card space-y-6 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400/90 font-mono">Sua pergunta</span>
-              <h2 className="text-xl md:text-2xl font-bold font-serif text-zinc-100 mt-1 leading-snug">
+              <span className="text-xs font-bold uppercase tracking-widest text-amber-400/90 font-mystic-serif flex items-center gap-2">
+                <span>✦</span>
+                <span>A Pergunta do Consulente</span>
+              </span>
+              <h2 className="text-2xl md:text-3xl font-bold font-mystic-title text-gold-gradient mt-2 leading-relaxed">
                 "{reading.question}"
               </h2>
             </div>
 
             {reading.context && (
-              <div className="pt-3 border-t border-zinc-800">
-                <span className="text-[11px] font-semibold text-zinc-400 block mb-1">Contexto adicional:</span>
-                <p className="text-xs md:text-sm text-zinc-300 italic bg-zinc-950 p-3 rounded-lg border border-zinc-800">
+              <div className="pt-4 border-t border-mystic-border/70">
+                <span className="text-xs font-semibold text-amber-300/80 font-mystic-serif block mb-1.5">Contexto pessoal:</span>
+                <p className="text-sm md:text-base text-zinc-300 italic font-body bg-mystic-void/70 p-4 rounded-2xl border border-mystic-border/50 leading-relaxed">
                   {reading.context}
                 </p>
               </div>
@@ -1519,86 +1605,100 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
             {/* Foto da Tiragem se anexada */}
             {reading.photoBase64 && (
-              <div className="pt-3 border-t border-zinc-800">
+              <div className="pt-4 border-t border-mystic-border/70">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400/90 font-mono">
-                    Foto da Tiragem Física
+                  <span className="text-xs font-bold uppercase tracking-widest text-amber-400 font-mystic-serif">
+                    Registro Visual da Mesa
                   </span>
                   <button
                     type="button"
                     onClick={() => setShowPhoto(true)}
-                    className="text-xs text-amber-300 hover:underline"
+                    className="text-xs text-amber-300 hover:underline font-mystic-serif"
                   >
                     Ampliar foto 🔍
                   </button>
                 </div>
-                <div className="max-h-56 rounded-xl overflow-hidden border border-zinc-800 bg-black flex items-center justify-center">
+                <div className="max-h-60 rounded-2xl overflow-hidden border border-mystic-border bg-black flex items-center justify-center shadow-inner">
                   <img
                     src={reading.photoBase64}
                     alt="Foto da Tiragem"
-                    className="max-h-56 w-auto object-contain cursor-pointer"
+                    className="max-h-60 w-auto object-contain cursor-pointer"
                     onClick={() => setShowPhoto(true)}
                   />
                 </div>
               </div>
             )}
 
-            <div className="pt-3 border-t border-zinc-800">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-2 font-mono">
-                Cartas {reading.inputMode === 'photo' ? 'Identificadas pela IA' : 'da tiragem'} ({reading.cards.length})
+            <div className="pt-4 border-t border-mystic-border/70">
+              <span className="text-xs font-bold uppercase tracking-widest text-amber-300/80 block mb-3 font-mystic-serif">
+                Cartas Consagradas ({reading.cards.length})
               </span>
               <ReadingSummary cards={reading.cards} />
             </div>
 
             {/* Destaque da Quintessência */}
-            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3 text-xs text-amber-200">
-              <span className="text-xl">🌟</span>
+            <div className="p-4 md:p-5 rounded-2xl bg-gradient-to-r from-amber-950/40 via-purple-950/40 to-amber-950/40 border border-amber-500/40 flex items-center gap-3.5 shadow-mystic-gold">
+              <span className="text-3xl">🌟</span>
               <div>
-                <span className="font-serif font-bold text-amber-300 uppercase tracking-wider text-[11px] block">
-                  Quintessência da Tiragem: {quint.card.name} (Arcano {quint.number})
+                <span className="font-mystic-title font-bold text-gold-gradient text-sm md:text-base block">
+                  Quintessência Oculta: {quint.card.name} (Arcano {quint.number})
                 </span>
-                <span className="text-[11px] text-zinc-300">
-                  A energia oculta subjacente que sintetiza a grande lição evolutiva desta leitura.
+                <span className="text-xs md:text-sm text-zinc-300 font-body">
+                  A frequência mestra que costura as lições espirituais desta tiragem.
                 </span>
               </div>
             </div>
           </div>
 
           {/* 1. VISÃO GERAL */}
-          <section className="p-6 md:p-7 rounded-2xl bg-zinc-950 border border-amber-500/25 shadow-xl space-y-2">
-            <div className="flex items-center gap-2.5 mb-2">
-              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-serif font-bold text-xs">1</span>
-              <h3 className="text-lg font-bold font-serif text-amber-200">Visão geral</h3>
+          <section className="p-7 md:p-8 rounded-3xl mystic-card space-y-4 shadow-xl">
+            <div className="flex items-center gap-3 pb-3 border-b border-mystic-border">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mystic-serif font-bold text-sm">
+                I
+              </span>
+              <h3 className="text-xl font-bold font-mystic-title text-gold-gradient">
+                Visão Geral da Tiragem
+              </h3>
             </div>
-            <p className="text-sm md:text-base text-zinc-200 leading-relaxed">{interp.overview}</p>
+            <p className="text-base md:text-lg text-zinc-200 font-body leading-relaxed">
+              {interp.overview}
+            </p>
           </section>
 
           {/* 2. CARTA POR CARTA */}
-          <section className="p-6 md:p-7 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl space-y-5">
-            <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-800">
-              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-serif font-bold text-xs">2</span>
+          <section className="p-7 md:p-8 rounded-3xl mystic-card space-y-6 shadow-xl">
+            <div className="flex items-center gap-3 pb-3 border-b border-mystic-border">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mystic-serif font-bold text-sm">
+                II
+              </span>
               <div>
-                <h3 className="text-lg font-bold font-serif text-amber-200">Carta por carta</h3>
-                <p className="text-xs text-zinc-400">Significado aprofundado, dinâmica psicológica e simbolismo.</p>
+                <h3 className="text-xl font-bold font-mystic-title text-gold-gradient">
+                  Hermenêutica Carta por Carta
+                </h3>
+                <p className="text-xs text-zinc-400 font-body">Significado profundo, iconografia e dinamismo psicológico.</p>
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               {interp.cardByCard.map((item, idx) => {
                 const isUpright = item.orientation === 'upright';
                 return (
-                  <div key={idx} className="p-5 rounded-xl bg-zinc-900/80 border border-zinc-800 hover:border-amber-500/30 transition-all space-y-3">
+                  <div key={idx} className="p-6 rounded-2xl bg-mystic-dark/90 border border-mystic-border hover:border-amber-400/40 transition-all space-y-3.5 shadow-md">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2.5">
-                        <span className="w-6 h-6 rounded-full bg-zinc-800 text-zinc-300 flex items-center justify-center text-xs font-serif font-bold">{idx + 1}</span>
-                        <h4 className="text-base font-bold text-zinc-100 font-serif">{item.card.name}</h4>
+                      <div className="flex items-center gap-3">
+                        <span className="w-7 h-7 rounded-full bg-mystic-void border border-mystic-border text-amber-300 flex items-center justify-center text-xs font-mystic-serif font-bold">
+                          {idx + 1}
+                        </span>
+                        <h4 className="text-base md:text-lg font-bold text-amber-100 font-mystic-serif">
+                          {item.card.name}
+                        </h4>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${isUpright ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' : 'bg-purple-900/40 text-purple-300 border-purple-500/40'}`}>
+                        <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${isUpright ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' : 'bg-purple-950 text-purple-300 border-purple-500/40'}`}>
                           {isUpright ? '⬆️ Normal' : '🔄 Invertida'}
                         </span>
                         {item.position && (
-                          <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                          <span className="text-xs font-medium px-3 py-1 rounded-full bg-mystic-void text-zinc-300 border border-mystic-border font-body">
                             Posição: {item.position}
                           </span>
                         )}
@@ -1607,14 +1707,19 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
                     <div className="flex flex-wrap gap-1.5">
                       {item.keywords.map((kw, i) => (
-                        <span key={i} className="px-2 py-0.5 rounded bg-zinc-950 text-zinc-400 text-[11px] border border-zinc-800">{kw}</span>
+                        <span key={i} className="px-2.5 py-0.5 rounded-full bg-mystic-void text-amber-200/80 text-[11px] border border-mystic-border/80">
+                          {kw}
+                        </span>
                       ))}
                     </div>
 
-                    <p className="text-xs md:text-sm text-zinc-200 leading-relaxed pt-1">{item.meaning}</p>
+                    <p className="text-base text-zinc-200 font-body leading-relaxed pt-1">
+                      {item.meaning}
+                    </p>
+
                     {item.nuanceNotes && (
-                      <p className="text-[11px] text-zinc-400 italic pt-1 border-t border-zinc-800">
-                        💡 <span className="font-semibold text-zinc-300">Nuance RWS:</span> {item.nuanceNotes}
+                      <p className="text-xs text-amber-200/70 italic pt-2 border-t border-mystic-border/50 font-body">
+                        ✦ <span className="font-semibold text-amber-300">Nuance Hermenêutica:</span> {item.nuanceNotes}
                       </p>
                     )}
                   </div>
@@ -1624,83 +1729,95 @@ Responda ESTRITAMENTE em formato JSON com o schema:
           </section>
 
           {/* 3. RELAÇÃO ENTRE AS CARTAS */}
-          <section className="p-6 md:p-7 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl space-y-4">
-            <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-800">
-              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-serif font-bold text-xs">3</span>
+          <section className="p-7 md:p-8 rounded-3xl mystic-card space-y-6 shadow-xl">
+            <div className="flex items-center gap-3 pb-3 border-b border-mystic-border">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mystic-serif font-bold text-sm">
+                III
+              </span>
               <div>
-                <h3 className="text-lg font-bold font-serif text-amber-200">Relação entre as cartas</h3>
-                <p className="text-xs text-zinc-400">Equilíbrio elemental, arcanos maiores e dinâmicas conjuntas.</p>
+                <h3 className="text-xl font-bold font-mystic-title text-gold-gradient">
+                  Alquimia & Sinergia dos Arcanos
+                </h3>
+                <p className="text-xs text-zinc-400 font-body">Equilíbrio dos 4 elementos, arcanos maiores e diálogos simbólicos.</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
-              <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 space-y-1.5">
-                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-wider font-mono">Equilíbrio Elemental</h5>
-                <p className="text-xs text-zinc-300 leading-relaxed">{interp.cardsRelationship.elementBalance}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+              <div className="p-5 rounded-2xl bg-mystic-dark/80 border border-mystic-border space-y-2">
+                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-mystic-serif">Equilíbrio dos Elementos</h5>
+                <p className="text-sm text-zinc-300 font-body leading-relaxed">{interp.cardsRelationship.elementBalance}</p>
               </div>
-              <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 space-y-1.5">
-                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-wider font-mono">Arcanos Maiores & Estrutura</h5>
-                <p className="text-xs text-zinc-300 leading-relaxed">{interp.cardsRelationship.majorArcanaSignificance}</p>
+              <div className="p-5 rounded-2xl bg-mystic-dark/80 border border-mystic-border space-y-2">
+                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-mystic-serif">Arcanos Maiores & Destino</h5>
+                <p className="text-sm text-zinc-300 font-body leading-relaxed">{interp.cardsRelationship.majorArcanaSignificance}</p>
               </div>
-              <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 md:col-span-2 space-y-1.5">
-                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-wider font-mono">Sinergias e Contrastes</h5>
-                <p className="text-xs text-zinc-300 leading-relaxed">{interp.cardsRelationship.synergiesAndContrasts}</p>
+              <div className="p-5 rounded-2xl bg-mystic-dark/80 border border-mystic-border md:col-span-2 space-y-2">
+                <h5 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-mystic-serif">Sinergias, Tensões & Contrastes</h5>
+                <p className="text-sm text-zinc-300 font-body leading-relaxed">{interp.cardsRelationship.synergiesAndContrasts}</p>
               </div>
               {interp.cardsRelationship.numericalOrNarrativeFlow && (
-                <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 md:col-span-2 space-y-1.5">
-                  <h5 className="text-xs font-bold text-amber-300 uppercase tracking-wider font-mono">Quintessência & Fluxo Narrativo</h5>
-                  <p className="text-xs text-zinc-300 leading-relaxed">{interp.cardsRelationship.numericalOrNarrativeFlow}</p>
+                <div className="p-5 rounded-2xl bg-mystic-dark/80 border border-mystic-border md:col-span-2 space-y-2">
+                  <h5 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-mystic-serif">Quintessência & Fluxo Narrativo</h5>
+                  <p className="text-sm text-zinc-300 font-body leading-relaxed">{interp.cardsRelationship.numericalOrNarrativeFlow}</p>
                 </div>
               )}
             </div>
           </section>
 
           {/* 4. SÍNTESE DA LEITURA */}
-          <section className="p-6 md:p-7 rounded-2xl bg-gradient-to-r from-amber-950/40 via-zinc-950 to-amber-950/40 border border-amber-500/40 shadow-2xl space-y-3">
-            <div className="flex items-center gap-2.5">
-              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500 text-zinc-950 font-serif font-bold text-xs">4</span>
-              <h3 className="text-lg font-bold font-serif text-amber-100">Síntese da leitura</h3>
+          <section className="p-7 md:p-8 rounded-3xl bg-gradient-to-r from-amber-950/60 via-purple-950/60 to-amber-950/60 border border-amber-500/50 shadow-mystic-gold space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500 text-zinc-950 font-mystic-serif font-bold text-sm shadow-md">
+                IV
+              </span>
+              <h3 className="text-xl font-bold font-mystic-title text-gold-gradient">
+                Síntese do Oráculo
+              </h3>
             </div>
-            <p className="text-sm md:text-base text-zinc-100 font-serif leading-relaxed italic">
+            <p className="text-lg md:text-xl text-zinc-100 font-body leading-relaxed italic">
               "{interp.synthesis}"
             </p>
           </section>
 
           {/* 5. PONTOS DE ATENÇÃO */}
-          <section className="p-6 md:p-7 rounded-2xl bg-zinc-950 border border-amber-500/20 shadow-xl space-y-5">
-            <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-800">
-              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-serif font-bold text-xs">5</span>
+          <section className="p-7 md:p-8 rounded-3xl mystic-card space-y-6 shadow-xl">
+            <div className="flex items-center gap-3 pb-3 border-b border-mystic-border">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mystic-serif font-bold text-sm">
+                V
+              </span>
               <div>
-                <h3 className="text-lg font-bold font-serif text-amber-200">Pontos de atenção</h3>
-                <p className="text-xs text-zinc-400">Aspectos para orientar escolhas e atitudes conscientes.</p>
+                <h3 className="text-xl font-bold font-mystic-title text-gold-gradient">
+                  Pontos de Atenção & Soberania
+                </h3>
+                <p className="text-xs text-zinc-400 font-body">Diretrizes conscientes para guiar seu livre arbítrio.</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-800/40 space-y-2">
-                <h4 className="text-xs font-bold text-emerald-300 uppercase tracking-wider font-mono">🌿 Aspectos Favoráveis</h4>
-                <ul className="space-y-1.5 text-xs text-emerald-100/90 list-disc list-inside">
+              <div className="p-5 rounded-2xl bg-emerald-950/30 border border-emerald-800/40 space-y-2.5">
+                <h4 className="text-xs font-bold text-emerald-300 uppercase tracking-widest font-mystic-serif">🌿 Forças Favoráveis</h4>
+                <ul className="space-y-2 text-sm text-emerald-100/90 font-body list-disc list-inside">
                   {interp.attentionPoints.favorable.map((item, i) => <li key={i}>{item}</li>)}
                 </ul>
               </div>
 
-              <div className="p-4 rounded-xl bg-rose-950/30 border border-rose-800/40 space-y-2">
-                <h4 className="text-xs font-bold text-rose-300 uppercase tracking-wider font-mono">⚡ Desafios & Cuidados</h4>
-                <ul className="space-y-1.5 text-xs text-rose-100/90 list-disc list-inside">
+              <div className="p-5 rounded-2xl bg-rose-950/30 border border-rose-800/40 space-y-2.5">
+                <h4 className="text-xs font-bold text-rose-300 uppercase tracking-widest font-mystic-serif">⚡ Desafios & Cuidados</h4>
+                <ul className="space-y-2 text-sm text-rose-100/90 font-body list-disc list-inside">
                   {interp.attentionPoints.challenging.map((item, i) => <li key={i}>{item}</li>)}
                 </ul>
               </div>
 
-              <div className="p-4 rounded-xl bg-sky-950/30 border border-sky-800/40 space-y-2">
-                <h4 className="text-xs font-bold text-sky-300 uppercase tracking-wider font-mono">🌊 Em Aberto / Indefinidos</h4>
-                <ul className="space-y-1.5 text-xs text-sky-100/90 list-disc list-inside">
+              <div className="p-5 rounded-2xl bg-sky-950/30 border border-sky-800/40 space-y-2.5">
+                <h4 className="text-xs font-bold text-sky-300 uppercase tracking-widest font-mystic-serif">🌊 Em Aberto no Tempo</h4>
+                <ul className="space-y-2 text-sm text-sky-100/90 font-body list-disc list-inside">
                   {interp.attentionPoints.undefinedOrOpen.map((item, i) => <li key={i}>{item}</li>)}
                 </ul>
               </div>
 
-              <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-800/40 space-y-2">
-                <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider font-mono">🧭 Dependentes da sua Postura</h4>
-                <ul className="space-y-1.5 text-xs text-amber-100/90 list-disc list-inside">
+              <div className="p-5 rounded-2xl bg-amber-950/30 border border-amber-800/40 space-y-2.5">
+                <h4 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-mystic-serif">🧭 Postura Recomendada</h4>
+                <ul className="space-y-2 text-sm text-amber-100/90 font-body list-disc list-inside">
                   {interp.attentionPoints.attitudeDependent.map((item, i) => <li key={i}>{item}</li>)}
                 </ul>
               </div>
@@ -1709,26 +1826,26 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
           {/* Seção Especial: Perguntas Reflexivas para o Consulente */}
           {interp.reflectiveQuestions && interp.reflectiveQuestions.length > 0 && (
-            <section className="p-6 md:p-7 rounded-2xl bg-purple-950/30 border border-purple-500/40 shadow-2xl space-y-4 animate-fadeIn">
-              <div className="flex items-center gap-2.5">
-                <span className="text-2xl">🪞</span>
+            <section className="p-7 md:p-8 rounded-3xl bg-purple-950/40 border border-purple-500/40 shadow-mystic-purple space-y-5 animate-fadeIn">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🪞</span>
                 <div>
-                  <h3 className="text-base md:text-lg font-bold font-serif text-purple-200">
-                    Perguntas para auto-reflexão & Espelho da Alma
+                  <h3 className="text-lg md:text-xl font-bold font-mystic-title text-purple-200">
+                    Espelho da Alma: Perguntas para Auto-Reflexão
                   </h3>
-                  <p className="text-xs text-purple-300/80">
-                    Questões existenciais profundas para meditar e integrar a lição das cartas no seu livre arbítrio.
+                  <p className="text-xs text-purple-300/80 font-body">
+                    Meditações profundas para iluminar as respostas que já habitam o seu interior.
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-2.5 pt-1">
+              <div className="space-y-3 pt-1">
                 {interp.reflectiveQuestions.map((q, i) => (
                   <div
                     key={i}
-                    className="p-3.5 bg-zinc-950/80 rounded-xl border border-purple-900/60 text-xs md:text-sm text-purple-100 flex items-start gap-2.5 shadow-sm"
+                    className="p-4 bg-mystic-void/80 rounded-2xl border border-purple-900/60 text-sm md:text-base text-purple-100 flex items-start gap-3 shadow-sm font-body"
                   >
-                    <span className="text-purple-400 font-bold font-mono text-sm">{i + 1}.</span>
+                    <span className="text-amber-400 font-bold font-mystic-serif text-sm">{i + 1}.</span>
                     <span className="leading-relaxed">{q}</span>
                   </div>
                 ))}
@@ -1741,16 +1858,16 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             <button
               type="button"
               onClick={onNewReading}
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 font-serif font-bold text-sm shadow-lg hover:from-amber-400 hover:to-amber-500 transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 font-mystic-title font-bold text-sm md:text-base shadow-mystic-gold hover:from-amber-400 hover:to-amber-500 transition-all flex items-center justify-center gap-2.5"
             >
-              <span>✨ Fazer nova interpretação</span>
+              <span>✨ Fazer Nova Consulta</span>
             </button>
             <button
               type="button"
               onClick={onGoToHistory}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-zinc-900 text-zinc-300 border border-zinc-700 hover:bg-zinc-800 text-sm font-medium transition-all"
+              className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-mystic-dark text-amber-200 border border-mystic-border hover:border-amber-400/50 text-sm font-mystic-serif transition-all"
             >
-              📜 Ver histórico
+              📜 Ver Histórico
             </button>
           </div>
 
@@ -1760,7 +1877,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
               onClick={() => setShowPhoto(false)}
               className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md cursor-pointer animate-fadeIn"
             >
-              <div className="relative max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden border border-amber-500/40">
+              <div className="relative max-w-4xl max-h-[90vh] rounded-3xl overflow-hidden border border-amber-500/40">
                 <img
                   src={reading.photoBase64}
                   alt="Foto da Tiragem Ampliada"
@@ -1769,7 +1886,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 <button
                   type="button"
                   onClick={() => setShowPhoto(false)}
-                  className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-zinc-950 text-zinc-100 text-xs font-bold border border-zinc-700"
+                  className="absolute top-4 right-4 px-4 py-2 rounded-full bg-mystic-dark text-zinc-100 text-xs font-mystic-serif font-bold border border-mystic-border"
                 >
                   ✕ Fechar
                 </button>
@@ -1779,23 +1896,23 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
           {/* Modal do Prompt */}
           {showPrompt && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-              <div className="bg-zinc-950 border border-amber-500/40 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-                <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50">
-                  <h4 className="font-serif font-bold text-amber-200 text-sm">Prompt Estruturado de IA</h4>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+              <div className="bg-mystic-dark border border-amber-500/40 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+                <div className="p-4 border-b border-mystic-border flex items-center justify-between bg-mystic-void">
+                  <h4 className="font-mystic-title font-bold text-amber-200 text-sm">Prompt Hermenêutico de IA</h4>
                   <button onClick={() => setShowPrompt(false)} className="text-zinc-400 hover:text-zinc-100">✕</button>
                 </div>
-                <div className="p-4 overflow-y-auto font-mono text-xs text-zinc-300 bg-zinc-950 leading-relaxed whitespace-pre-wrap select-all">
+                <div className="p-4 overflow-y-auto font-mono text-xs text-zinc-300 bg-mystic-void leading-relaxed whitespace-pre-wrap select-all">
                   {generateInterpretationPrompt(reading)}
                 </div>
-                <div className="p-3 border-t border-zinc-800 flex justify-end gap-2">
+                <div className="p-3 border-t border-mystic-border flex justify-end gap-2">
                   <button
                     onClick={() => { navigator.clipboard.writeText(generateInterpretationPrompt(reading)); alert('Prompt copiado!'); }}
-                    className="px-4 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-semibold"
+                    className="px-4 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-mystic-serif"
                   >
                     Copiar Prompt
                   </button>
-                  <button onClick={() => setShowPrompt(false)} className="px-4 py-1.5 rounded-lg bg-zinc-800 text-zinc-200 text-xs font-semibold">
+                  <button onClick={() => setShowPrompt(false)} className="px-4 py-2 rounded-xl bg-mystic-surface text-zinc-200 text-xs font-mystic-serif">
                     Fechar
                   </button>
                 </div>
@@ -1818,7 +1935,7 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
       const handleDelete = (id, e) => {
         e.stopPropagation();
-        if (window.confirm('Excluir esta leitura do histórico?')) {
+        if (window.confirm('Excluir este oráculo do histórico?')) {
           storageService.deleteReading(id);
           load();
         }
@@ -1831,20 +1948,20 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       }, [readings, searchTerm]);
 
       return (
-        <div className="max-w-4xl mx-auto space-y-7 animate-fadeIn pb-12">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
+        <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn pb-16">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-mystic-border">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold font-serif text-zinc-100 flex items-center gap-2.5">
+              <h1 className="text-2xl md:text-4xl font-bold font-mystic-title text-gold-gradient flex items-center gap-3">
                 <span>📜</span>
-                <span>Histórico de Leituras</span>
+                <span>Grimório de Tiragens</span>
               </h1>
-              <p className="text-xs md:text-sm text-zinc-400 mt-1">Revisite suas tiragens salvas localmente.</p>
+              <p className="text-xs md:text-sm text-zinc-400 font-body mt-1">Revisite as revelações oraculares consagradas.</p>
             </div>
             <button
               onClick={onNewReading}
-              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-serif font-bold text-xs md:text-sm shadow-md transition-all flex items-center gap-2"
+              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-mystic-serif font-bold text-xs md:text-sm shadow-mystic-gold transition-all flex items-center gap-2"
             >
-              <span>✨ Nova interpretação</span>
+              <span>✨ Nova Consulta</span>
             </button>
           </div>
 
@@ -1855,27 +1972,27 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar por pergunta ou contexto..."
-                className="w-full pl-9 pr-4 py-2.5 bg-zinc-950 border border-zinc-800 focus:border-amber-400 rounded-xl text-xs md:text-sm text-zinc-100 placeholder-zinc-500 outline-none"
+                className="w-full pl-10 pr-4 py-3 bg-mystic-dark border border-mystic-border focus:border-amber-400 rounded-2xl text-xs md:text-sm text-zinc-100 placeholder-zinc-500 outline-none shadow-inner"
               />
-              <span className="absolute left-3 top-3 text-zinc-500 text-xs">🔍</span>
+              <span className="absolute left-3.5 top-3.5 text-amber-400 text-xs">🔍</span>
             </div>
           )}
 
           {filtered.length === 0 ? (
-            <div className="text-center py-16 px-4 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-4">
-              <span className="text-4xl block">🎴</span>
-              <h3 className="text-lg font-bold font-serif text-zinc-200">
-                {readings.length === 0 ? 'Nenhuma leitura salva ainda' : 'Nenhuma leitura encontrada'}
+            <div className="text-center py-16 px-4 rounded-3xl mystic-card space-y-4">
+              <span className="text-5xl block">🎴</span>
+              <h3 className="text-lg font-bold font-mystic-title text-zinc-200">
+                {readings.length === 0 ? 'Nenhuma leitura consagrada ainda' : 'Nenhuma consulta encontrada'}
               </h3>
-              <p className="text-xs md:text-sm text-zinc-400 max-w-md mx-auto">
+              <p className="text-xs md:text-sm text-zinc-400 font-body max-w-md mx-auto">
                 {readings.length === 0 ? 'Faça sua tiragem física e envie a foto ou selecione as cartas manualmente.' : 'Tente buscar com outros termos.'}
               </p>
               {readings.length === 0 && (
                 <button
                   onClick={onNewReading}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 text-zinc-950 font-serif font-bold text-xs md:text-sm shadow-md"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 font-mystic-title font-bold text-xs md:text-sm shadow-mystic-gold"
                 >
-                  <span>✨ Iniciar primeira interpretação</span>
+                  <span>✨ Realizar Primeira Leitura</span>
                 </button>
               )}
             </div>
@@ -1889,15 +2006,15 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                   <div
                     key={reading.id}
                     onClick={() => onSelectReading(reading)}
-                    className="p-5 md:p-6 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-amber-500/40 transition-all cursor-pointer shadow-lg space-y-4 group"
+                    className="p-6 rounded-3xl mystic-card hover:border-amber-400/60 transition-all cursor-pointer shadow-lg space-y-4 group"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                      <div className="flex items-center gap-2 text-zinc-400">
+                      <div className="flex items-center gap-2 text-zinc-400 font-mystic-serif">
                         <span>📅 {dateStr}</span>
-                        <span className="text-zinc-600">•</span>
-                        <span className="text-amber-400/90 font-medium capitalize">Estilo {reading.interpretationStyle}</span>
+                        <span className="text-amber-500/40">•</span>
+                        <span className="text-amber-300 font-medium capitalize">Prisma {reading.interpretationStyle}</span>
                         {reading.photoBase64 && (
-                          <span className="px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/30 text-[10px]">
+                          <span className="px-2.5 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 text-[10px]">
                             📸 Foto
                           </span>
                         )}
@@ -1912,15 +2029,15 @@ Responda ESTRITAMENTE em formato JSON com o schema:
                     </div>
 
                     <div>
-                      <h3 className="text-base md:text-lg font-bold font-serif text-zinc-100 group-hover:text-amber-200 transition-colors leading-snug">
+                      <h3 className="text-lg md:text-xl font-bold font-mystic-title text-zinc-100 group-hover:text-amber-200 transition-colors leading-snug">
                         "{reading.question}"
                       </h3>
-                      {reading.context && <p className="text-xs text-zinc-400 italic line-clamp-1 mt-1">Contexto: {reading.context}</p>}
+                      {reading.context && <p className="text-xs text-zinc-400 font-body italic line-clamp-1 mt-1">Contexto: {reading.context}</p>}
                     </div>
 
-                    <div className="pt-2 border-t border-zinc-800 flex items-center justify-between gap-4 flex-wrap">
+                    <div className="pt-3 border-t border-mystic-border/70 flex items-center justify-between gap-4 flex-wrap">
                       <ReadingSummary cards={reading.cards} />
-                      <span className="text-xs font-bold text-amber-400 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                      <span className="text-xs font-bold font-mystic-serif text-amber-400 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
                         <span>Ver interpretação</span>
                         <span>→</span>
                       </span>
@@ -1968,49 +2085,49 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       };
 
       return (
-        <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans">
-          {/* Header */}
-          <header className="sticky top-0 z-40 bg-zinc-950/90 backdrop-blur-md border-b border-amber-500/20 px-4 lg:px-8 py-3.5 shadow-lg shadow-black/40">
+        <div className="min-h-screen flex flex-col font-sans relative">
+          {/* Header Místico Imperial */}
+          <header className="sticky top-0 z-40 bg-mystic-void/90 backdrop-blur-xl border-b border-amber-500/30 px-4 lg:px-8 py-4 shadow-2xl">
             <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
-              <button onClick={handleNewReading} className="flex items-center gap-3 text-left">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400/20 via-amber-600/20 to-zinc-900 border border-amber-400/40 flex items-center justify-center">
-                  <span className="text-xl">🎴</span>
+              <button onClick={handleNewReading} className="flex items-center gap-3.5 text-left group">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400/20 via-purple-900/40 to-mystic-void border border-amber-400/50 flex items-center justify-center shadow-mystic-gold group-hover:scale-105 transition-transform">
+                  <span className="text-2xl">🎴</span>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-serif font-bold text-lg text-amber-100 tracking-wide">Tarot Interpreter</span>
-                    <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">RWS</span>
+                    <span className="font-mystic-title font-bold text-lg md:text-xl text-gold-gradient tracking-wider">Tarot Interpreter</span>
+                    <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/40">RWS</span>
                   </div>
-                  <p className="text-xs text-zinc-400 hidden sm:block">Sistema Rider-Waite-Smith • Manual ou Foto com IA</p>
+                  <p className="text-xs text-zinc-400 font-body hidden sm:block">Oráculo Rider-Waite-Smith • Manual ou Visão por IA</p>
                 </div>
               </button>
 
-              <nav className="flex items-center gap-2">
+              <nav className="flex items-center gap-2.5">
                 <button
                   onClick={handleNewReading}
-                  className={`px-3.5 py-2 rounded-lg text-xs md:text-sm font-medium transition-all flex items-center gap-1.5 ${
-                    tab === 'new' ? 'bg-amber-500/15 text-amber-200 border border-amber-500/40' : 'text-zinc-300 hover:text-amber-100'
+                  className={`px-4 py-2 rounded-xl text-xs md:text-sm font-mystic-serif transition-all flex items-center gap-1.5 ${
+                    tab === 'new' ? 'bg-amber-500/20 text-amber-200 border border-amber-500/50 shadow-mystic-gold' : 'text-zinc-300 hover:text-amber-200'
                   }`}
                 >
-                  <span>✨ Nova interpretação</span>
+                  <span>✨ Nova Consulta</span>
                 </button>
                 <button
                   onClick={() => setTab('history')}
-                  className={`px-3.5 py-2 rounded-lg text-xs md:text-sm font-medium transition-all flex items-center gap-2 ${
-                    tab === 'history' ? 'bg-amber-500/15 text-amber-200 border border-amber-500/40' : 'text-zinc-300 hover:text-amber-100'
+                  className={`px-4 py-2 rounded-xl text-xs md:text-sm font-mystic-serif transition-all flex items-center gap-2 ${
+                    tab === 'history' ? 'bg-amber-500/20 text-amber-200 border border-amber-500/50 shadow-mystic-gold' : 'text-zinc-300 hover:text-amber-200'
                   }`}
                 >
-                  <span>📜 Histórico</span>
+                  <span>📜 Grimório</span>
                   {savedCount > 0 && (
-                    <span className="px-1.5 py-0.2 text-[11px] font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <span className="px-2 py-0.2 text-[10px] font-bold rounded-full bg-amber-500/30 text-amber-200 border border-amber-500/40">
                       {savedCount}
                     </span>
                   )}
                 </button>
                 <button
                   onClick={() => setIsSettingsOpen(true)}
-                  title="Configurar Conexão de IA"
-                  className="p-2 rounded-lg text-zinc-400 hover:text-amber-200 hover:bg-zinc-900 border border-zinc-800 transition-colors"
+                  title="Configurar Chave de IA"
+                  className="p-2.5 rounded-xl text-zinc-400 hover:text-amber-200 hover:bg-mystic-dark border border-mystic-border transition-colors shadow-sm"
                 >
                   ⚙️
                 </button>
@@ -2018,8 +2135,8 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             </div>
           </header>
 
-          {/* Conteúdo */}
-          <main className="flex-1 max-w-6xl w-full mx-auto px-4 lg:px-8 py-6 md:py-10">
+          {/* Conteúdo Principal */}
+          <main className="flex-1 max-w-6xl w-full mx-auto px-4 lg:px-8 py-8 md:py-12 relative z-10">
             {tab === 'new' && (
               <NewReadingPage
                 key={newReadingKey}
@@ -2042,11 +2159,13 @@ Responda ESTRITAMENTE em formato JSON com o schema:
             )}
           </main>
 
-          {/* Footer */}
-          <footer className="mt-auto border-t border-zinc-900 bg-zinc-950 py-6 px-4 text-center text-xs text-zinc-400 space-y-1.5">
-            <p className="font-serif text-zinc-300">Tarot Interpreter — Interpretação Simbólica Tradicional Rider-Waite-Smith</p>
-            <p className="text-[11px] text-zinc-400">
-              Uso ético e reflexivo • Sem simulações ou sorteios automatizados • As cartas iluminam possibilidades e reflexões conscientes.
+          {/* Rodapé Místico */}
+          <footer className="mt-auto border-t border-mystic-border/60 bg-mystic-void/90 py-8 px-4 text-center text-xs text-zinc-400 space-y-2 relative z-10">
+            <p className="font-mystic-title text-gold-gradient text-sm">
+              ✧ Tarot Interpreter — Oráculo & Hermenêutica Rider-Waite-Smith ✧
+            </p>
+            <p className="text-xs text-zinc-400 font-body max-w-xl mx-auto">
+              As cartas não predizem sentenças imutáveis, mas iluminam os caminhos e arquétipos para o seu livre arbítrio e autoconhecimento.
             </p>
           </footer>
 
