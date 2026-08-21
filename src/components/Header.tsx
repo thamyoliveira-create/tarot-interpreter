@@ -29,14 +29,14 @@ export const Header: React.FC<HeaderProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-serif font-bold text-lg lg:text-xl text-amber-100 tracking-wide">
-                Tarot Interpreter
+                Arcana
               </span>
-              <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">
                 RWS
               </span>
             </div>
-            <p className="text-xs text-zinc-400 hidden sm:block">
-              Sistema Rider-Waite-Smith • Tiragem Física
+            <p className="text-xs text-zinc-400">
+              Oráculo Rider-Waite-Smith • Interpretação Simbólica Tradicional
             </p>
           </div>
         </button>

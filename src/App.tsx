@@ -88,7 +88,7 @@ export const App: React.FC = () => {
       {/* Rodapé Elegante */}
       <footer className="mt-auto border-t border-zinc-900 bg-zinc-950 py-6 px-4 text-center text-xs text-zinc-400 space-y-1.5">
         <p className="font-serif text-zinc-300">
-          Tarot Interpreter — Interpretação Simbólica Tradicional Rider-Waite-Smith
+          Arcana — Oráculo & Interpretação Simbólica Tradicional Rider-Waite-Smith
         </p>
         <p className="text-[11px] text-zinc-400">
           Uso ético e reflexivo • Sem simulações ou sorteios automatizados • As cartas iluminam possibilidades e reflexões conscientes.
