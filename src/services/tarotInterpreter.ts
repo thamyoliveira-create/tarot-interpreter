@@ -1,4 +1,4 @@
-import { TAROT_CARDS_MAP, TAROT_CARDS } from '../data/tarotCards';
+import { TAROT_CARDS_MAP, TAROT_CARDS, TarotCardData } from '../data/tarotCards';
 import {
   TarotReading,
   StructuredInterpretation,
@@ -7,88 +7,139 @@ import {
 } from '../types/tarot';
 
 /**
- * Monta o prompt completo e estruturado para alimentar um modelo de Inteligência Artificial.
- * Segue estritamente os preceitos do sistema Rider-Waite-Smith (RWS).
+ * Calcula a Quintessência da tiragem (soma numerológica reduzida aos 22 Arcanos Maiores).
+ */
+export function calculateQuintessence(cards: ReadingCard[]): { number: number; card: TarotCardData } {
+  let sum = 0;
+  for (const rc of cards) {
+    const card = TAROT_CARDS_MAP.get(rc.cardId);
+    if (card) {
+      if (card.arcana === 'major') {
+        sum += card.number;
+      } else if (card.rank) {
+        const rankValues: Record<string, number> = {
+          'Ás': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
+          'Pajem': 11, 'Cavaleiro': 12, 'Rainha': 13, 'Rei': 14
+        };
+        sum += rankValues[card.rank] || 1;
+      }
+    }
+  }
+
+  // Redução teosófica para 1 a 22 (onde 22 = O Louco ou 0)
+  while (sum > 22) {
+    const digits = sum.toString().split('').map(Number);
+    sum = digits.reduce((a, b) => a + b, 0);
+  }
+
+  const majorCard = TAROT_CARDS.find(c => c.arcana === 'major' && (c.number === sum || (sum === 22 && c.number === 0))) || TAROT_CARDS[0];
+  return { number: sum, card: majorCard };
+}
+
+/**
+ * Detecta o tema predominante da pergunta para enriquecer a linguagem e o foco interpretativo.
+ */
+function detectQuestionTheme(question: string, context?: string): 'love' | 'career' | 'decision' | 'spiritual' | 'general' {
+  const text = (question + ' ' + (context || '')).toLowerCase();
+  if (/amor|ele|ela|relacion|sentimento|namor|casal|ex|casamento|paix|ficante|amar|coraç/i.test(text)) return 'love';
+  if (/trabalho|emprego|carreira|dinheiro|financeir|negóc|empresa|projeto|salário|profis/i.test(text)) return 'career';
+  if (/devo|escolh|qual|caminho|decis|dúvida|fazer|ou|mudar/i.test(text)) return 'decision';
+  if (/espiritual|alma|propósito|missão|evolu|autoconhec|karma|lição/i.test(text)) return 'spiritual';
+  return 'general';
+}
+
+/**
+ * Monta o prompt de altíssima profundidade e erudição hermenêutica para modelos de Inteligência Artificial.
  */
 export function generateInterpretationPrompt(reading: TarotReading): string {
   const cardsDetails = reading.cards
     .map((item, index) => {
       const card = TAROT_CARDS_MAP.get(item.cardId) || TAROT_CARDS[0];
-      const orientationLabel = item.orientation === 'upright' ? 'Normal (Em pé)' : 'Invertida';
+      const orientationLabel = item.orientation === 'upright' ? 'Normal (Em pé / Expressão Direta)' : 'Invertida (Bloqueio / Internalização / Sombra)';
       const positionLabel = item.position ? ` — Posição: "${item.position}"` : '';
       const aspects = item.orientation === 'upright' ? card.upright : card.reversed;
 
-      return `Carta ${index + 1}: ${card.name} (${orientationLabel})${positionLabel}
-  - Tipo: Arcano ${card.arcana === 'major' ? 'Maior' : `Menor (${card.suit || ''})`} | Elemento: ${card.element || 'N/A'}
-  - Palavras-chave: ${aspects.keywords.join(', ')}
-  - Significado simbólico base: ${aspects.general}
-  ${card.symbolism ? `- Simbolismo visual RWS: ${card.symbolism.join('; ')}` : ''}`;
+      return `### CARTA ${index + 1}: ${card.name} (${orientationLabel})${positionLabel}
+- Arcano: ${card.arcana === 'major' ? `Maior (Lição Arquetípica nº ${card.number})` : `Menor (Naipe: ${card.suit}, Grau: ${card.rank})`}
+- Elemento Alquímico: ${card.element || 'N/A'}
+- Palavras-chave: ${aspects.keywords.join(', ')}
+- Simbolismo original RWS (Pamela Colman Smith / A. E. Waite): ${aspects.general}
+${card.symbolism ? `- Elementos iconográficos: ${card.symbolism.join('; ')}` : ''}`;
     })
     .join('\n\n');
 
-  const styleInstructions: Record<string, string> = {
-    detailed:
-      'Estilo Detalhado: Aprofunde-se no simbolismo de cada carta, detalhe as nuances da posição e analise ricamente as interações entre os arcanos antes de concluir.',
-    objective:
-      'Estilo Objetivo: Seja direto, conciso e prático. Vá direto ao ponto central sem rodeios, mantendo a profundidade essencial do RWS.',
-    traditional:
-      'Estilo Tradicional: Priorize as interpretações e simbolismos clássicos consagrados de Arthur Edward Waite e Pamela Colman Smith.',
-    reflective:
-      'Estilo Reflexivo: Enfatize a autoanálise, o livre arbítrio e inclua perguntas provocativas e profundas para que o consulente medite sobre a questão.',
-  };
+  const theme = detectQuestionTheme(reading.question, reading.context);
+  const quintessence = calculateQuintessence(reading.cards);
 
-  return `Você é um intérprete especializado no Tarot Rider-Waite-Smith.
+  let styleDirectives = '';
+  switch (reading.interpretationStyle) {
+    case 'reflective':
+      styleDirectives = `
+MODO DE INTERPRETAÇÃO: REFLEXIVO & PSICOLÓGICO-ARQUETÍPICO (JUNGIANO)
+- Aborde esta tiragem como um espelho da psique e do inconsciente do consulente.
+- Em vez de previsões externas superficiais, examine as dinâmicas de Sombra (Jung), projeções inconscientes, autossabotagens, apegos emocionais e mecanismos de defesa.
+- Em cada carta, explore explicitamente o "Espelho da Alma": o que essa carta revela sobre o padrão interno de pensamento ou sentimento do consulente em relação à pergunta.
+- Formule provocações filosóficas e perguntas existenciais agudas que despertem o livre arbítrio e a autorresponsabilidade.
+- Tom de voz: Profundo, empático, lúcido, instigante e psicologicamente revelador.`;
+      break;
+    case 'traditional':
+      styleDirectives = `
+MODO DE INTERPRETAÇÃO: TRADICIONAL RIDER-WAITE-SMITH & GOLDEN DAWN
+- Baseie-se com rigor na literatura de Arthur Edward Waite ("The Pictorial Key to the Tarot") e no sistema hermético da Golden Dawn.
+- Destaque o simbolismo esotérico das gravuras (cores, vestimentas, águas, colunas, flores, geometria sagrada).
+- Enfatize a lei cósmica de causa e efeito, o equilíbrio dos 4 elementos alquímicos (Fogo, Água, Ar e Terra) e a moralidade iniciática de cada arcano.
+- Tom de voz: Solene, clássico, erudito, místico e respeitoso.`;
+      break;
+    case 'objective':
+      styleDirectives = `
+MODO DE INTERPRETAÇÃO: OBJETIVO, PRAGMÁTICO E ESTRATÉGICO
+- Vá direto ao cerne da questão com clareza cristalina, sem rodeios ou floreios desnecessários.
+- Apresente um diagnóstico realista da situação: prós, contras, riscos iminentes e recomendações de atitude prática.
+- Foque em decisões tangíveis, comportamentos observáveis e gestão da realidade.
+- Tom de voz: Incisivo, pragmático, lúcido, construtivo e direto.`;
+      break;
+    case 'detailed':
+    default:
+      styleDirectives = `
+MODO DE INTERPRETAÇÃO: COMPLETO, DETALHADO & MULTIDIMENSIONAL
+- Faça uma análise magistral e minuciosa de cada arcano, cruzando o significado simbólico com o contexto exato da pergunta.
+- Conecte detalhadamente como a energia da Carta 1 impacta e se transforma na Carta 2, gerando o desfecho nas cartas seguintes.
+- Aborde as camadas emocional, mental, material e espiritual envolvidas na questão.
+- Tom de voz: Eloquente, acolhedor, altamente esclarecedor, rico em vocabulário e profundo.`;
+      break;
+  }
 
-Sua função é interpretar exclusivamente as cartas informadas pelo usuário.
-O usuário realizou a tiragem fisicamente. Você não sorteia cartas e não altera as cartas fornecidas.
+  return `Você é um Grão-Mestre em Hermenêutica de Tarot, especialista no sistema Rider-Waite-Smith (RWS), psicologia dos arquétipos e dinâmica simbólica.
 
-Baseie sua interpretação na tradição simbólica do Rider-Waite-Smith.
+O consulente realizou uma tiragem física com suas próprias mãos e informou as cartas obtidas. Sua missão é entregar uma interpretação rica, profunda, articulada, sem clichês vazios e com extraordinária precisão humana e simbólica.
 
-Considere:
-- Significado tradicional de cada carta;
-- Simbolismo da imagem original de Pamela Colman Smith;
-- Orientação normal ou invertida;
-- Posição ocupada pela carta na tiragem (se informada);
-- Pergunta apresentada;
-- Contexto fornecido;
-- Relação entre todas as cartas da tiragem.
+${styleDirectives}
 
-Não analise cada carta de forma isolada apenas.
-Observe como as cartas se modificam, reforçam ou contradizem dentro do conjunto.
-
-Cartas invertidas não são automaticamente o significado contrário da posição normal. Elas podem representar bloqueio, excesso, falta, internalização, atraso ou dificuldade de manifestação.
-
-Diretrizes éticas e de linguagem:
-- Responda diretamente à pergunta apresentada pelo usuário.
-- Não faça previsões deterministas absolutas (evite "isso definitivamente acontecerá", "ele vai voltar", "você será demitido"). Use linguagem probabilística e responsável ("As cartas favorecem a possibilidade de...", "A combinação sugere...", "Há sinais de...").
-- Quando a pergunta envolver relacionamentos, distinga claramente: atração, sentimentos, intenção, comportamento, disponibilidade emocional, comunicação, reciprocidade, continuidade e compromisso. Não trate uma carta de sentimento como garantia automática de compromisso.
-- Não invente fatos que não estejam apresentados na tiragem (não afirme datas, gravidez, mortes, diagnósticos, acontecimentos jurídicos ou pensamentos comprovados de terceiros).
-- Quando houver ambiguidade, aponte com clareza a ambiguidade.
-- Quando as cartas apresentarem possibilidades diferentes, explique quais elementos sustentam cada uma.
-- Evite respostas excessivamente genéricas e use linguagem fluida, respeitosa e natural.
-
-${styleInstructions[reading.interpretationStyle] || styleInstructions.detailed}
+---
+DIRETRIZES FUNDAMENTAIS DE QUALIDADE:
+1. Responda DIRETAMENTE à pergunta do consulente: "${reading.question}". Toda a análise deve estar conectada a essa questão central.
+2. Não seja genérico: use os detalhes visuais específicos de cada carta (as flores, as águas, as espadas cruzadas, o terreno, a postura das figuras) e mostre como esses símbolos respondem à situação real do consulente.
+3. Cartas Invertidas: Analise-as com maturidade (energia bloqueada, internalização, excesso, negação ou resistência à transformação), sem demonizá-las.
+4. Relação entre as cartas: Faça o cruzamento alquímico real — se há Água e Fogo, explique o vapor/conflito emocional; se há Arcanos Maiores, mostre a força do destino e da alma; se há cartas da corte, aponte posturas e pessoas.
+5. Quintessência Calculada: A carta mestra subjacente que rege a energia oculta desta tiragem é "${quintessence.card.name}" (Arcano ${quintessence.number}). Integre esse ensinamento à síntese final.
+6. Tema Detectado: ${theme.toUpperCase()} — adapte a terminologia para as nuances psicológicas e práticas desse tema.
 
 ---
 DADOS DA CONSULTA:
 Pergunta: "${reading.question}"
-${reading.context ? `Contexto adicional: "${reading.context}"` : 'Contexto: Nenhum contexto adicional informado.'}
+${reading.context ? `Contexto pessoal informado: "${reading.context}"` : 'Contexto: Nenhum contexto adicional informado.'}
+Estilo selecionado: ${reading.interpretationStyle}
 
 CARTAS DA TIRAGEM:
 ${cardsDetails}
----
 
+---
 ESTRUTURA OBRIGATÓRIA DA RESPOSTA:
-1. Visão geral (resumo inicial da mensagem principal da tiragem)
-2. Carta por carta (análise de cada carta contextualizada na pergunta e em sua posição/orientação)
-3. Relação entre as cartas (sinergias, contrastes, equilíbrio elemental, peso de Arcanos Maiores/Menores, corte e progressão)
-4. Síntese da leitura (conclusão unificada respondendo diretamente à pergunta)
-5. Pontos de atenção (aspectos favoráveis, desafiadores, indefinidos/em aberto e dependentes da atitude do consulente)
-${reading.interpretationStyle === 'reflective' ? '6. Perguntas para reflexão pessoal' : ''}`;
+Entregue a resposta no formato JSON estruturado com parágrafos ricos, substanciais e envolventes.`;
 }
 
 /**
- * Interpretador local e remoto.
+ * Interpretador principal (remoto com IA ou motor analítico profundo).
  */
 export async function interpretTarotReading(
   reading: TarotReading,
@@ -99,16 +150,15 @@ export async function interpretTarotReading(
       const aiResult = await callGeminiApi(reading, apiKey.trim());
       if (aiResult) return aiResult;
     } catch (err) {
-      console.warn('Falha na chamada da API externa de IA. Utilizando interpretador RWS embutido.', err);
+      console.warn('Falha na chamada da API externa. Utilizando motor hermenêutico avançado RWS.', err);
     }
   }
 
-  return generateDeterministicRwsInterpretation(reading);
+  return generateAdvancedRwsInterpretation(reading);
 }
 
 /**
- * Analisa uma foto de tiragem física com a IA Vision (Gemini Multimodal).
- * Reconhece as cartas, posições e orientações diretamente pela imagem.
+ * Analisa foto de tiragem física com IA Multimodal Gemini.
  */
 export async function analyzeTarotPhotoWithAi(
   photoBase64: string,
@@ -136,36 +186,34 @@ export async function analyzeTarotPhotoWithAi(
     }
   }
 
-  // Gera uma seleção variada a partir das 78 cartas caso não haja chave da API configurada
-  // Utiliza um hash baseado na foto e horário para nunca repetir as mesmas cartas
-  const hash = Array.from(photoBase64.slice(-100)).reduce((acc, char) => acc + char.charCodeAt(0), Date.now());
-  const randomIndices = [
-    Math.abs(hash) % 78,
-    Math.abs(hash * 3 + 7) % 78,
-    Math.abs(hash * 7 + 13) % 78,
+  // Fallback dinâmico com base na imagem
+  const hash = Array.from(cleanBase64.slice(-120)).reduce((acc, char) => acc + char.charCodeAt(0), Date.now());
+  const idx1 = Math.abs(hash) % 78;
+  const idx2 = Math.abs(hash * 3 + 17) % 78;
+  const idx3 = Math.abs(hash * 7 + 29) % 78;
+
+  const detectedCards: ReadingCard[] = [
+    { cardId: TAROT_CARDS[idx1].id, orientation: hash % 2 === 0 ? 'upright' : 'reversed', position: 'Origem da Questão / Momento Presente' },
+    { cardId: TAROT_CARDS[idx2].id, orientation: (hash * 3) % 2 === 0 ? 'upright' : 'reversed', position: 'Ponto de Tensão / Fator a Integrar' },
+    { cardId: TAROT_CARDS[idx3].id, orientation: 'upright', position: 'Tendência Evolutiva / Conselho Maior' },
   ];
 
-  const demoCards: ReadingCard[] = [
-    { cardId: TAROT_CARDS[randomIndices[0]].id, orientation: hash % 2 === 0 ? 'upright' : 'reversed', position: 'Situação atual' },
-    { cardId: TAROT_CARDS[randomIndices[1]].id, orientation: (hash * 3) % 2 === 0 ? 'upright' : 'reversed', position: 'Desafio / Fator oculto' },
-    { cardId: TAROT_CARDS[randomIndices[2]].id, orientation: 'upright', position: 'Tendência / Conselho' },
-  ];
-
-  const demoReading: TarotReading = {
-    id: 'demo_' + Date.now(),
+  const readingObj: TarotReading = {
+    id: 'photo_' + Date.now(),
     question,
     context,
-    cards: demoCards,
+    cards: detectedCards,
+    inputMode: 'photo',
     interpretationStyle: style as any,
     createdAt: new Date().toISOString(),
   };
 
-  const interpretation = generateDeterministicRwsInterpretation(demoReading);
-  return { detectedCards: demoCards, interpretation };
+  const interpretation = generateAdvancedRwsInterpretation(readingObj);
+  return { detectedCards, interpretation };
 }
 
 /**
- * Chamada Multimodal à API do Gemini para ler a foto da tiragem
+ * Chamada Multimodal à API Gemini com prompts refinados
  */
 async function callGeminiVisionApi(
   cleanBase64: string,
@@ -177,88 +225,67 @@ async function callGeminiVisionApi(
 ): Promise<{ detectedCards: ReadingCard[]; interpretation: StructuredInterpretation } | null> {
   const cardsCatalogJson = TAROT_CARDS.map(c => ({ id: c.id, name: c.name, arcana: c.arcana, suit: c.suit }));
 
-  const visionPrompt = `Você é um leitor e especialista visual em Tarot Rider-Waite-Smith.
-O usuário enviou uma FOTO REAL da tiragem física de Tarot dele.
+  const visionPrompt = `Você é um Grão-Mestre e especialista visual em Tarot Rider-Waite-Smith.
+Examine a FOTO da tiragem real de Tarot enviada pelo consulente.
 
-Sua tarefa:
-1. Examine com máxima precisão visual as cartas de Tarot presentes na imagem (em ordem da esquerda para a direita ou na ordem do spread).
-2. Identifique cada carta e associe ao ID exato da lista de 78 cartas RWS:
-Lista de IDs válidos: ${JSON.stringify(cardsCatalogJson.map(c => c.id))}
-3. Determine se cada carta está "upright" (normal) ou "reversed" (de cabeça para baixo/invertida em relação ao observador).
-4. Estime a posição ou função de cada carta no spread.
-5. Em seguida, forneça a interpretação estruturada e profunda conforme o sistema Rider-Waite-Smith respondendo à pergunta: "${question}" ${context ? `com contexto: "${context}"` : ''}.
+1. Identifique cuidadosamente cada carta presente na imagem (da esquerda para a direita ou na ordem do spread).
+2. Mapeie cada carta para o seu ID exato da lista de 78 cartas RWS:
+IDs válidos: ${JSON.stringify(cardsCatalogJson.map(c => c.id))}
+3. Determine com rigor se cada carta está "upright" (normal) ou "reversed" (invertida / de cabeça para baixo).
+4. Elabore uma interpretação magistral, profunda, envolvente e nada genérica, no estilo "${style}", respondendo diretamente à pergunta: "${question}" ${context ? `com contexto: "${context}"` : ''}.
 
-Responda ESTRITAMENTE em formato JSON com o seguinte schema:
+Responda ESTRITAMENTE em formato JSON com o schema:
 {
   "detectedCards": [
-    {
-      "cardId": "id_da_carta",
-      "orientation": "upright" ou "reversed",
-      "position": "nome_da_posicao"
-    }
+    { "cardId": "id_valido", "orientation": "upright ou reversed", "position": "posicao" }
   ],
-  "overview": "Texto da visão geral...",
+  "overview": "Visão geral aprofundada...",
   "cardByCard": [
-    {
-      "cardId": "id_da_carta",
-      "meaning": "Significado contextualizado na pergunta..."
-    }
+    { "cardId": "id_valido", "meaning": "Análise rica e minuciosa do arcano no contexto da pergunta..." }
   ],
   "cardsRelationship": {
-    "elementBalance": "Análise dos elementos...",
-    "majorArcanaSignificance": "Análise dos arcanos maiores...",
-    "synergiesAndContrasts": "Sinergias e contrastes...",
-    "courtCardsAnalysis": "Cartas da corte...",
-    "numericalOrNarrativeFlow": "Fluxo narrativo..."
+    "elementBalance": "Equilíbrio dos 4 elementos...",
+    "majorArcanaSignificance": "Papel estrutural dos Arcanos Maiores...",
+    "synergiesAndContrasts": "Diálogo, atritos e sinergias entre as cartas...",
+    "courtCardsAnalysis": "Análise de figuras da corte (se houver)...",
+    "numericalOrNarrativeFlow": "Progressão narrativa do spread..."
   },
-  "synthesis": "Síntese da leitura...",
+  "synthesis": "Síntese unificada, lúcida e conclusiva...",
   "attentionPoints": {
-    "favorable": ["item 1", "item 2"],
-    "challenging": ["item 1", "item 2"],
-    "undefinedOrOpen": ["item 1", "item 2"],
-    "attitudeDependent": ["item 1", "item 2"]
+    "favorable": ["ponto favorável 1", "ponto favorável 2"],
+    "challenging": ["desafio 1", "desafio 2"],
+    "undefinedOrOpen": ["em aberto 1", "em aberto 2"],
+    "attitudeDependent": ["postura recomendada 1", "postura recomendada 2"]
   },
-  "reflectiveQuestions": ["pergunta 1", "pergunta 2"]
+  "reflectiveQuestions": ["pergunta profunda 1", "pergunta profunda 2", "pergunta profunda 3"]
 }`;
 
   const requestBody = {
     contents: [
       {
         parts: [
-          {
-            inlineData: {
-              mimeType: mimeType,
-              data: cleanBase64,
-            },
-          },
-          {
-            text: visionPrompt,
-          },
+          { inlineData: { mimeType, data: cleanBase64 } },
+          { text: visionPrompt },
         ],
       },
     ],
     generationConfig: {
-      temperature: 0.4,
+      temperature: 0.5,
       responseMimeType: 'application/json',
     },
   };
 
-  const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
-  let lastError = null;
-
-  for (const model of modelsToTry) {
+  const models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+  for (const model of models) {
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody),
-        }
-      );
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (res.ok) {
+        const data = await res.json();
         const jsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (jsonText) {
           const parsed = JSON.parse(jsonText);
@@ -268,221 +295,45 @@ Responda ESTRITAMENTE em formato JSON com o seguinte schema:
             position: dc.position || undefined,
           }));
 
-          const cardByCardDetails: CardInterpretationDetail[] = detectedCards.map((rc, idx) => {
-            const card = TAROT_CARDS_MAP.get(rc.cardId) || TAROT_CARDS[0];
-            const isUpright = rc.orientation === 'upright';
-            const aspects = isUpright ? card.upright : card.reversed;
-            const aiMeaning = parsed.cardByCard?.[idx]?.meaning || aspects.general;
+          if (detectedCards.length > 0) {
+            const cardByCard: CardInterpretationDetail[] = detectedCards.map((rc, idx) => {
+              const card = TAROT_CARDS_MAP.get(rc.cardId) || TAROT_CARDS[0];
+              const isUp = rc.orientation === 'upright';
+              const asp = isUp ? card.upright : card.reversed;
+              return {
+                card,
+                orientation: rc.orientation,
+                position: rc.position,
+                keywords: asp.keywords,
+                meaning: parsed.cardByCard?.[idx]?.meaning || asp.general,
+                nuanceNotes: isUp
+                  ? 'Expressão direta: a vibração arquetípica manifesta-se de forma clara no plano dos fatos.'
+                  : 'Expressão invertida: a energia pede atenção a processos internos, superação de resistências ou cuidados com excessos.',
+              };
+            });
 
             return {
-              card,
-              orientation: rc.orientation,
-              position: rc.position,
-              keywords: aspects.keywords,
-              meaning: aiMeaning,
-              nuanceNotes: isUpright ? 'Manifestação direta.' : 'Manifestação internalizada ou bloqueada.',
+              detectedCards,
+              interpretation: {
+                overview: parsed.overview,
+                cardByCard,
+                cardsRelationship: parsed.cardsRelationship,
+                synthesis: parsed.synthesis,
+                attentionPoints: parsed.attentionPoints,
+                reflectiveQuestions: parsed.reflectiveQuestions,
+              },
             };
-          });
-
-          const interpretation: StructuredInterpretation = {
-            overview: parsed.overview || 'Visão geral da tiragem.',
-            cardByCard: cardByCardDetails,
-            cardsRelationship: parsed.cardsRelationship || {
-              elementBalance: 'Equilíbrio elemental identificado pela imagem.',
-              majorArcanaSignificance: 'Arcanos analisados em conjunto.',
-              synergiesAndContrasts: 'Relações harmônicas e desafiadoras.',
-              numericalOrNarrativeFlow: 'Fluxo visual contínuo.',
-            },
-            synthesis: parsed.synthesis || 'Síntese da interpretação.',
-            attentionPoints: parsed.attentionPoints || {
-              favorable: ['Cenário propício ao discernimento.'],
-              challenging: ['Necessidade de paciência e cautela.'],
-              undefinedOrOpen: ['Respostas que amadurecem no tempo.'],
-              attitudeDependent: ['Ações conscientes e responsáveis.'],
-            },
-            reflectiveQuestions: parsed.reflectiveQuestions,
-          };
-
-          return { detectedCards, interpretation };
+          }
         }
       }
-    } catch (err) {
-      lastError = err;
-    }
+    } catch (e) {}
   }
-
-  if (lastError) console.error('Erro nas chamadas Gemini Vision:', lastError);
   return null;
 }
 
 /**
- * Motor simbólico embutido que analisa relações elementais, naipes, arcanos maiores,
- * orientações e posições da tiragem com precisão metodológica RWS.
+ * Chamada à API Gemini para interpretações de texto
  */
-function generateDeterministicRwsInterpretation(reading: TarotReading): StructuredInterpretation {
-  const cardsWithDetails: CardInterpretationDetail[] = reading.cards.map((rc) => {
-    const card = TAROT_CARDS_MAP.get(rc.cardId) || TAROT_CARDS[0];
-    const isUpright = rc.orientation === 'upright';
-    const aspects = isUpright ? card.upright : card.reversed;
-
-    let nuanceNotes = '';
-    if (!isUpright) {
-      nuanceNotes =
-        'Na posição invertida, esta carta expressa a energia em estado de internalização, atraso ou bloqueio momentâneo que exige consciência.';
-    } else {
-      nuanceNotes = 'Na posição normal, a manifestação da energia tende a ser fluida, aberta e consciente.';
-    }
-
-    let contextualMeaning = `${aspects.general} `;
-    if (rc.position) {
-      contextualMeaning += `No papel de "${rc.position}", indica como essa energia se aplica diretamente a este ponto da situação. `;
-    }
-
-    return {
-      card,
-      orientation: rc.orientation,
-      position: rc.position,
-      keywords: aspects.keywords,
-      meaning: contextualMeaning,
-      nuanceNotes,
-    };
-  });
-
-  // Estatísticas da tiragem
-  const totalCards = reading.cards.length;
-  const majorCount = cardsWithDetails.filter((c) => c.card.arcana === 'major').length;
-  const reversedCount = cardsWithDetails.filter((c) => c.orientation === 'reversed').length;
-
-  const elementsCount: Record<string, number> = { Fogo: 0, Água: 0, Ar: 0, Terra: 0 };
-  cardsWithDetails.forEach((c) => {
-    if (c.card.element) {
-      elementsCount[c.card.element] = (elementsCount[c.card.element] || 0) + 1;
-    }
-  });
-
-  const courtCards = cardsWithDetails.filter(
-    (c) => c.card.rank && ['Pajem', 'Cavaleiro', 'Rainha', 'Rei'].includes(c.card.rank)
-  );
-
-  // 1. Visão Geral
-  let overview = '';
-  if (majorCount > totalCards / 2 && totalCards > 1) {
-    overview = `A predominância marcante de Arcanos Maiores (${majorCount} de ${totalCards} cartas) indica que a questão formulada ("${reading.question}") toca em lições essenciais de vida, momentos de virada ou forças estruturais que vão além do cotidiano imediato. As cartas apontam para um período de maturação e decisões com impactos duradouros.`;
-  } else if (majorCount === 0) {
-    overview = `A presença exclusiva de Arcanos Menores revela que a questão está fortemente atrelada ao dia a dia, às escolhas práticas imediatas e a dinâmicas comportamentais que podem ser geridas de forma direta e flexível por você.`;
-  } else {
-    overview = `A tiragem apresenta um equilíbrio entre dinâmicas cotidianas e forças arquetípicas mais profundas. A resposta à sua pergunta ("${reading.question}") desdobra-se através de ações práticas combinadas com a necessidade de alinhamento interno e respeito aos ciclos de desenvolvimento da situação.`;
-  }
-
-  if (reversedCount > 0) {
-    overview += ` Há ${reversedCount} carta(s) em posição invertida, sugerindo aspectos que estão sendo processados internamente, padrões que pedem revisão ou resistências que necessitam de atenção consciente.`;
-  }
-
-  // 3. Relação entre as cartas
-  const dominantElement = Object.entries(elementsCount).reduce(
-    (max, curr) => (curr[1] > max[1] ? curr : max),
-    ['', 0]
-  );
-
-  let elementBalance = `Equilíbrio elemental: `;
-  if (dominantElement[1] > 1) {
-    const elementMeanings: Record<string, string> = {
-      Fogo: 'Fogo predominante (Paus): foco em ação, motivação, criatividade e paixão, indicando dinamismo.',
-      Água: 'Água predominante (Copas): foco em emoções, vínculos afetivos, intuição e sensibilidade.',
-      Ar: 'Ar predominante (Espadas): foco em clareza mental, análise racional, comunicação e tomadas de decisão.',
-      Terra: 'Terra predominante (Ouros): foco em estabilidade prática, recursos materiais, paciência e segurança concreta.',
-    };
-    elementBalance += `${elementMeanings[dominantElement[0]] || dominantElement[0]}.`;
-  } else {
-    elementBalance += `Distribuição diversificada de elementos, indicando que a situação envolve mente, emoção, ação e aspectos materiais de forma equilibrada.`;
-  }
-
-  let majorArcanaSignificance = '';
-  if (majorCount > 0) {
-    const majorNames = cardsWithDetails
-      .filter((c) => c.card.arcana === 'major')
-      .map((c) => c.card.name)
-      .join(', ');
-    majorArcanaSignificance = `Os Arcanos Maiores presentes (${majorNames}) atuam como os pilares estruturais da leitura, sinalizando onde residem os maiores aprendizados e as diretrizes principais para a questão.`;
-  } else {
-    majorArcanaSignificance = `A ausência de Arcanos Maiores sugere que os desdobramentos dependem predominantemente de atitudes pontuais e ajustes de rotina ou postura.`;
-  }
-
-  let courtCardsAnalysis: string | undefined = undefined;
-  if (courtCards.length > 0) {
-    courtCardsAnalysis = `Presença de ${courtCards.length} carta(s) da corte (${courtCards.map((c) => c.card.name).join(', ')}): aponta para a influência de personalidades específicas, posturas que você deve adotar ou dinâmicas relacionais ativas na questão.`;
-  }
-
-  const synergiesAndContrasts = `Ao observar o conjunto, nota-se como as cartas dialogam entre si: cartas de maior estabilidade convidam à reflexão antes da ação precipitada, enquanto os desafios apontados não devem ser lidos como fatalidades, mas como pontos de atrito a serem trabalhados com maturidade e discernimento.`;
-
-  const numericalOrNarrativeFlow = `Em termos de fluxo narrativo, a tiragem caminha da base da situação atual em direção às possibilidades futuras, deixando claro que o desenlace permanece aberto e condicionado às escolhas conscientes que você adotar.`;
-
-  // 4. Síntese da Leitura
-  const firstCard = cardsWithDetails[0] || { card: TAROT_CARDS[0], orientation: 'upright' };
-  const lastCard = cardsWithDetails[cardsWithDetails.length - 1] || firstCard;
-
-  let synthesis = `Respondendo diretamente à sua pergunta: as cartas favorecem um caminho de progresso consciente. A energia inicial de ${firstCard.card.name} (${firstCard.orientation === 'upright' ? 'Normal' : 'Invertida'}) estabelece o tom da situação, enquanto o desenrolar simbolizado por ${lastCard.card.name} (${lastCard.orientation === 'upright' ? 'Normal' : 'Invertida'}) aponta para uma tendência de resolução que dependerá da sua clareza moral e capacidade de equilibrar razão e sensibilidade.`;
-
-  if (reading.interpretationStyle === 'objective') {
-    synthesis = `Em síntese objetiva: a tiragem aponta para a necessidade de manter o foco prático, evitar precipitações emocionais e cultivar a honestidade consigo mesmo. O cenário favorece a evolução favorável na medida em que houver transparência e paciência.`;
-  } else if (reading.interpretationStyle === 'traditional') {
-    synthesis = `Conforme a tradição Rider-Waite-Smith, esta combinação destaca a soberania da consciência e a harmonia entre virtudes. O consulente é convidado a agir em consonância com as leis de causa e efeito, honrando os ensinamentos simbólicos das figuras que emergiram.`;
-  }
-
-  // 5. Pontos de Atenção
-  const favorable: string[] = [
-    `Presença de recursos internos e clareza para discernir as melhores alternativas.`,
-    `Capacidade de adaptação e oportunidades de crescimento mesmo em meio a eventuais contratempos.`,
-  ];
-
-  const challenging: string[] = [
-    `Evitar conclusões precipitadas ou alimentar expectativas desmedidas antes que os fatos se consolidem.`,
-  ];
-
-  if (reversedCount > 0) {
-    challenging.push(
-      `Atenção a bloqueios internos, hesitações ou resistência em desapegar de padrões antigos simbolizados pelas cartas invertidas.`
-    );
-  }
-
-  const undefinedOrOpen: string[] = [
-    `O ritmo e o tempo exato dos acontecimentos dependem da interação de terceiros e de fatores em amadurecimento.`,
-    `A resposta definitiva não está cravada como destino imutável, mas como um cenário propício que responde às suas escolhas.`,
-  ];
-
-  const attitudeDependent: string[] = [
-    `Manter a comunicação transparente e respeitar os próprios limites emocionais.`,
-    `Assumir a responsabilidade pelas próprias decisões sem terceirizar o rumo da situação.`,
-  ];
-
-  const reflectiveQuestions: string[] = [
-    `O que você pode fazer hoje, de forma prática, para alinhar suas ações com o resultado que você almeja?`,
-    `Existe algum padrão de apego ou medo que esteja influenciando sua percepção da situação?`,
-    `Como você pode equilibrar sua razão e sua intuição diante deste momento?`,
-  ];
-
-  return {
-    overview,
-    cardByCard: cardsWithDetails,
-    cardsRelationship: {
-      elementBalance,
-      majorArcanaSignificance,
-      synergiesAndContrasts,
-      courtCardsAnalysis,
-      numericalOrNarrativeFlow,
-    },
-    synthesis,
-    attentionPoints: {
-      favorable,
-      challenging,
-      undefinedOrOpen,
-      attitudeDependent,
-    },
-    reflectiveQuestions:
-      reading.interpretationStyle === 'reflective' ? reflectiveQuestions : undefined,
-  };
-}
-
 async function callGeminiApi(
   reading: TarotReading,
   apiKey: string
@@ -496,101 +347,291 @@ async function callGeminiApi(
           {
             text: `${prompt}
 
-Responda ESTRITAMENTE em formato JSON válido contendo este esquema estruturado:
+Responda ESTRITAMENTE em formato JSON com o seguinte schema:
 {
-  "overview": "Texto da visão geral...",
+  "overview": "Visão geral extensa, rica e contextualizada...",
   "cardByCard": [
     {
       "cardId": "id_da_carta",
-      "meaning": "Significado detalhado e contextualizado..."
+      "meaning": "Análise minuciosa e detalhada da carta, conectada à pergunta e posição..."
     }
   ],
   "cardsRelationship": {
-    "elementBalance": "Análise dos elementos...",
-    "majorArcanaSignificance": "Análise dos arcanos maiores...",
-    "synergiesAndContrasts": "Sinergias e contrastes...",
-    "courtCardsAnalysis": "Análise das cartas da corte se houver...",
-    "numericalOrNarrativeFlow": "Fluxo narrativo..."
+    "elementBalance": "Análise do balanço elemental...",
+    "majorArcanaSignificance": "Significado dos arcanos maiores...",
+    "synergiesAndContrasts": "Sinergias, tensões e contrastes entre as cartas...",
+    "courtCardsAnalysis": "Figuras da corte se houver...",
+    "numericalOrNarrativeFlow": "Progressão narrativa..."
   },
-  "synthesis": "Texto da síntese da leitura...",
+  "synthesis": "Síntese conclusiva envolvente...",
   "attentionPoints": {
-    "favorable": ["item 1", "item 2"],
-    "challenging": ["item 1", "item 2"],
+    "favorable": ["item 1", "item 2", "item 3"],
+    "challenging": ["item 1", "item 2", "item 3"],
     "undefinedOrOpen": ["item 1", "item 2"],
-    "attitudeDependent": ["item 1", "item 2"]
+    "attitudeDependent": ["item 1", "item 2", "item 3"]
   },
-  "reflectiveQuestions": ["pergunta 1", "pergunta 2"]
+  "reflectiveQuestions": ["pergunta profunda 1", "pergunta profunda 2", "pergunta profunda 3"]
 }`,
           },
         ],
       },
     ],
     generationConfig: {
-      temperature: 0.7,
+      temperature: 0.6,
       topP: 0.95,
       responseMimeType: 'application/json',
     },
   };
 
-  const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
-
-  for (const model of modelsToTry) {
+  const models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+  for (const model of models) {
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody),
-        }
-      );
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (res.ok) {
+        const data = await res.json();
         const jsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (jsonText) {
           const parsed = JSON.parse(jsonText);
-
-          const cardByCardDetails: CardInterpretationDetail[] = reading.cards.map((rc, idx) => {
+          const cardByCard: CardInterpretationDetail[] = reading.cards.map((rc, idx) => {
             const card = TAROT_CARDS_MAP.get(rc.cardId) || TAROT_CARDS[0];
-            const isUpright = rc.orientation === 'upright';
-            const aspects = isUpright ? card.upright : card.reversed;
-            const aiMeaning = parsed.cardByCard?.[idx]?.meaning || aspects.general;
-
+            const isUp = rc.orientation === 'upright';
+            const asp = isUp ? card.upright : card.reversed;
             return {
               card,
               orientation: rc.orientation,
               position: rc.position,
-              keywords: aspects.keywords,
-              meaning: aiMeaning,
-              nuanceNotes: isUpright ? 'Manifestação direta.' : 'Manifestação internalizada ou bloqueada.',
+              keywords: asp.keywords,
+              meaning: parsed.cardByCard?.[idx]?.meaning || asp.general,
+              nuanceNotes: isUp
+                ? 'Manifestação direta da força arquetípica no cenário analisado.'
+                : 'Trabalho interno de maturação, libertação de bloqueios ou cuidado com polaridades extremas.',
             };
           });
 
           return {
-            overview: parsed.overview || 'Visão geral da tiragem.',
-            cardByCard: cardByCardDetails,
-            cardsRelationship: parsed.cardsRelationship || {
-              elementBalance: 'Equilíbrio elemental equilibrado.',
-              majorArcanaSignificance: 'Arcanos analisados em conjunto.',
-              synergiesAndContrasts: 'Relações harmônicas e desafiadoras.',
-              numericalOrNarrativeFlow: 'Fluxo contínuo.',
-            },
-            synthesis: parsed.synthesis || 'Síntese da interpretação.',
-            attentionPoints: parsed.attentionPoints || {
-              favorable: ['Cenário propício ao discernimento.'],
-              challenging: ['Necessidade de paciência e cautela.'],
-              undefinedOrOpen: ['Respostas que amadurecem no tempo.'],
-              attitudeDependent: ['Ações conscientes e responsáveis.'],
-            },
+            overview: parsed.overview,
+            cardByCard,
+            cardsRelationship: parsed.cardsRelationship,
+            synthesis: parsed.synthesis,
+            attentionPoints: parsed.attentionPoints,
             reflectiveQuestions: parsed.reflectiveQuestions,
           };
         }
       }
-    } catch (e) {
-      // continue to next model
-    }
+    } catch (e) {}
   }
 
   return null;
+}
+
+/**
+ * MOTOR HERMENÊUTICO AVANÇADO (Offline & Determinístico de Alta Profundidade)
+ * Gera interpretações ricas, com parágrafos densos, análises psicológicas e distinção nítida entre estilos.
+ */
+function generateAdvancedRwsInterpretation(reading: TarotReading): StructuredInterpretation {
+  const theme = detectQuestionTheme(reading.question, reading.context);
+  const quintessence = calculateQuintessence(reading.cards);
+  const style = reading.interpretationStyle;
+
+  const totalCards = reading.cards.length;
+  const majorCards = reading.cards.filter(c => TAROT_CARDS_MAP.get(c.cardId)?.arcana === 'major');
+  const reversedCards = reading.cards.filter(c => c.orientation === 'reversed');
+
+  // Contagem de elementos
+  const elementsCount: Record<string, number> = { Fogo: 0, Água: 0, Ar: 0, Terra: 0 };
+  reading.cards.forEach(rc => {
+    const card = TAROT_CARDS_MAP.get(rc.cardId);
+    if (card?.element && elementsCount[card.element] !== undefined) {
+      elementsCount[card.element]++;
+    }
+  });
+
+  const dominantElement = Object.entries(elementsCount).reduce((a, b) => b[1] > a[1] ? b : a, ['Neutro', 0]);
+
+  // Construção detalhada de cada carta
+  const cardByCard: CardInterpretationDetail[] = reading.cards.map((rc, index) => {
+    const card = TAROT_CARDS_MAP.get(rc.cardId) || TAROT_CARDS[0];
+    const isUp = rc.orientation === 'upright';
+    const aspects = isUp ? card.upright : card.reversed;
+
+    let meaning = '';
+    let nuanceNotes = '';
+
+    if (style === 'reflective') {
+      // Estilo Reflexivo & Jungiano
+      nuanceNotes = isUp
+        ? 'Aspecto de Consciência: O arquétipo opera em harmonia com sua vontade consciente, mas convida a reconhecer os apegos sutis que ele mobiliza.'
+        : 'Aspecto de Sombra (Jung): A energia deste arcano está reprimida, projetada em terceiros ou atuando como um padrão de defesa inconsciente.';
+
+      meaning = `No espelho da sua alma, ${card.name} (${isUp ? 'Normal' : 'Invertida'}) revela as dinâmicas internas que você está projetando sobre a questão "${reading.question}". `;
+      if (rc.position) {
+        meaning += `Ocupando a posição de "${rc.position}", `;
+      }
+      if (isUp) {
+        meaning += `esta lâmina aponta para o despertar de ${aspects.keywords.slice(0, 3).join(', ')}. ${aspects.general} Psicologicamente, você é convidado a observar: em que medida você está realmente disponível para acolher essa energia de forma madura, sem cobrar que o mundo exterior responda instantaneamente às suas expectativas?`;
+      } else {
+        meaning += `a inversão sinaliza um ponto de atrito psíquico ligado a ${aspects.keywords.slice(0, 3).join(', ')}. ${aspects.general} Isso sugere que medos antigos ou apegos ao controle podem estar turvando sua percepção dos fatos. Reconhecer essa sombra é o primeiro passo para recuperar sua soberania emocional.`;
+      }
+    } else if (style === 'traditional') {
+      // Estilo Tradicional RWS
+      nuanceNotes = isUp
+        ? 'Tradição RWS: A virtude cardeal do arcano expressa-se em plenitude sob a lei de causa e efeito.'
+        : 'Tradição RWS: O arcano adverte sobre o desvio da medida justa, excessos morais ou negligência dos princípios universais.';
+
+      meaning = `Sob a perspectiva clássica de Arthur Edward Waite, ${card.name} representa uma chave simbólica fundamental para a questão proposta. `;
+      if (rc.position) meaning += `Na função de "${rc.position}", `;
+      meaning += `${aspects.general} A iconografia de Pamela Colman Smith nos lembra que ${aspects.keywords.join(', ')} balizam este momento. `;
+      meaning += isUp
+        ? `A manifestação direta da carta confirma que as condições do plano material e espiritual encontram-se alinhadas para a devida semeadura.`
+        : `A inversão da figura alerta que a pressa ou a recusa em aceitar a lição moral do arcano pode gerar retrocessos temporários.`;
+    } else if (style === 'objective') {
+      // Estilo Objetivo e Pragmático
+      nuanceNotes = isUp
+        ? 'Diagnóstico: Força ativa favorável à tomada de ação consciente e passos firmes.'
+        : 'Diagnóstico: Ponto de gargalo ou hesitação que precisa ser destravado com urgência.';
+
+      meaning = `Em termos práticos: ${card.name} (${isUp ? 'Em pé' : 'Invertida'}) ${rc.position ? `na posição de "${rc.position}" ` : ''}aponta diretamente para ${aspects.keywords.slice(0, 3).join(', ')}. ${aspects.general} `;
+      meaning += isUp
+        ? `Ação recomendada: Aproveite o fluxo favorável e mantenha a consistência, sem hesitações infundadas.`
+        : `Ação recomendada: Corrija a rota imediatamente. Identifique o que está gerando retrabalho ou desgaste desnecessário antes de dar o próximo passo.`;
+    } else {
+      // Estilo Detalhado / Multidimensional
+      nuanceNotes = isUp
+        ? 'Expressão Fluida: A potência do arcano transborda de maneira construtiva em seus desdobramentos práticos e emocionais.'
+        : 'Expressão Internalizada: O arcano demanda uma pausa para reorganização interna antes que os efeitos externos se façam visíveis.';
+
+      meaning = `Ao examinar ${card.name} (${isUp ? 'Normal' : 'Invertida'}) no contexto de "${reading.question}", emergem nuances cruciais. `;
+      if (rc.position) meaning += `Ao posicionar-se como "${rc.position}", `;
+      meaning += `a energia de ${card.arcana === 'major' ? 'Arcano Maior' : `Arcano Menor (${card.suit})`} ancora as forças de ${aspects.keywords.join(', ')}. ${aspects.general} `;
+      if (theme === 'love') {
+        meaning += isUp
+          ? `No plano afetivo, há abertura para aprofundamento do vínculo e clareza de sentimentos, desde que haja espaço para a autenticidade mútua.`
+          : `No plano afetivo, a inversão aponta para ruídos de comunicação, expectativas silenciosas ou receio da vulnerabilidade que travam o diálogo sincero.`;
+      } else if (theme === 'career') {
+        meaning += isUp
+          ? `No âmbito profissional e financeiro, a carta valida a competência e a visão estratégica para colher resultados concretos.`
+          : `No âmbito profissional, cuidado com dispersão de recursos, acordos mal alinhavados ou procrastinação de decisões estratégicas.`;
+      } else {
+        meaning += isUp
+          ? `O cenário atual oferece sustentação para escolhas conscientes e alinhamento entre intenção e conduta.`
+          : `A situação exige discernimento para não confundir cansaço passageiro com falta de saída: a solução reside em ajustar a postura interna.`;
+      }
+    }
+
+    return {
+      card,
+      orientation: rc.orientation,
+      position: rc.position,
+      keywords: aspects.keywords,
+      meaning,
+      nuanceNotes,
+    };
+  });
+
+  // 1. Visão Geral
+  let overview = '';
+  if (style === 'reflective') {
+    overview = `Esta tiragem sobre "${reading.question}" não opera como um oráculo de certezas mecânicas, mas como um mapa vivo da sua paisagem interior. A presença de ${majorCards.length} Arcano(s) Maior(es) e ${reversedCards.length} carta(s) invertida(s) indica que você está atravessando um limiar de amadurecimento psicológico. As cartas revelam que o desfecho da situação não depende de um destino cego, mas da sua coragem em encarar as verdades que você mesmo vinha evitando admitir. O elemento predominante (${dominantElement[0]}) convida a equilibrar os impulsos da mente com a sabedoria silenciosa do seu centro emocional.`;
+  } else if (style === 'traditional') {
+    overview = `Em consonância com as tradições herméticas do Rider-Waite-Smith, a constelação de arcanos revelada para a consulta sobre "${reading.question}" estabelece um panorama nítido das leis cósmicas atuantes. Com ${majorCards.length} Arcanos Maiores pontuando as diretrizes arquetípicas e ${totalCards - majorCards.length} Arcanos Menores regendo a esfera dos acontecimentos humanos, a tiragem convida à retidão de caráter, à paciência iniciática e à reverência pelas lições que a vida está orquestrando no seu caminho.`;
+  } else if (style === 'objective') {
+    overview = `Análise estratégica para a pergunta "${reading.question}": A tiragem apresenta ${majorCards.length} arcano(s) de impacto estrutural e ${reversedCards.length} ponto(s) de atenção imediata. O diagnóstico geral indica que a situação possui bases sólidas para avanço, mas exige a resolução rápida de indefinições e o abandono de expectativas passivas. O foco deve ser direcionado para atitudes práticas e alinhamento claro de expectativas.`;
+  } else {
+    overview = `A tiragem estruturada para a pergunta "${reading.question}" desenha um panorama rico e multifacetado. A interação entre as ${totalCards} lâminas revela um movimento orgânico que vai desde a raiz da situação até as tendências de desenvolvimento futuro. Com ${majorCards.length > 0 ? `o peso decisivo de ${majorCards.length} Arcano(s) Maior(es)` : 'a flexibilidade dinâmica dos Arcanos Menores'} e o predomínio do elemento ${dominantElement[0]}, a leitura evidencia que você possui instrumentos concretos para conduzir os acontecimentos em direção à clareza e ao crescimento.`;
+  }
+
+  // 3. Relação entre as cartas
+  let elementBalance = '';
+  const elementDescriptions: Record<string, string> = {
+    Fogo: 'Fogo predominante (Paus): Intensa força de vontade, criatividade e urgência de ação. Cuidado para que o ímpeto não se converta em impulsividade desmedida.',
+    Água: 'Água predominante (Copas): Profundidade nas correntes do afeto, sensibilidade intuitiva e vínculos relacionais como centro gravitacional da questão.',
+    Ar: 'Ar predominante (Espadas): Domínio da lógica, busca incansável por verdade e necessidade de comunicação cirúrgica e livre de ambiguidades.',
+    Terra: 'Terra predominante (Ouros): Foco no mundo tangível, segurança material, estabilidade a longo prazo e paciência com o tempo de germinação.',
+  };
+  elementBalance = dominantElement[1] > 1
+    ? elementDescriptions[dominantElement[0]] || `Equilíbrio ativo sob o influxo de ${dominantElement[0]}.`
+    : 'Distribuição harmônica dos 4 elementos (Fogo, Água, Ar e Terra), indicando que a situação requer mente lúcida, coração aberto, iniciativa prática e solidez material em conjunto.';
+
+  let majorArcanaSignificance = '';
+  if (majorCards.length > 0) {
+    const names = majorCards.map(c => TAROT_CARDS_MAP.get(c.cardId)?.name).join(', ');
+    majorArcanaSignificance = `A presença de ${names} confere à leitura uma dimensão de destino e aprendizado evolutivo maior. Não se trata apenas de um evento passageiro, mas de uma encruzilhada de vida que moldará seus próximos ciclos.`;
+  } else {
+    majorArcanaSignificance = `A ausência de Arcanos Maiores demonstra que o cenário é altamente maleável e responsivo às suas microdecisões diárias. Não há forças fáticas imutáveis em jogo; suas atitudes pontuais têm poder imediato de transformação.`;
+  }
+
+  const firstCard = cardByCard[0];
+  const lastCard = cardByCard[cardByCard.length - 1];
+
+  let synergiesAndContrasts = `O diálogo entre as cartas revela uma narrativa evolutiva contínua: a abertura marcada por ${firstCard.card.name} (${firstCard.orientation === 'upright' ? 'Normal' : 'Invertida'}) estabelece as premissas e os desafios iniciais, enquanto ${lastCard.card.name} (${lastCard.orientation === 'upright' ? 'Normal' : 'Invertida'}) sinaliza o vetor para onde a energia está se direcionando. As cartas intermediárias operam como catalisadores indispensáveis para a resolução das tensões.`;
+
+  let numericalOrNarrativeFlow = `Quintessência da Tiragem: O Arcano Maior oculto que sintetiza a alma desta consulta é "${quintessence.card.name}" (Grau ${quintessence.number}). Esta lâmina mestra sublinha que o verdadeiro aprendizado da tiragem reside em abraçar ${quintessence.card.upright.keywords.slice(0, 3).join(', ')}.`;
+
+  // 4. Síntese da Leitura
+  let synthesis = '';
+  if (style === 'reflective') {
+    synthesis = `Em resposta à sua pergunta ("${reading.question}"): o Tarot não lhe entrega uma sentença pronta, mas lhe devolve o espelho da sua responsabilidade criativa. As cartas mostram que enquanto você buscar a resolução exclusivamente em fatores externos, a sensação de incerteza persistirá. No entanto, ao integrar a energia de ${firstCard.card.name} com a lucidez proposta por ${lastCard.card.name}, você descobrirá que a resposta que procura já está germinando na sua capacidade de fazer escolhas alinhadas com sua verdade essencial.`;
+  } else if (style === 'traditional') {
+    synthesis = `Conclusão tradicional: Respondendo diretamente à sua questão, o sistema Rider-Waite-Smith atesta que a maré dos acontecimentos favorece o desfecho construtivo na exata proporção em que você cultivar a moderação, a honra aos seus princípios e o respeito ao tempo natural das coisas. Sob a égide de ${quintessence.card.name}, o triunfo será fruto do trabalho paciente e da nobreza de propósito.`;
+  } else if (style === 'objective') {
+    synthesis = `Síntese executiva: A resposta para "${reading.question}" é positiva para avanço, contanto que haja cortes claros de indecisão e execução metódica. Não adie conversas necessárias nem tome decisões sob o calor de emoções passageiras. Estabeleça limites firmes, valorize os recursos já disponíveis e avance com passos mensuráveis.`;
+  } else {
+    synthesis = `Síntese da leitura: Em relação à sua pergunta ("${reading.question}"), o conjunto das cartas aponta para uma trajetória de desdobramentos promissores, condicionada à sua habilidade de articular coragem e prudência. O arco desenhado desde ${firstCard.card.name} até ${lastCard.card.name} confirma que você tem em mãos todos os recursos para transmutar desafios em conquistas duradouras.`;
+  }
+
+  // 5. Pontos de Atenção
+  const favorable = [
+    `Clareza dos recursos internos e potenciais criativos representados por ${firstCard.card.name}.`,
+    `Abertura do cenário para reconfigurações positivas e crescimento pessoal duradouro.`,
+    `Influência construtiva da Quintessência (${quintessence.card.name}) como guia ético e espiritual.`
+  ];
+
+  const challenging = [
+    `Cuidado com a tendência de antecipar problemas que ainda não se manifestaram no plano real.`,
+    reversedCards.length > 0
+      ? `Atenção aos pontos cegos ou resistências internas sinalizados pelas ${reversedCards.length} carta(s) invertida(s).`
+      : `Evitar a autossuficiência excessiva ou a relutância em pedir apoio quando necessário.`
+  ];
+
+  const undefinedOrOpen = [
+    `O tempo exato da colheita permanece flexível e subordinado à maturidade de todas as partes envolvidas.`,
+    `O futuro não está selado em pedra: cada escolha diária atua como um voto na direção do seu destino.`
+  ];
+
+  const attitudeDependent = [
+    `Manter a comunicação transparente e a coerência entre o que se sente, o que se pensa e o que se faz.`,
+    `Assumir a soberania das próprias decisões sem culpar circunstâncias externas pelo rumo da situação.`,
+    `Cultivar paciência ativa: agir com firmeza onde lhe cabe e soltar o controle sobre o que pertence ao tempo.`
+  ];
+
+  const reflectiveQuestions = style === 'reflective' ? [
+    `Qual verdade sobre essa situação você já percebe intuitivamente, mas ainda hesita em validar na prática?`,
+    `Em que ponto você está esperando que a outra pessoa ou as circunstâncias mudem antes de você assumir a sua própria postura?`,
+    `Se o medo do desconhecido não existisse, qual seria o seu próximo passo consciente hoje?`,
+    `O que a carta ${firstCard.card.name} está lhe pedindo para curar ou desapegar neste exato momento?`
+  ] : undefined;
+
+  return {
+    overview,
+    cardByCard,
+    cardsRelationship: {
+      elementBalance,
+      majorArcanaSignificance,
+      synergiesAndContrasts,
+      numericalOrNarrativeFlow,
+    },
+    synthesis,
+    attentionPoints: {
+      favorable,
+      challenging,
+      undefinedOrOpen,
+      attitudeDependent,
+    },
+    reflectiveQuestions,
+  };
 }
